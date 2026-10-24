@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_garage_ai_diagnostic_wizard_form" model="ir.ui.view">
+        <field name="name">garage.ai.diagnostic.wizard.form</field>
+        <field name="model">garage.ai.diagnostic.wizard</field>
+        <field name="arch" type="xml">
+            <form string="🎙️ Diagnostic IA &amp; Tâches Dynamiques Atelier">
+                <div class="alert alert-info" role="status">
+                    <i class="fa fa-info-circle me-1" title="Information"/>
+                    <b>Module IA Workshop :</b> Transférez un enregistrement vocal ou saisissez les notes du mécanicien (Darija / Français).
+                    Gemini Flash générera automatiquement les micro-tâches <b>[Étape 4 • مخصصة]</b> verrouillées et notifiera le magasinier pour les pièces.
+                </div>
+                <group>
+                    <group string="Véhicule &amp; Référence">
+                        <field name="reception_id" readonly="1"/>
+                        <field name="vehicle_id"/>
+                        <field name="license_plate"/>
+                    </group>
+                    <group string="Détection Métier &amp; Assurance">
+                        <field name="specialty"/>
+                        <field name="is_assurance"/>
+                    </group>
+                </group>
+                <group string="Enregistrement Audio (Optionnel)">
+                    <field name="audio_file" filename="audio_filename" widget="binary"/>
+                    <field name="audio_filename" invisible="1"/>
+                </group>
+                <group string="Notes Mécanicien &amp; Tâches Détectées">
+                    <field name="raw_note" placeholder="Collez ou dictez les opérations à réaliser (Ex: إصلاح البارشو الأمامي، تغيير زيت المحرك 5W30، تغيير فلتر المازوط...)"/>
+                    <field name="extracted_todos" placeholder="Chaque ligne deviendra une micro-tâche verrouillée [Étape 4 • مخصصة] à l'Atelier"/>
+                </group>
+                <footer>
+                    <button name="action_process" string="🚀 Lancer l'Interprétation IA &amp; Créer Micro-Tâches" type="object" class="btn-primary" icon="fa-magic"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_ai_diagnostic_wizard" model="ir.actions.act_window">
+        <field name="name">Diagnostic IA Atelier</field>
+        <field name="res_model">garage.ai.diagnostic.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

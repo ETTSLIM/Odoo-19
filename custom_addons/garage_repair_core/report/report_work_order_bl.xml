@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Action Rapport QWeb PDF -->
+    <record id="action_report_work_order_bl" model="ir.actions.report">
+        <field name="name">Bon de Travail / BL Atelier</field>
+        <field name="model">repair.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">garage_repair_core.report_work_order_bl_document</field>
+        <field name="report_file">garage_repair_core.report_work_order_bl_document</field>
+        <field name="print_report_name">'Bon_de_Travail_' + (object.bl_number or object.name)</field>
+        <field name="binding_model_id" ref="repair.model_repair_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template Document QWeb -->
+    <template id="report_work_order_bl_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: sans-serif; font-size: 13px;">
+                        
+                        <!-- Titre Document -->
+                        <div class="row mb-4">
+                            <div class="col-7">
+                                <h3 class="text-uppercase fw-bold text-primary mb-1">
+                                    Bon de Travail &amp; Sortie Atelier
+                                </h3>
+                                <p class="text-muted mb-0">
+                                    Référence : <strong><span t-field="o.bl_number"/></strong> (<span t-field="o.name"/>)
+                                </p>
+                                <p class="text-muted">
+                                    Date : <span t-esc="time.strftime('%d/%m/%Y')"/>
+                                </p>
+                            </div>
+                            <div class="col-5 border p-3 rounded bg-light">
+                                <h6 class="fw-bold mb-2 text-dark">Informations Client</h6>
+                                <div><strong t-field="o.partner_id.name"/></div>
+                                <t t-if="o.partner_id.customer_type == 'company'">
+                                    <div class="small"><strong>ICE :</strong> <span t-field="o.partner_id.ice"/></div>
+                                    <div class="small" t-if="o.partner_id.identifiant_fiscal"><strong>IF :</strong> <span t-field="o.partner_id.identifiant_fiscal"/></div>
+                                    <div class="small" t-if="o.partner_id.registre_commerce"><strong>RC :</strong> <span t-field="o.partner_id.registre_commerce"/></div>
+                                </t>
+                                <t t-if="o.partner_id.customer_type == 'particulier'">
+                                    <div class="small" t-if="o.partner_id.cin"><strong>CIN :</strong> <span t-field="o.partner_id.cin"/></div>
+                                </t>
+                                <div class="small" t-if="o.partner_id.phone"><strong>Tél :</strong> <span t-field="o.partner_id.phone"/></div>
+                            </div>
+                        </div>
+
+                        <!-- Fiche Technique Véhicule -->
+                        <div class="card mb-4 border-primary">
+                            <div class="card-header bg-primary text-white py-1">
+                                <strong>Fiche Technique du Véhicule Réparé</strong>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <strong>Immatriculation :</strong>
+                                        <h5 class="text-primary mb-0"><span t-field="o.license_plate"/></h5>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong>Marque &amp; Modèle :</strong><br/>
+                                        <span t-field="o.vehicle_id.model_id.name"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong>Kilométrage Atelier :</strong><br/>
+                                        <span t-field="o.odometer_order"/> km
+                                    </div>
+                                </div>
+                                <div class="row mt-2" t-if="o.vin_number">
+                                    <div class="col-12 small text-muted">
+                                        <strong>N° Châssis (VIN) :</strong> <span t-field="o.vin_number"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tableau des Pièces Détachées -->
+                        <h6 class="fw-bold text-dark mt-3">1. Pièces Détachées &amp; Fournitures Remplacées</h6>
+                        <table class="table table-sm table-bordered mb-3">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Désignation Pièce</th>
+                                    <th class="text-center" style="width: 15%;">Quantité</th>
+                                    <th class="text-end" style="width: 20%;">Prix Unitaire</th>
+                                    <th class="text-end" style="width: 20%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.garage_parts_lines" t-as="p">
+                                    <td><span t-field="p.name"/></td>
+                                    <td class="text-center"><span t-field="p.qty"/></td>
+                                    <td class="text-end"><span t-field="p.sale_price"/></td>
+                                    <td class="text-end"><span t-field="p.subtotal"/></td>
+                                </tr>
+                                <tr t-if="not o.garage_parts_lines">
+                                    <td colspan="4" class="text-center text-muted fst-italic">Aucune pièce facturée</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Tableau de Main-d'Œuvre -->
+                        <h6 class="fw-bold text-dark mt-3">2. Main-d'Œuvre &amp; Interventions Atelier</h6>
+                        <table class="table table-sm table-bordered mb-3">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Description des Travaux</th>
+                                    <th class="text-center" style="width: 15%;">Heures / Taux</th>
+                                    <th class="text-end" style="width: 20%;">Taux Horaire</th>
+                                    <th class="text-end" style="width: 20%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.garage_labor_lines" t-as="l">
+                                    <td>
+                                        <span t-field="l.name"/>
+                                        <span class="badge bg-light text-dark ms-1 small"><span t-field="l.work_type"/></span>
+                                    </td>
+                                    <td class="text-center"><span t-field="l.hours"/> h</td>
+                                    <td class="text-end"><span t-field="l.hourly_rate"/></td>
+                                    <td class="text-end"><span t-field="l.subtotal"/></td>
+                                </tr>
+                                <tr t-if="not o.garage_labor_lines">
+                                    <td colspan="4" class="text-center text-muted fst-italic">Forfait atelier inclus</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Récapitulatif Financier & Reste Dû -->
+                        <div class="row justify-content-end mt-3">
+                            <div class="col-5">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>Total Pièces :</strong></td>
+                                        <td class="text-end"><span t-field="o.amount_parts_untaxed"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Main-d'Œuvre :</strong></td>
+                                        <td class="text-end"><span t-field="o.amount_labor_untaxed"/></td>
+                                    </tr>
+                                    <tr class="border-top border-dark">
+                                        <td class="h6 fw-bold">Net à Payer :</td>
+                                        <td class="text-end h6 fw-bold text-primary"><span t-field="o.amount_untaxed_total"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Montant Réglé :</td>
+                                        <td class="text-end text-success fw-bold"><span t-field="o.amount_paid"/></td>
+                                    </tr>
+                                    <tr class="border-top">
+                                        <td><strong>Reste Dû :</strong></td>
+                                        <td class="text-end text-danger fw-bold"><span t-field="o.amount_residual"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Cadre de Décharge et Signatures -->
+                        <div class="row mt-4 pt-3 border-top">
+                            <div class="col-6 text-center">
+                                <p class="fw-bold mb-5">Cachet &amp; Signature de l'Atelier</p>
+                                <span class="text-muted small">Garage Automobile Pro</span>
+                            </div>
+                            <div class="col-6 text-center">
+                                <p class="fw-bold mb-1">Signature du Client</p>
+                                <p class="small text-muted mb-4">(Bon pour accord des travaux et restitution du véhicule)</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

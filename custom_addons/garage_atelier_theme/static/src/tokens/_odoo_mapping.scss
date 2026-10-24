@@ -1,0 +1,34 @@
+// ============================================================================
+// Garage Pro Design Tokens - Compile-Time Odoo 19 & Bootstrap Mapping
+// Prepended before Odoo's primary_variables.scss so Odoo compiles natively
+// ============================================================================
+
+// --- Odoo Brand & Base Actions ---
+$o-community-color:          $g-navbar-bg;
+$o-brand-odoo:               $g-navbar-bg;
+$o-brand-primary:            $g-color-accent;
+$o-brand-secondary:          $g-slate-600;
+$o-action:                   $g-color-accent;
+
+// --- Contextual Alert & Status Colors ---
+$o-success:                  $g-emerald-500;
+$o-info:                     $g-sky-600;
+$o-warning:                  $g-amber-500;
+$o-danger:                   $g-red-600;
+
+// --- Top Navbar Configuration (used by navbar.variables.scss) ---
+$o-navbar-height:            48px;
+$o-navbar-background:        $g-navbar-bg;
+$o-navbar-border-bottom:     2px solid $g-navbar-border;
+$o-navbar-entry-color:       $g-navbar-text;
+$o-navbar-entry-color--hover:$g-navbar-text-hover;
+$o-navbar-entry-bg--hover:   rgba(255, 255, 255, 0.08);
+$o-navbar-entry-color--active: $g-navbar-text-active;
+$o-navbar-entry-bg--active:  $g-navbar-item-active;
+
+// --- Control Metric Defaults & Bootstrap Hooks (Tokens) ---
+// Odoo 19 defines $o-border-radius as o-to-rem(...) and expects rem units in bootstrap math
+$o-border-radius:            o-to-rem(10px);
+$o-border-radius-sm:         o-to-rem(6px);
+$o-border-radius-lg:         o-to-rem(16px);
+$o-statbutton-height:        44px;

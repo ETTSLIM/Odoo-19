@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Compagnies d'Assurance Marocaines Principales -->
+        <record id="partner_insurance_wafa" model="res.partner">
+            <field name="name">Wafa Assurance</field>
+            <field name="is_company">True</field>
+            <field name="is_insurance_company">True</field>
+            <field name="customer_type">company</field>
+            <field name="ice">001524389000045</field>
+            <field name="identifiant_fiscal">01085240</field>
+            <field name="registre_commerce">32541</field>
+            <field name="street">1, Boulevard Abdelmoumen</field>
+            <field name="city">Casablanca</field>
+            <field name="phone">+212 522 54 55 56</field>
+            <field name="email">sinistres.auto@wafaassurance.co.ma</field>
+            <field name="website">https://www.wafaassurance.ma</field>
+        </record>
+
+        <record id="partner_insurance_rma" model="res.partner">
+            <field name="name">RMA (Royale Marocaine d'Assurance)</field>
+            <field name="is_company">True</field>
+            <field name="is_insurance_company">True</field>
+            <field name="customer_type">company</field>
+            <field name="ice">000054896000032</field>
+            <field name="identifiant_fiscal">01002341</field>
+            <field name="registre_commerce">12450</field>
+            <field name="street">83, Avenue de l'Armée Royale</field>
+            <field name="city">Casablanca</field>
+            <field name="phone">+212 522 49 80 00</field>
+            <field name="email">gestion.sinistres@rmaassurance.com</field>
+            <field name="website">https://www.rmaassurance.com</field>
+        </record>
+
+        <record id="partner_insurance_sanlam" model="res.partner">
+            <field name="name">Sanlam Maroc</field>
+            <field name="is_company">True</field>
+            <field name="is_insurance_company">True</field>
+            <field name="customer_type">company</field>
+            <field name="ice">001648721000018</field>
+            <field name="identifiant_fiscal">01054320</field>
+            <field name="registre_commerce">28900</field>
+            <field name="street">216, Boulevard Mohamed Zerktouni</field>
+            <field name="city">Casablanca</field>
+            <field name="phone">+212 522 42 06 00</field>
+            <field name="email">auto.sinistres@sanlam.ma</field>
+            <field name="website">https://www.sanlam.ma</field>
+        </record>
+
+        <record id="partner_insurance_axa" model="res.partner">
+            <field name="name">AXA Assurance Maroc</field>
+            <field name="is_company">True</field>
+            <field name="is_insurance_company">True</field>
+            <field name="customer_type">company</field>
+            <field name="ice">000049872000088</field>
+            <field name="identifiant_fiscal">01011500</field>
+            <field name="registre_commerce">18200</field>
+            <field name="street">120-122, Avenue Hassan II</field>
+            <field name="city">Casablanca</field>
+            <field name="phone">+212 522 88 92 92</field>
+            <field name="email">service.expertise@axa.ma</field>
+            <field name="website">https://www.axa.ma</field>
+        </record>
+
+        <!-- Cabinet d'Expertise Automobile Agréé -->
+        <record id="partner_expert_salmi" model="res.partner">
+            <field name="name">Cabinet Salmi d'Expertise Automobile</field>
+            <field name="is_company">True</field>
+            <field name="is_expert_cabinet">True</field>
+            <field name="customer_type">company</field>
+            <field name="ice">002145893000074</field>
+            <field name="identifiant_fiscal">40215890</field>
+            <field name="street">142, Boulevard Mohamed Zerktouni</field>
+            <field name="city">Casablanca</field>
+            <field name="phone">+212 522 34 56 78</field>
+            <field name="email">expert.salmi@salmiexpertise.ma</field>
+        </record>
+    </data>
+</odoo>

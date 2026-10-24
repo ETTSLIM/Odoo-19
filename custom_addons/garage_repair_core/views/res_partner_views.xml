@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_inherit_garage" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.garage</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Bouton Statistique pour les Véhicules possédés -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_vehicles" type="object" class="oe_stat_button" icon="fa-car">
+                    <field name="vehicle_count" widget="statinfo" string="Véhicules"/>
+                </button>
+            </xpath>
+
+            <!-- Type de client juste sous le nom -->
+            <xpath expr="//field[@name='company_type']" position="after">
+                <field name="customer_type" widget="radio" options="{'horizontal': true}"/>
+            </xpath>
+
+            <!-- Identifiants Légaux Marocains & Catégorisation Garage -->
+            <xpath expr="//page[@name='internal_notes']" position="before">
+                <page string="Fiscalité Maroc &amp; Rôles Garage" name="morocco_tax_garage">
+                    <group>
+                        <group string="Identification Client Particulier" invisible="customer_type == 'company' and is_company">
+                            <field name="cin" placeholder="Ex: BE123456 (Pour client particulier marocain)"/>
+                        </group>
+                        <group string="Identifiants Fiscaux Société (Obligatoires Facture)" invisible="customer_type == 'particulier' and not is_company">
+                            <field name="ice" placeholder="15 chiffres obligatoires (Ex: 001234567000089)"/>
+                            <field name="identifiant_fiscal" placeholder="Numéro IF"/>
+                            <field name="registre_commerce" placeholder="Numéro RC &amp; Ville (Ex: 89542 Casablanca)"/>
+                            <field name="patente" placeholder="N° Patente professionnelle"/>
+                        </group>
+                        <group string="Rôle dans l'Écosystème Atelier">
+                            <field name="is_insurance_company"/>
+                            <field name="is_expert_cabinet"/>
+                            <field name="is_parts_supplier"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Recherche améliorée pour filtrer par ICE, CIN, Assurances, etc. -->
+    <record id="view_res_partner_filter_inherit_garage" model="ir.ui.view">
+        <field name="name">res.partner.select.inherit.garage</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="ice"/>
+                <field name="cin"/>
+            </xpath>
+            <xpath expr="//filter[@name='type_person']" position="after">
+                <separator/>
+                <filter string="Clients Particuliers" name="filter_particulier" domain="[('customer_type', '=', 'particulier')]"/>
+                <filter string="Sociétés &amp; Flottes" name="filter_company" domain="[('customer_type', '=', 'company')]"/>
+                <separator/>
+                <filter string="Compagnies d'Assurance" name="filter_insurance" domain="[('is_insurance_company', '=', True)]"/>
+                <filter string="Cabinets d'Expertise" name="filter_expert" domain="[('is_expert_cabinet', '=', True)]"/>
+                <filter string="Fournisseurs Pièces Détachées" name="filter_parts_supplier" domain="[('is_parts_supplier', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

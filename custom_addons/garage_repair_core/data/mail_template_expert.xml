@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Modèle d'Email pour Transmission Dossier Sinistre à l'Expert -->
+        <record id="mail_template_insurance_claim_expert" model="mail.template">
+            <field name="name">Expertise Auto : Transmission Dossier Sinistre</field>
+            <field name="model_id" ref="garage_repair_core.model_garage_insurance_claim"/>
+            <field name="subject">[EXPERTISE AUTO] Dossier Sinistre N° {{ object.claim_number }} - Véhicule {{ object.license_plate }} ({{ object.insurance_id.name }})</field>
+            <field name="email_to">{{ object.expert_email }}</field>
+            <field name="description">Modèle d'envoi automatique du dossier de chiffrage et photos au cabinet d'expertise</field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; font-size: 13px; color: #333333; line-height: 1.5;">
+                    <p>Bonjour <t t-if="object.expert_name"><span t-out="object.expert_name"/></t><t t-else="">Maître / Monsieur l'Expert</t>,</p>
+
+                    <p>
+                        Veuillez trouver ci-après les éléments techniques et le chiffrage contradictoire pour le dossier sinistre suivant :
+                    </p>
+
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin: 15px 0;">
+                        <table style="width: 100%; font-size: 13px;">
+                            <tr>
+                                <td style="width: 40%; color: #64748b; padding: 4px 0;"><strong>N° Sinistre Compagnie :</strong></td>
+                                <td style="padding: 4px 0;"><strong><span t-out="object.claim_number"/></strong> (<span t-out="object.insurance_id.name"/>)</td>
+                            </tr>
+                            <tr t-if="object.police_number">
+                                <td style="color: #64748b; padding: 4px 0;"><strong>N° Police / Attestation :</strong></td>
+                                <td style="padding: 4px 0;"><span t-out="object.police_number"/></td>
+                            </tr>
+                            <tr>
+                                <td style="color: #64748b; padding: 4px 0;"><strong>Véhicule :</strong></td>
+                                <td style="padding: 4px 0;"><span t-out="object.vehicle_id.name"/></td>
+                            </tr>
+                            <tr>
+                                <td style="color: #64748b; padding: 4px 0;"><strong>Immatriculation :</strong></td>
+                                <td style="padding: 4px 0;"><strong style="color: #0284c7;"><span t-out="object.license_plate"/></strong></td>
+                            </tr>
+                            <tr t-if="object.vin_number">
+                                <td style="color: #64748b; padding: 4px 0;"><strong>N° Châssis (VIN) :</strong></td>
+                                <td style="padding: 4px 0;"><span t-out="object.vin_number"/></td>
+                            </tr>
+                            <tr>
+                                <td style="color: #64748b; padding: 4px 0;"><strong>Assuré / Propriétaire :</strong></td>
+                                <td style="padding: 4px 0;"><span t-out="object.customer_id.name"/></td>
+                            </tr>
+                            <tr>
+                                <td style="color: #64748b; padding: 4px 0;"><strong>Date du Choc :</strong></td>
+                                <td style="padding: 4px 0;"><span t-out="object.accident_date"/></td>
+                            </tr>
+                            <tr>
+                                <td style="color: #64748b; padding: 4px 0;"><strong>Estimation Atelier HT :</strong></td>
+                                <td style="padding: 4px 0;"><strong><span t-out="format_amount(object.total_garage_claim_untaxed, object.currency_id)"/></strong></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <p t-if="object.damage_notes">
+                        <strong>Constat Visuel &amp; Dégâts :</strong><br/>
+                        <span t-out="object.damage_notes"/>
+                    </p>
+
+                    <p>
+                        Le véhicule est disponible dans nos ateliers pour examen et visite contradictoire.
+                        Le rapport complet d'expertise est joint à cet email.
+                    </p>
+
+                    <p style="margin-top: 25px; color: #64748b; font-size: 11px;">
+                        Email généré automatiquement par <strong>Garage Pro Maroc</strong>.
+                    </p>
+                </div>
+            </field>
+            <field name="report_template_ids" eval="[(4, ref('action_report_insurance_claim_expert'))]"/>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+</odoo>

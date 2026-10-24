@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_garage_operator_pin_wizard_form" model="ir.ui.view">
+        <field name="name">garage.operator.pin.wizard.form</field>
+        <field name="model">garage.operator.pin.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Pointage &amp; Validation Opérateur (Tablette)">
+                <div class="alert alert-info py-2 mb-3" role="alert">
+                    <i class="fa fa-tablet me-2" title="Tablette Atelier"/>
+                    <strong>Tablette Atelier Partagée :</strong> Saisissez votre code PIN personnel à 4 chiffres pour valider les opérations et enregistrer votre intervention.
+                </div>
+                <group>
+                    <group string="Dossier Véhicule">
+                        <field name="reception_id" readonly="1"/>
+                        <field name="stage_id" readonly="1"/>
+                    </group>
+                    <group string="Authentification Opérateur">
+                        <field name="pin_code" password="True" placeholder="Ex: 1234"/>
+                        <field name="action_type" widget="radio"/>
+                    </group>
+                </group>
+                <notebook invisible="action_type != 'send_diagnostic_note'">
+                    <page string="Note Diagnostic &amp; Pièces au Magasinier">
+                        <field name="diagnostic_note" placeholder="Précisez les références de pièces demandées ou les dégâts constatés à transmettre au magasinier..."/>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_confirm_pin" string="Confirmer &amp; Enregistrer le Pointage" type="object" class="btn-primary"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_operator_pin_wizard" model="ir.actions.act_window">
+        <field name="name">Validation par Code PIN</field>
+        <field name="res_model">garage.operator.pin.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

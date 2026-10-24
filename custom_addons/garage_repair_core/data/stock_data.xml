@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Emplacement Stock Opérationnel (Physique Réel / BL) -->
+        <record id="location_stock_operational" model="stock.location">
+            <field name="name">Stock Opérationnel (Atelier / BL)</field>
+            <field name="usage">internal</field>
+            <field name="location_id" ref="stock.stock_location_stock"/>
+        </record>
+
+        <!-- Emplacement Stock Fiscal (Déclaré / Facturé) -->
+        <record id="location_stock_official" model="stock.location">
+            <field name="name">Stock Fiscal (Déclaré avec Factures)</field>
+            <field name="usage">internal</field>
+            <field name="location_id" ref="stock.stock_location_stock"/>
+        </record>
+    </data>
+</odoo>

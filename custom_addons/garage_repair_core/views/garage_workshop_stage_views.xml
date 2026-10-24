@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vues Étapes Atelier -->
+    <record id="view_garage_workshop_stage_list" model="ir.ui.view">
+        <field name="name">garage.workshop.stage.list</field>
+        <field name="model">garage.workshop.stage</field>
+        <field name="arch" type="xml">
+            <list string="Étapes du Workflow Atelier">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="mapped_state" widget="badge"/>
+                <field name="responsible_role"/>
+                <field name="fold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_garage_workshop_stage_form" model="ir.ui.view">
+        <field name="name">garage.workshop.stage.form</field>
+        <field name="model">garage.workshop.stage</field>
+        <field name="arch" type="xml">
+            <form string="Étape du Workflow Atelier">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nom de l'Étape"/>
+                        <h1><field name="name" placeholder="Ex: 1. Réception &amp; Diagnostic"/></h1>
+                    </div>
+                    <group>
+                        <group string="Configuration Séquence">
+                            <field name="sequence"/>
+                            <field name="code"/>
+                            <field name="mapped_state"/>
+                            <field name="fold"/>
+                        </group>
+                        <group string="Responsabilités">
+                            <field name="responsible_role"/>
+                            <field name="operator_ids" widget="many2many_tags" placeholder="Opérateurs autorisés..."/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description &amp; Consignes">
+                            <field name="description" placeholder="Instructions opératoires spécifiques pour l'équipe sur cette étape..."/>
+                        </page>
+                        <page string="Notification WhatsApp Client">
+                            <field name="auto_whatsapp_template" placeholder="Message modèle envoyé au client à l'entrée dans cette étape..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_workshop_stage" model="ir.actions.act_window">
+        <field name="name">Étapes Atelier (7 Étapes)</field>
+        <field name="res_model">garage.workshop.stage</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Vues Opérateurs Atelier (Compte Tablette Partagé avec Code PIN) -->
+    <record id="view_garage_workshop_operator_list" model="ir.ui.view">
+        <field name="name">garage.workshop.operator.list</field>
+        <field name="model">garage.workshop.operator</field>
+        <field name="arch" type="xml">
+            <list string="Opérateurs Atelier &amp; Codes PIN Tablette">
+                <field name="name"/>
+                <field name="pin_code" groups="garage_repair_core.group_garage_manager"/>
+                <field name="role" widget="badge"/>
+                <field name="specialty"/>
+                <field name="user_id" optional="show"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_garage_workshop_operator_form" model="ir.ui.view">
+        <field name="name">garage.workshop.operator.form</field>
+        <field name="model">garage.workshop.operator</field>
+        <field name="arch" type="xml">
+            <form string="Opérateur d'Atelier (Pointage PIN)">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nom &amp; Prénom"/>
+                        <h1><field name="name" placeholder="Ex: Youssef (Mécanicien)"/></h1>
+                    </div>
+                    <group>
+                        <group string="Rôle &amp; Métier">
+                            <field name="role"/>
+                            <field name="specialty"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Sécurité Tablette">
+                            <field name="pin_code" password="True" groups="garage_repair_core.group_garage_manager"/>
+                            <field name="user_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Étapes Atelier Autorisées">
+                            <field name="allowed_stage_ids" widget="many2many_tags" placeholder="Laissez vide pour autoriser toutes les étapes de son rôle"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_workshop_operator" model="ir.actions.act_window">
+        <field name="name">Opérateurs Atelier (Codes PIN)</field>
+        <field name="res_model">garage.workshop.operator</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Vue Formulaire Micro-Tâche Atelier (Modal "Voir") -->
+    <record id="view_garage_reception_task_form" model="ir.ui.view">
+        <field name="name">garage.reception.task.form</field>
+        <field name="model">garage.reception.task</field>
+        <field name="arch" type="xml">
+            <form string="Détail Sous-tâche Atelier">
+                <header>
+                    <button name="action_toggle_state" string="Basculer État (Terminé / En attente)" type="object" class="btn-primary" icon="fa-check-circle"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Titre de l'Opération"/>
+                        <h2><field name="name" readonly="1"/></h2>
+                    </div>
+                    <group>
+                        <group string="Contexte Véhicule &amp; Étape">
+                            <field name="reception_id" readonly="1"/>
+                            <field name="specialty" widget="badge" readonly="1"/>
+                            <field name="stage_id" readonly="1"/>
+                            <field name="is_ai_dynamic" readonly="1"/>
+                        </group>
+                        <group string="Exécution &amp; Temps">
+                            <field name="planned_hours" widget="float_time" readonly="1"/>
+                            <field name="completed_by_operator_id" readonly="1"/>
+                            <field name="completed_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Instructions Pratiques &amp; Consignes">
+                            <field name="description" readonly="1" placeholder="Instructions opératoires détaillées..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

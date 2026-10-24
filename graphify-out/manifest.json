@@ -1,0 +1,197 @@
+{
+  "custom_addons/garage_atelier_theme/__init__.py": {
+    "mtime": 1792487119.9745634,
+    "ast_hash": "df4697b9472e60508b091c83df7f595e",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_atelier_theme/__manifest__.py": {
+    "mtime": 1792682635.5726092,
+    "ast_hash": "6e409db650591d52d1f93f3e35235056",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_atelier_theme/static/src/js/navbar_subnav.js": {
+    "mtime": 1792683713.0441382,
+    "ast_hash": "2ca93993075d93b18b0f86a0ea8e6f11",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/__init__.py": {
+    "mtime": 1792455476.921043,
+    "ast_hash": "a2666e9161b898348cc569e454a72c7e",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/__manifest__.py": {
+    "mtime": 1792682421.4264395,
+    "ast_hash": "b6a1f0fc942b8db55094295a6ddd8977",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/controllers/__init__.py": {
+    "mtime": 1792567149.0243213,
+    "ast_hash": "8a3fd32092380382cdbf79cdabaf8b11",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/controllers/portal_tracking.py": {
+    "mtime": 1792567244.9505994,
+    "ast_hash": "d96f03f90c7db1e732f4dc2f23632d95",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/controllers/workshop_tablet_api.py": {
+    "mtime": 1792589068.2578745,
+    "ast_hash": "24cc599ad6e177f3c7e0681dc6ff9956",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/__init__.py": {
+    "mtime": 1792682242.4139454,
+    "ast_hash": "4e7843e449fe811aac914cc154228292",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/fleet_vehicle.py": {
+    "mtime": 1792591223.40424,
+    "ast_hash": "999bd1f6f0d39cc4cfa0f2b568052c86",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/garage_insurance_claim.py": {
+    "mtime": 1792674021.9046636,
+    "ast_hash": "02c5072f4557023167b59a2c049a5f7a",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/garage_parts_purchase.py": {
+    "mtime": 1792767505.0327766,
+    "ast_hash": "f58d2d04098aaeaf1f61d3e04ebf23fb",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/garage_reception.py": {
+    "mtime": 1792678424.8553898,
+    "ast_hash": "8e97400a81a86f8613fd08edbededdb5",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/garage_repair_order.py": {
+    "mtime": 1792765047.8969648,
+    "ast_hash": "76e23ba3ac6dd6c93f042b2682d2d853",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/garage_ui_kit.py": {
+    "mtime": 1792594101.828941,
+    "ast_hash": "5d24b39afa1f8e69399b27af32133ba3",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/garage_workshop_workflow.py": {
+    "mtime": 1792591318.1767724,
+    "ast_hash": "6c7ce923969271d957da57da6a13efd3",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/res_config_settings.py": {
+    "mtime": 1792455303.6671152,
+    "ast_hash": "fb34f07aa48c139a02c77379c86ed05c",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/res_partner.py": {
+    "mtime": 1792451067.0961342,
+    "ast_hash": "742b87b00569052cac2bf607dc8bf61f",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/res_users.py": {
+    "mtime": 1792682453.2595165,
+    "ast_hash": "939e3eed5552095eb82eda3ad27ee1e6",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/models/whatsapp_gateway.py": {
+    "mtime": 1792455319.9172854,
+    "ast_hash": "d275f9b93a987cced39b97547c77e199",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/wizard/__init__.py": {
+    "mtime": 1792588906.529908,
+    "ast_hash": "67aea606732476179cefbda66c529b41",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/wizard/garage_ai_diagnostic_wizard.py": {
+    "mtime": 1792589011.9665544,
+    "ast_hash": "0cb2a8372a3f838ba93baca9a92f83e6",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/wizard/garage_billing_wizard.py": {
+    "mtime": 1792765147.042399,
+    "ast_hash": "44dac8ed9fb9434ce89012dfa350de87",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/wizard/garage_insurance_invoice_wizard.py": {
+    "mtime": 1792765170.9485726,
+    "ast_hash": "597c0550deb0b5bde45e6ac504dd0728",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/wizard/garage_operator_pin_wizard.py": {
+    "mtime": 1792567116.7114015,
+    "ast_hash": "a11da7b20386a8dee26576b3672ff03d",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/wizard/garage_payment_recovery_wizard.py": {
+    "mtime": 1792674138.9771445,
+    "ast_hash": "6333f7d2cc17a753c625c437a7b39d10",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_repair_core/wizard/garage_stock_picker_wizard.py": {
+    "mtime": 1792765068.3715274,
+    "ast_hash": "1e4938e139a26ac393b2de209a0dce3a",
+    "semantic_hash": ""
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1792850636.088996,
+    "ast_hash": "f1e53ecc9194573d3c28fc116c743a2e",
+    "semantic_hash": ""
+  },
+  ".agents/rules/odoo19_standards.md": {
+    "mtime": 1792850666.151924,
+    "ast_hash": "202ec46026af5806ca194089730080ce",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1792850636.0891607,
+    "ast_hash": "6d73634a678cf1e1c71930adf80bd1f0",
+    "semantic_hash": ""
+  },
+  ".gemini/rules/graphify.md": {
+    "mtime": 1792850668.7033262,
+    "ast_hash": "f1e53ecc9194573d3c28fc116c743a2e",
+    "semantic_hash": ""
+  },
+  ".gemini/rules/odoo19_standards.md": {
+    "mtime": 1792489170.3633957,
+    "ast_hash": "46dd5267b9a40e7fa76935761576f811",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1792850657.2909713,
+    "ast_hash": "202ec46026af5806ca194089730080ce",
+    "semantic_hash": ""
+  },
+  "GEMINI.md": {
+    "mtime": 1792850657.2909713,
+    "ast_hash": "202ec46026af5806ca194089730080ce",
+    "semantic_hash": ""
+  },
+  "agent.md": {
+    "mtime": 1792850657.2909713,
+    "ast_hash": "202ec46026af5806ca194089730080ce",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1792450260.2206507,
+    "ast_hash": "6b9bf5ab45accd35ffc9eb0ea891fcd7",
+    "semantic_hash": ""
+  },
+  "docs/README_MCP.md": {
+    "mtime": 1792489178.790271,
+    "ast_hash": "b833e6ceb681bc229e1a171da5c2475e",
+    "semantic_hash": ""
+  },
+  "docs/guide_utilisation_assistante_darija.md": {
+    "mtime": 1792581107.5926278,
+    "ast_hash": "f27c8a55f481aabd2aa02ec14167544b",
+    "semantic_hash": ""
+  },
+  "custom_addons/garage_atelier_theme/static/description/icon.png": {
+    "mtime": 1792487117.341012,
+    "ast_hash": "098958a7c77e2fff8e9e8606104ce97f",
+    "semantic_hash": ""
+  }
+}

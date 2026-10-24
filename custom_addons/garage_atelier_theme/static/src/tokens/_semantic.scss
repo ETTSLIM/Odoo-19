@@ -1,0 +1,80 @@
+// ============================================================================
+// Garage Pro Design Tokens - Tier 2: Semantic Roles
+// Contextual meanings mapped to primitives for zero-hardcoding
+// ============================================================================
+
+// --- Surface & Structural Semantics ---
+$g-surface-bg:         $g-slate-50;
+$g-surface-sheet:      $g-white;
+$g-surface-muted:      $g-slate-100;
+$g-surface-elevated:   $g-white;
+
+$g-border-subtle:      $g-slate-200;
+$g-border-default:     $g-slate-300;
+$g-border-strong:      $g-slate-400;
+
+$g-text-primary:       $g-slate-900;
+$g-text-secondary:     $g-slate-600;
+$g-text-muted:         $g-slate-500;
+$g-text-inverse:       $g-white;
+
+// --- Brand & Action Semantics ---
+$g-color-accent:       $g-blue-600;
+$g-color-accent-hover: $g-blue-700;
+$g-color-accent-soft:  $g-blue-50;
+$g-color-accent-text:  $g-blue-700;
+
+// --- Workshop Navigation Semantics ---
+$g-navbar-bg:          $g-slate-900;
+$g-navbar-border:      $g-blue-600;
+$g-navbar-text:        $g-slate-300;
+$g-navbar-text-hover:  $g-white;
+$g-navbar-text-active: $g-white;
+$g-navbar-item-active: $g-blue-600;
+
+// --- Workshop Financial Semantics ---
+// 1. Total Agréé / Devis Initial (Emerald)
+$g-money-approved-fg:  $g-emerald-700;
+$g-money-approved-bg:  $g-emerald-50;
+$g-money-approved-bd:  $g-emerald-500;
+
+// 2. Part Compagnie Assurance / Encaissé (Blue)
+$g-money-covered-fg:   $g-blue-700;
+$g-money-covered-bg:   $g-blue-50;
+$g-money-covered-bd:   $g-blue-500;
+
+// 3. Franchise Client / Reste à Payer (High-Visibility Amber/Red)
+$g-money-owed-fg:      $g-amber-700;
+$g-money-owed-bg:      $g-amber-50;
+$g-money-owed-bd:      $g-amber-500;
+
+// 4. Critical Alert / Unpaid Residual
+$g-money-danger-fg:    $g-red-700;
+$g-money-danger-bg:    $g-red-50;
+$g-money-danger-bd:    $g-red-500;
+
+// --- Workflow Stages Semantics ---
+$g-stage-draft:        $g-slate-500;
+$g-stage-progress:     $g-blue-600;
+$g-stage-review:       $g-amber-600;
+$g-stage-approved:     $g-emerald-600;
+$g-stage-done:         $g-slate-800;
+$g-stage-cancel:       $g-red-600;
+
+// --- Moroccan License Plate Semantics ---
+$g-plate-bg:           $g-white;
+$g-plate-text:         $g-slate-900;
+$g-plate-border:       $g-slate-900;
+
+// --- Desk Input & Control Semantics ---
+$g-input-bg:           $g-slate-50;
+$g-input-bg-focus:     $g-white;
+$g-input-border:       $g-slate-300;
+$g-input-border-hover: $g-slate-400;
+$g-input-focus-ring:   rgba(37, 99, 235, 0.18);
+
+// --- Control Sizing & Density ---
+$g-control-h-desktop:  40px;
+$g-control-h-touch:    44px;
+$g-control-radius:     $g-radius-lg; // 10px
+$g-card-radius:        $g-radius-xl; // 16px

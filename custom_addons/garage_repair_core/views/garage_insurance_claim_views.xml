@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue Liste des Dossiers Sinistres -->
+    <record id="view_garage_insurance_claim_list" model="ir.ui.view">
+        <field name="name">garage.insurance.claim.list</field>
+        <field name="model">garage.insurance.claim</field>
+        <field name="arch" type="xml">
+            <list string="Dossiers Sinistres &amp; Assurances" decoration-info="state in ('draft', 'dossier_sent')"
+                  decoration-warning="state in ('expert_review', 'amendment_pending')"
+                  decoration-success="state in ('accord_approved', 'repaired', 'invoiced')">
+                <field name="name"/>
+                <field name="claim_number"/>
+                <field name="insurance_id"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate" class="o_garage_plate"/>
+                <field name="customer_id"/>
+                <field name="expert_cabinet_id"/>
+                <field name="total_garage_claim_untaxed" sum="Total Chiffré HT"/>
+                <field name="expert_accord_amount_ttc" sum="Total Agréé TTC"/>
+                <field name="insurance_net_payable" sum="Total Net Assurance"/>
+                <field name="customer_payable" sum="Total Franchise Client"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('draft', 'dossier_sent')"
+                       decoration-warning="state in ('expert_review', 'amendment_pending')"
+                       decoration-primary="state == 'in_repair'"
+                       decoration-success="state in ('accord_approved', 'repaired', 'invoiced', 'closed')"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Kanban des Dossiers Sinistres -->
+    <record id="view_garage_insurance_claim_kanban" model="ir.ui.view">
+        <field name="name">garage.insurance.claim.kanban</field>
+        <field name="model">garage.insurance.claim</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="claim_number"/>
+                <field name="insurance_id"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate"/>
+                <field name="customer_id"/>
+                <field name="expert_accord_amount_ttc"/>
+                <field name="insurance_net_payable"/>
+                <field name="customer_payable"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="o_garage_plate">
+                                <field name="license_plate"/>
+                            </span>
+                            <strong class="text-dark small"><field name="claim_number"/></strong>
+                        </div>
+                        <div class="fw-bold mb-1"><field name="vehicle_id"/></div>
+                        <div class="text-muted small mb-1">
+                            <i class="fa fa-shield me-1" title="Assurance"/> <field name="insurance_id"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <i class="fa fa-user-o me-1" title="Client"/> <field name="customer_id"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <div>
+                                <span class="text-muted small">Net Assur. :</span>
+                                <strong class="text-primary ms-1"><field name="insurance_net_payable"/></strong>
+                            </div>
+                            <t t-if="record.customer_payable.raw_value > 0">
+                                <span class="badge bg-warning text-dark small" title="Franchise Client">
+                                    Franchise: <field name="customer_payable"/>
+                                </span>
+                            </t>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire Complète du Dossier Sinistre -->
+    <record id="view_garage_insurance_claim_form" model="ir.ui.view">
+        <field name="name">garage.insurance.claim.form</field>
+        <field name="model">garage.insurance.claim</field>
+        <field name="arch" type="xml">
+            <form string="Dossier Sinistre &amp; Expertise">
+                <header>
+                    <button name="action_send_dossier_expert" string="Transmettre à l'Expert"
+                            type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_expert_visit" string="Enregistrer Visite Expert"
+                            type="object" class="btn-secondary"
+                            invisible="state != 'dossier_sent'"/>
+                    <button name="action_approve_accord" string="Valider Bon d'Accord Expert"
+                            type="object" class="btn-success"
+                            invisible="state not in ('expert_review', 'amendment_pending')"/>
+                    <button name="action_client_approve_expert" string="Valider Accord Client"
+                            type="object" class="btn-warning"
+                            invisible="state != 'accord_approved' or client_accord_status == 'approved'"/>
+                    <button name="action_start_repair" string="Lancer Travaux Atelier"
+                            type="object" class="btn-primary"
+                            invisible="state != 'accord_approved' or client_accord_status != 'approved'"/>
+                    <button name="action_complete_repair" string="Terminer Travaux"
+                            type="object" class="btn-success"
+                            invisible="state != 'in_repair'"/>
+                    <button name="action_open_split_invoicing_wizard" string="Émettre Facturation Scindée"
+                            type="object" class="btn-primary"
+                            invisible="state not in ('repaired', 'invoiced') or client_accord_status != 'approved'"/>
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,expert_review,accord_approved,in_repair,repaired,invoiced"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="BA VALIDÉ" bg_color="text-bg-success" invisible="state not in ('accord_approved', 'in_repair', 'repaired')"/>
+                    <widget name="web_ribbon" title="FACTURÉ" bg_color="text-bg-primary" invisible="state != 'invoiced'"/>
+                    <widget name="web_ribbon" title="CLÔTURÉ" bg_color="text-bg-dark" invisible="state != 'closed'"/>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_attachments" type="object" class="oe_stat_button" icon="fa-picture-o">
+                            <field name="attachment_count" widget="statinfo" string="Photos &amp; Pièces"/>
+                        </button>
+                        <button name="action_view_reception" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="not reception_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Fiche</span>
+                                <span class="o_stat_text">Réception</span>
+                            </div>
+                        </button>
+                        <button name="action_view_repair_order" type="object" class="oe_stat_button" icon="oi-settings-adjust" invisible="not repair_order_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Ordre</span>
+                                <span class="o_stat_text">Réparation</span>
+                            </div>
+                        </button>
+                        <button name="action_view_amendments" type="object" class="oe_stat_button" icon="fa-plus-square-o" invisible="amendments_count == 0">
+                            <field name="amendments_count" widget="statinfo" string="Avenants"/>
+                        </button>
+                        <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-pencil-square-o" invisible="invoice_count == 0">
+                            <field name="invoice_count" widget="statinfo" string="Factures"/>
+                        </button>
+                    </div>
+
+                    <!-- Bandeaux Validation Accord Client -->
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3" role="alert" invisible="state != 'accord_approved' or client_accord_status == 'approved'">
+                        <div>
+                            <i class="fa fa-clock-o fa-lg me-2" title="En attente client"/>
+                            <strong>En Attente de l'Accord Client : </strong>
+                            L'avis de l'expert (<field name="expert_accord_amount_ttc" readonly="1" class="fw-bold"/>) doit obligatoirement être validé par le client avant de démarrer l'atelier (Franchise/Vétusté: <field name="customer_payable" readonly="1" class="fw-bold"/>).
+                        </div>
+                    </div>
+                    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3" role="alert" invisible="client_accord_status != 'approved'">
+                        <div>
+                            <i class="fa fa-check-circle fa-lg me-2" title="Accord client validé"/>
+                            <strong>Avis Expert Validé par le Client : </strong>
+                            Accord confirmé le <field name="client_accord_date" readonly="1" class="ms-1"/> (Canal: <field name="client_accord_ip" readonly="1"/>).
+                        </div>
+                    </div>
+
+                    <!-- Titre & Référence Interne -->
+                    <div class="oe_title">
+                        <label for="name" string="Réf. Interne"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <label for="claim_number" string="N° Sinistre :" class="fw-bold text-dark"/>
+                            <field name="claim_number" placeholder="Ex: SIN-WAFA-984210" class="fs-4 fw-bold text-primary"/>
+                        </div>
+                    </div>
+
+                    <!-- Bandeau Hero : Véhicule, Client & KPI Financiers 3-Secondes -->
+                    <div class="o_garage_hero mt-3">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3" invisible="not vehicle_id and not customer_id">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="o_garage_plate" invisible="not license_plate">
+                                    <field name="license_plate" readonly="1"/>
+                                </span>
+                                <span class="fs-5 fw-bold text-dark" invisible="not vehicle_id">
+                                    <field name="vehicle_id" readonly="1"/>
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="not customer_id">
+                                <i class="fa fa-user-o text-muted" title="Client Assuré"/>
+                                <span class="fw-semibold text-dark">
+                                    <field name="customer_id" readonly="1"/>
+                                </span>
+                                <span class="text-muted" invisible="not customer_phone">•</span>
+                                <i class="fa fa-phone text-muted" title="Téléphone" invisible="not customer_phone"/>
+                                <field name="customer_phone" readonly="1" invisible="not customer_phone"/>
+                                <button name="action_send_whatsapp_customer" type="object"
+                                        class="btn btn-outline-success btn-sm o_garage_whatsapp_btn ms-1" icon="fa-whatsapp"
+                                        title="WhatsApp Client (Message adapté à l'étape)"
+                                        aria-label="WhatsApp Client"
+                                        invisible="not customer_phone"/>
+                            </div>
+                        </div>
+
+                        <!-- Strip KPI Financiers Haute Visibilité -->
+                        <div class="o_garage_kpi_strip">
+                            <div class="o_garage_kpi_card o_garage_kpi_approved">
+                                <span class="o_garage_kpi_label">Total Agréé TTC</span>
+                                <span class="o_garage_kpi_value"><field name="expert_accord_amount_ttc" widget="monetary"/></span>
+                            </div>
+                            <div class="o_garage_kpi_card o_garage_kpi_covered">
+                                <span class="o_garage_kpi_label">Part Compagnie</span>
+                                <span class="o_garage_kpi_value"><field name="insurance_net_payable" widget="monetary"/></span>
+                            </div>
+                            <div class="o_garage_kpi_card o_garage_kpi_owed" invisible="customer_payable == 0">
+                                <span class="o_garage_kpi_label">Franchise Client</span>
+                                <span class="o_garage_kpi_value"><field name="customer_payable" widget="monetary"/></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Synthèse Administrative Compacte -->
+                    <group>
+                        <group string="Compagnie d'Assurance &amp; Cabinet">
+                            <field name="insurance_id"/>
+                            <field name="insurance_ice"/>
+                            <field name="police_number"/>
+                            <field name="insurance_agent"/>
+                            <field name="expert_cabinet_id"/>
+                            <field name="expert_name"/>
+                            <label for="expert_phone"/>
+                            <div class="o_row">
+                                <field name="expert_phone" widget="phone"/>
+                                <button name="action_send_whatsapp_expert" type="object"
+                                        class="o_garage_whatsapp_btn" icon="fa-whatsapp"
+                                        title="WhatsApp Expert"/>
+                            </div>
+                            <field name="expert_email" widget="email"/>
+                        </group>
+                        <group string="Véhicule, Assuré &amp; Circonstances">
+                            <field name="vehicle_id"/>
+                            <field name="customer_id"/>
+                            <field name="reception_id"/>
+                            <field name="repair_order_id"/>
+                            <field name="accident_date"/>
+                            <field name="shock_location"/>
+                            <field name="expert_visit_date"/>
+                            <field name="accord_date"/>
+                            <field name="vin_number"/>
+                            <field name="customer_cin"/>
+                        </group>
+                    </group>
+
+                    <!-- Onglets Fonctionnels -->
+                    <notebook>
+                        <page string="Chiffrage &amp; Décompte Scindé" name="financial_tab">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary border-bottom pb-1 fw-bold">Chiffrage Atelier Garage</h6>
+                                    <group>
+                                        <field name="initial_estimate_parts" widget="monetary"/>
+                                        <field name="initial_estimate_labor" widget="monetary"/>
+                                        <field name="claim_estimate_untaxed" widget="monetary" class="fw-bold"/>
+                                        <field name="amendment_total_untaxed" widget="monetary" invisible="amendments_count == 0"/>
+                                        <field name="total_garage_claim_untaxed" widget="monetary" class="fw-bold text-dark fs-6"/>
+                                        <field name="currency_id" invisible="1"/>
+                                    </group>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success border-bottom pb-1 fw-bold">Accord Expert &amp; Facturation Scindée</h6>
+                                    <group>
+                                        <field name="expert_accord_amount_untaxed" widget="monetary" class="fw-bold"/>
+                                        <field name="expert_used_parts_net" widget="monetary"/>
+                                        <field name="used_parts_vat_shortfall" widget="monetary" invisible="expert_used_parts_net == 0"/>
+                                        <field name="expert_accord_amount_tax" widget="monetary"/>
+                                        <field name="expert_accord_amount_ttc" widget="monetary" class="fw-bold text-success fs-6"/>
+                                        <field name="client_accord_status" widget="badge" decoration-warning="client_accord_status == 'pending'" decoration-success="client_accord_status == 'approved'" decoration-danger="client_accord_status == 'contested'"/>
+                                        <field name="franchise_type"/>
+                                        <field name="franchise_rate" invisible="franchise_type != 'percent'"/>
+                                        <field name="franchise_amount" widget="monetary"/>
+                                        <field name="wear_amount" widget="monetary"/>
+                                    </group>
+                                    <div class="alert alert-primary mt-2 p-2" role="status">
+                                        <div class="d-flex justify-content-between">
+                                            <strong>Net Prise en Charge Compagnie (TTC) :</strong>
+                                            <strong class="fs-6"><field name="insurance_net_payable"/></strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1 text-danger" invisible="customer_payable == 0">
+                                            <span>Part Client (Franchise + Vétusté TTC) :</span>
+                                            <strong><field name="customer_payable"/></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </page>
+
+                        <page string="Avenants (Dégâts Masqués)" name="amendments_tab">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Pièces cachées découvertes au démontage soumises à contre-visite expert.</span>
+                                <button name="action_request_amendment" string="Ajouter un Avenant" type="object"
+                                        class="btn btn-sm btn-outline-primary" icon="fa-plus-square-o"
+                                        invisible="state in ('invoiced', 'closed', 'cancel')"/>
+                            </div>
+                            <field name="amendment_ids">
+                                <list editable="bottom" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="reason"/>
+                                    <field name="date_submission"/>
+                                    <field name="description"/>
+                                    <field name="parts_amount_untaxed" widget="monetary"/>
+                                    <field name="labor_amount_untaxed" widget="monetary"/>
+                                    <field name="total_untaxed" widget="monetary"/>
+                                    <field name="state" widget="badge"/>
+                                    <button name="action_submit_to_expert" string="Soumettre" type="object" icon="fa-paper-plane-o" invisible="state != 'draft'" title="Soumettre"/>
+                                    <button name="action_approve_by_expert" string="Valider" type="object" icon="fa-check-circle-o" class="text-success" invisible="state != 'submitted'" title="Valider"/>
+                                    <button name="action_reject_by_expert" string="Refuser" type="object" icon="fa-times-circle-o" class="text-danger" invisible="state != 'submitted'" title="Refuser"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Constat Visuel &amp; Dégâts" name="damages_tab">
+                            <group>
+                                <field name="damage_notes" placeholder="Descriptif détaillé des chocs tôlerie, marbre, soubassement, airbags, optiques..."/>
+                            </group>
+                        </page>
+
+                        <page string="Dossier Administratif &amp; Photos" name="photos_tab">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <h6 class="text-dark border-bottom pb-1 fw-bold">Checklist Pièces Justificatives</h6>
+                                    <group>
+                                        <field name="doc_carte_grise" widget="boolean_toggle"/>
+                                        <field name="doc_permis" widget="boolean_toggle"/>
+                                        <field name="doc_constat" widget="boolean_toggle"/>
+                                        <field name="doc_bon_accord" widget="boolean_toggle"/>
+                                    </group>
+                                </div>
+                                <div class="col-md-7">
+                                    <h6 class="text-dark border-bottom pb-1 fw-bold">Photos du Véhicule (Choc, Avant / Après)</h6>
+                                    <field name="attachment_ids" widget="many2many_binary" string="Photos et Justificatifs"/>
+                                </div>
+                            </div>
+                        </page>
+
+                        <page string="Factures Scindées" name="invoices_tab" invisible="not is_invoiced">
+                            <group>
+                                <group string="Facture Compagnie">
+                                    <field name="insurance_invoice_id"/>
+                                </group>
+                                <group string="Facture / Reçu Client">
+                                    <field name="customer_invoice_id"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue Recherche Sinistres -->
+    <record id="view_garage_insurance_claim_search" model="ir.ui.view">
+        <field name="name">garage.insurance.claim.search</field>
+        <field name="model">garage.insurance.claim</field>
+        <field name="arch" type="xml">
+            <search string="Recherche Sinistre">
+                <field name="name"/>
+                <field name="claim_number"/>
+                <field name="license_plate"/>
+                <field name="insurance_id"/>
+                <field name="customer_id"/>
+                <field name="expert_cabinet_id"/>
+                <filter name="filter_in_progress" string="En Cours d'Expertise" domain="[('state', 'in', ('dossier_sent', 'expert_review', 'amendment_pending'))]"/>
+                <filter name="filter_accord_approved" string="Bon d'Accord Validé" domain="[('state', '=', 'accord_approved')]"/>
+                <filter name="filter_in_repair" string="En Atelier" domain="[('state', '=', 'in_repair')]"/>
+                <filter name="filter_to_invoice" string="Prêt à Facturer" domain="[('state', '=', 'repaired')]"/>
+                <separator/>
+                <filter name="filter_has_franchise" string="Avec Franchise Client" domain="[('customer_payable', '>', 0)]"/>
+                <group>
+                    <filter name="group_by_insurance" string="Compagnie d'Assurance" context="{'group_by': 'insurance_id'}"/>
+                    <filter name="group_by_expert" string="Cabinet d'Expertise" context="{'group_by': 'expert_cabinet_id'}"/>
+                    <filter name="group_by_state" string="État" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Sinistres -->
+    <record id="action_garage_insurance_claim" model="ir.actions.act_window">
+        <field name="name">Dossiers Sinistres &amp; Assurances</field>
+        <field name="res_model">garage.insurance.claim</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_garage_insurance_claim_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Ouvrez un nouveau dossier de sinistre d'assurance automobile
+            </p>
+            <p>
+                Gérez l'ensemble du cycle de vie sinistre : transmission au cabinet d'expertise,
+                chiffrage initial, avenants pour pièces masquées, bon d'accord contradictoire et émission de la facturation scindée.
+            </p>
+        </field>
+    </record>
+</odoo>

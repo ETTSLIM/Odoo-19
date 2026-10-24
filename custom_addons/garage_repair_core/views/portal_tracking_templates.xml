@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Page Dossier Introuvable -->
+    <template id="portal_tracking_not_found" name="Dossier Introuvable">
+        <html>
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title>Dossier Introuvable - Garage Pro</title>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+            </head>
+            <body class="bg-light d-flex align-items-center min-vh-100">
+                <div class="container text-center py-5">
+                    <div class="card shadow-sm p-4 mx-auto" style="max-width: 480px;">
+                        <div class="text-danger mb-3">
+                            <svg width="64" height="64" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+                            </svg>
+                        </div>
+                        <h4 class="fw-bold">Lien Expiré ou Invalide</h4>
+                        <p class="text-muted">Le dossier de suivi demandé n'existe pas ou le jeton de sécurité est incorrect.</p>
+                        <p class="small text-muted">Veuillez contacter votre conseiller d'atelier Garage Pro.</p>
+                    </div>
+                </div>
+            </body>
+        </html>
+    </template>
+
+    <!-- Portail Principal de Suivi Mobile-First 7 Étapes -->
+    <template id="portal_tracking_page" name="Portail de Suivi Véhicule">
+        <html>
+            <head>
+                <meta charset="utf-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+                <title>Suivi Véhicule <t t-esc="vehicle.license_plate"/> - Garage Pro</title>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+                <style>
+                    body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+                    .plate-badge {
+                        background: #fff;
+                        border: 2px solid #111;
+                        border-radius: 6px;
+                        font-weight: 800;
+                        letter-spacing: 1px;
+                        padding: 4px 12px;
+                        display: inline-block;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .step-item { position: relative; text-align: center; flex: 1; min-width: 44px; }
+                    .step-icon {
+                        width: 32px; height: 32px; line-height: 32px;
+                        border-radius: 50%; background: #e9ecef;
+                        color: #6c757d; font-size: 12px; margin: 0 auto 4px;
+                        display: flex; align-items: center; justify-content: center;
+                    }
+                    .step-active .step-icon { background: #0d6efd; color: #fff; box-shadow: 0 0 0 3px rgba(13,110,253,0.25); }
+                    .step-done .step-icon { background: #198754; color: #fff; }
+                    .step-label { font-size: 10px; font-weight: 600; color: #6c757d; line-height: 1.1; }
+                    .step-active .step-label { color: #0d6efd; font-weight: 700; }
+                    .step-done .step-label { color: #198754; }
+                </style>
+            </head>
+            <body class="pb-5">
+
+                <!-- En-tête Garage -->
+                <nav class="navbar navbar-dark bg-dark py-2 shadow-sm">
+                    <div class="container d-flex justify-content-between align-items-center">
+                        <span class="navbar-brand mb-0 h6 fw-bold">
+                            <i class="fa fa-wrench text-warning me-2" title="Garage Pro"/>Garage Pro
+                        </span>
+                        <span class="badge bg-secondary">Suivi Direct</span>
+                    </div>
+                </nav>
+
+                <div class="container my-3" style="max-width: 600px;">
+
+                    <!-- Fiche Véhicule -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3 overflow-hidden">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="fw-bold mb-1 text-dark">
+                                        <t t-esc="vehicle.model_id.name or 'Votre Véhicule'"/>
+                                    </h5>
+                                    <div class="small text-muted mb-2">
+                                        Client : <strong t-esc="partner.name"/>
+                                    </div>
+                                    <span class="plate-badge text-dark fs-6">
+                                        <t t-esc="vehicle.license_plate"/>
+                                    </span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary px-2 py-1">Atelier</span>
+                                    <div class="small text-muted mt-2" t-if="reception and reception.odometer_in">
+                                        <i class="fa fa-tachometer-alt me-1" title="Kilométrage"/> <t t-esc="int(reception.odometer_in)"/> km
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stepper 7 Étapes Canoniques Atelier -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="fa fa-route text-primary me-2" title="Avancement"/>Étape d'Avancement des Travaux
+                            </h6>
+                        </div>
+                        <div class="card-body pt-0 pb-3">
+                            <div class="d-flex justify-content-between position-relative overflow-x-auto pb-1">
+                                
+                                <!-- Étape 1 : Réception -->
+                                <div t-attf-class="step-item #{'step-done' if current_step > 1 else ('step-active' if current_step == 1 else '')}">
+                                    <div class="step-icon"><i class="fa fa-car" title="Réception"/></div>
+                                    <div class="step-label">1. Accueil</div>
+                                </div>
+
+                                <!-- Étape 2 : Devis -->
+                                <div t-attf-class="step-item #{'step-done' if current_step > 2 else ('step-active' if current_step == 2 else '')}">
+                                    <div class="step-icon"><i class="fa fa-file-invoice-dollar" title="Devis"/></div>
+                                    <div class="step-label">2. Devis</div>
+                                </div>
+
+                                <!-- Étape 3 : Pièces -->
+                                <div t-attf-class="step-item #{'step-done' if current_step > 3 else ('step-active' if current_step == 3 else '')}">
+                                    <div class="step-icon"><i class="fa fa-boxes" title="Pièces"/></div>
+                                    <div class="step-label">3. Pièces</div>
+                                </div>
+
+                                <!-- Étape 4 : Réparation -->
+                                <div t-attf-class="step-item #{'step-done' if current_step > 4 else ('step-active' if current_step == 4 else '')}">
+                                    <div class="step-icon"><i class="fa fa-tools" title="Réparation"/></div>
+                                    <div class="step-label">4. Atelier</div>
+                                </div>
+
+                                <!-- Étape 5 : Contrôle Qualité -->
+                                <div t-attf-class="step-item #{'step-done' if current_step > 5 else ('step-active' if current_step == 5 else '')}">
+                                    <div class="step-icon"><i class="fa fa-clipboard-check" title="Contrôle"/></div>
+                                    <div class="step-label">5. Contrôle</div>
+                                </div>
+
+                                <!-- Étape 6 : Prêt -->
+                                <div t-attf-class="step-item #{'step-done' if current_step > 6 else ('step-active' if current_step == 6 else '')}">
+                                    <div class="step-icon"><i class="fa fa-key" title="Prêt"/></div>
+                                    <div class="step-label">6. Prêt</div>
+                                </div>
+
+                                <!-- Étape 7 : Livré -->
+                                <div t-attf-class="step-item #{'step-done' if current_step >= 7 else ''}">
+                                    <div class="step-icon"><i class="fa fa-check-double" title="Livré"/></div>
+                                    <div class="step-label">7. Livré</div>
+                                </div>
+                            </div>
+
+                            <!-- Barre de Progression Checklist Réelle -->
+                            <div class="progress mt-3 mb-1" style="height: 8px;">
+                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" t-attf-style="width: #{checklist_progress}%;"/>
+                            </div>
+                            <div class="d-flex justify-content-between small text-muted mb-2">
+                                <span>Progression globale atelier :</span>
+                                <span class="fw-bold text-success"><t t-esc="checklist_progress"/>%</span>
+                            </div>
+
+                            <!-- Statut Badge Explicatif -->
+                            <div class="alert alert-info py-2 px-3 mt-2 mb-0 small text-center rounded-3" role="alert">
+                                <t t-if="current_step == 1">
+                                    <i class="fa fa-info-circle me-1" title="Information"/> Véhicule réceptionné. Inspection technique et état des lieux en cours.
+                                </t>
+                                <t t-if="current_step == 2">
+                                    <i class="fa fa-clock me-1" title="Devis"/> Chiffrage du devis et validation des pièces nécessaires.
+                                </t>
+                                <t t-if="current_step == 3">
+                                    <i class="fa fa-boxes me-1" title="Pièces"/> Préparation et réception des pièces détachées au magasin.
+                                </t>
+                                <t t-if="current_step == 4">
+                                    <i class="fa fa-wrench me-1" title="En cours"/> Intervention active sur le véhicule dans l'atelier par nos mécaniciens.
+                                </t>
+                                <t t-if="current_step == 5">
+                                    <i class="fa fa-check-circle me-1" title="Contrôle"/> Essai routier, contrôle de conformité et scan électronique zéro défaut.
+                                </t>
+                                <t t-if="current_step == 6">
+                                    <i class="fa fa-bell text-success me-1" title="Prêt"/> <strong>Votre véhicule est prêt pour restitution !</strong> Vous pouvez vous présenter à l'atelier.
+                                </t>
+                                <t t-if="current_step >= 7">
+                                    <i class="fa fa-check-double text-success me-1" title="Clôturé"/> Véhicule restitué avec succès. Merci de votre confiance !
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gamme des Opérations Réalisées (Customer-Safe) -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3" t-if="customer_tasks">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="fa fa-tasks text-success me-2" title="Checklist"/>Opérations Réalisées &amp; Contrôles
+                            </h6>
+                        </div>
+                        <div class="card-body pt-0 pb-3">
+                            <ul class="list-group list-group-flush small">
+                                <li t-foreach="customer_tasks" t-as="task" class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span t-att-class="'text-decoration-line-through text-muted' if task['is_done'] else 'text-dark'">
+                                        <i t-attf-class="fa #{'fa-check-circle text-success' if task['is_done'] else 'fa-circle-notch text-muted'} me-2" title="Statut"/>
+                                        <t t-esc="task['name']"/>
+                                    </span>
+                                    <span t-attf-class="badge #{'bg-success' if task['is_done'] else 'bg-light text-muted'}">
+                                        <t t-if="task['is_done']">Validé</t>
+                                        <t t-else="">En attente</t>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Fiche Diagnostic & Carburant -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3" t-if="reception">
+                        <div class="card-body p-3">
+                            <h6 class="fw-bold mb-3 text-dark">
+                                <i class="fa fa-clipboard-list text-primary me-2" title="Constat"/>Constat d'Accueil
+                            </h6>
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Niveau de Carburant :</small>
+                                    <div class="progress mt-1" style="height: 10px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" t-attf-style="width: #{reception.fuel_level}%;"/>
+                                    </div>
+                                    <small class="text-muted"><t t-esc="reception.fuel_level"/> %</small>
+                                </div>
+                                <div class="col-6" t-if="reception.estimated_completion_date">
+                                    <small class="text-muted d-block">Restitution Estimée :</small>
+                                    <span class="fw-bold text-success small">
+                                        <i class="fa fa-calendar-day me-1" title="Date estimée"/>
+                                        <t t-esc="reception.estimated_completion_date.strftime('%d/%m/%Y à %Hh%M')"/>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2" t-if="reception.symptoms">
+                                <small class="text-muted d-block">Motif de visite :</small>
+                                <p class="small text-dark mb-0 bg-light p-2 rounded"><t t-esc="reception.symptoms"/></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chiffrage Devis & Validation en 1-Clic -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3" t-if="repair_order and repair_order.amount_untaxed_total > 0">
+                        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="fa fa-receipt text-primary me-2" title="Devis"/>Détail du Devis
+                            </h6>
+                            <span class="badge bg-success" t-if="repair_order.client_approval_status == 'approved'">
+                                <i class="fa fa-check me-1" title="Validé"/> Validé par vous
+                            </span>
+                        </div>
+                        <div class="card-body pt-0 pb-3">
+                            <table class="table table-sm table-borderless small mb-2">
+                                <thead class="border-bottom">
+                                    <tr class="text-muted">
+                                        <th>Prestation / Pièce</th>
+                                        <th class="text-center">Qté</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="repair_order.garage_parts_lines" t-as="p">
+                                        <td><t t-esc="p.name"/></td>
+                                        <td class="text-center"><t t-esc="p.qty"/></td>
+                                        <td class="text-end fw-bold"><t t-esc="p.subtotal"/> DH</td>
+                                    </tr>
+                                    <tr t-foreach="repair_order.garage_labor_lines" t-as="l">
+                                        <td><t t-esc="l.name"/></td>
+                                        <td class="text-center"><t t-esc="l.hours"/>h</td>
+                                        <td class="text-end fw-bold"><t t-esc="l.subtotal"/> DH</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- Total -->
+                            <div class="border-top pt-2 d-flex justify-content-between align-items-center">
+                                <span class="h6 mb-0 text-muted">Total Net :</span>
+                                <span class="h5 fw-bold text-primary mb-0"><t t-esc="repair_order.amount_untaxed_total"/> MAD</span>
+                            </div>
+
+                            <!-- Bloc Validation en 1 Clic -->
+                            <div class="mt-3 pt-2 text-center" id="approval_section">
+                                <t t-if="can_approve">
+                                    <button type="button" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow-sm" id="btn_approve_devis" t-attf-onclick="approveDevis('#{token}')">
+                                        <i class="fa fa-check-circle me-2" title="Valider"/> Valider &amp; Autoriser les Travaux
+                                    </button>
+                                    <small class="text-muted d-block mt-2">
+                                        En cliquant, vous donnez votre accord pour le démarrage immédiat des réparations.
+                                    </small>
+                                </t>
+                                <t t-if="repair_order.client_approval_status == 'approved'">
+                                    <div class="alert alert-success py-2 mb-0 small text-center" role="alert">
+                                        <i class="fa fa-check-circle me-1" title="Validé"/> <strong>Travaux Validés :</strong> Merci ! L'équipe atelier intervient activement sur votre véhicule.
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dossier Sinistre & Validation Avis Expert -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3" t-if="claim and claim.expert_accord_amount_ttc > 0">
+                        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="fa fa-shield-alt text-warning me-2" title="Sinistre"/>Dossier Sinistre &amp; Avis Expert
+                            </h6>
+                            <span class="badge bg-success" t-if="claim.client_accord_status == 'approved'">
+                                <i class="fa fa-check me-1" title="Avis Validé"/> Avis Validé
+                            </span>
+                            <span class="badge bg-warning text-dark" t-if="claim.client_accord_status == 'pending'">
+                                <i class="fa fa-clock me-1" title="En attente"/> En Attente de Votre Accord
+                            </span>
+                        </div>
+                        <div class="card-body pt-0 pb-3">
+                            <div class="bg-light p-3 rounded-3 mb-3 small">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Compagnie d'Assurance :</span>
+                                    <strong class="text-dark"><t t-esc="claim.insurance_id.name"/></strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">Cabinet d'Expertise :</span>
+                                    <strong class="text-dark"><t t-esc="claim.expert_cabinet_id.name or claim.expert_name or 'Cabinet Agréé'"/></strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1 border-top pt-2">
+                                    <span class="text-muted">Total Réparations Agréé Expert :</span>
+                                    <strong class="text-dark"><t t-esc="claim.expert_accord_amount_ttc"/> MAD TTC</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1 text-success">
+                                    <span>Prise en charge Compagnie :</span>
+                                    <strong class="fw-bold"><t t-esc="claim.insurance_net_payable"/> MAD TTC</strong>
+                                </div>
+                                <div class="d-flex justify-content-between pt-1 border-top text-danger" t-if="claim.customer_payable > 0">
+                                    <span class="fw-bold">Votre Part (Franchise &amp; Vétusté) :</span>
+                                    <strong class="fs-6 fw-bold"><t t-esc="claim.customer_payable"/> MAD TTC</strong>
+                                </div>
+                            </div>
+
+                            <!-- Bloc Validation Accord Client -->
+                            <div class="text-center" id="expert_approval_section">
+                                <t t-if="can_approve_expert">
+                                    <button type="button" class="btn btn-warning btn-lg w-100 py-3 fw-bold shadow-sm text-dark" id="btn_approve_expert" t-attf-onclick="approveExpert('#{token}')">
+                                        <i class="fa fa-check-circle me-2" title="Approuver"/> J'approuve l'Avis de l'Expert &amp; Autorise les Travaux
+                                    </button>
+                                    <small class="text-muted d-block mt-2">
+                                        Conformément aux règles d'assurance, votre validation est requise pour lancer les réparations.
+                                    </small>
+                                </t>
+                                <t t-if="claim.client_accord_status == 'approved'">
+                                    <div class="alert alert-success py-2 mb-0 small text-center" role="alert">
+                                        <i class="fa fa-check-circle me-1" title="Validé"/> <strong>Avis Expert Validé :</strong> Vous avez autorisé la prise en charge. Les réparations sont en cours d'exécution.
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact & Assistance -->
+                    <div class="text-center mt-4">
+                        <small class="text-muted d-block mb-2">Une question sur vos réparations ?</small>
+                        <a href="tel:+212522000000" class="btn btn-outline-dark btn-sm rounded-pill px-3 me-2">
+                            <i class="fa fa-phone me-1" title="Téléphone"/> Appeler l'Atelier
+                        </a>
+                    </div>
+
+                </div>
+
+                <!-- Script AJAX de validation 1-clic -->
+                <script>
+                    function approveDevis(token) {
+                        const btn = document.getElementById('btn_approve_devis');
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validation en cours...';
+                        }
+                        fetch('/garage/tracking/' + token + '/approve', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({})
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.result &amp;&amp; data.result.success) {
+                                document.getElementById('approval_section').innerHTML = 
+                                    '<div class="alert alert-success py-3 rounded-3 shadow-sm" role="alert">' +
+                                    '<h5 class="fw-bold mb-1"><i class="fa fa-check-circle me-2" title="Accord"></i>Accord Enregistré !</h5>' +
+                                    '<p class="small mb-0">' + data.result.message + '</p>' +
+                                    '</div>';
+                                setTimeout(() => window.location.reload(), 2000);
+                            } else {
+                                alert("Erreur lors de la validation. Veuillez contacter l'atelier.");
+                                if (btn) btn.disabled = false;
+                            }
+                        })
+                        .catch(err => {
+                            alert("Erreur de connexion. Veuillez réessayer.");
+                            if (btn) btn.disabled = false;
+                        });
+                    }
+
+                    function approveExpert(token) {
+                        const btn = document.getElementById('btn_approve_expert');
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validation en cours...';
+                        }
+                        fetch('/garage/tracking/' + token + '/approve_expert', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({})
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.result &amp;&amp; data.result.success) {
+                                document.getElementById('expert_approval_section').innerHTML = 
+                                    '<div class="alert alert-success py-3 rounded-3 shadow-sm" role="alert">' +
+                                    '<h5 class="fw-bold mb-1"><i class="fa fa-check-circle me-2" title="Validé"></i>Avis Expert Approuvé !</h5>' +
+                                    '<p class="small mb-0">' + data.result.message + '</p>' +
+                                    '</div>';
+                                setTimeout(() => window.location.reload(), 2000);
+                            } else {
+                                alert("Erreur lors de la validation. Veuillez contacter l'atelier.");
+                                if (btn) btn.disabled = false;
+                            }
+                        })
+                        .catch(err => {
+                            alert("Erreur de connexion. Veuillez réessayer.");
+                            if (btn) btn.disabled = false;
+                        });
+                    }
+                </script>
+            </body>
+        </html>
+    </template>
+</odoo>

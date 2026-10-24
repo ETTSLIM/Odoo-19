@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- 7 Étapes Canoniques du Workflow Atelier Automobile (Odoo 19) -->
+        <record id="stage_1_reception" model="garage.workshop.stage">
+            <field name="name">Réception</field>
+            <field name="sequence">10</field>
+            <field name="code">reception</field>
+            <field name="mapped_state">draft</field>
+            <field name="responsible_role">receptionist</field>
+            <field name="fold">False</field>
+            <field name="description">Prise en charge du véhicule, photos d'état des lieux, relevé kilométrage/carburant et diagnostic initial.</field>
+        </record>
+
+        <record id="stage_2_devis" model="garage.workshop.stage">
+            <field name="name">Devis &amp; Accord</field>
+            <field name="sequence">20</field>
+            <field name="code">devis</field>
+            <field name="mapped_state">quoted</field>
+            <field name="responsible_role">magasinier</field>
+            <field name="fold">False</field>
+            <field name="description">Chiffrage des pièces par le magasinier, passage de l'expert d'assurance et validation client en 1-clic.</field>
+        </record>
+
+        <record id="stage_3_pieces" model="garage.workshop.stage">
+            <field name="name">Commande Pièces</field>
+            <field name="sequence">30</field>
+            <field name="code">pieces</field>
+            <field name="mapped_state">quoted</field>
+            <field name="responsible_role">magasinier</field>
+            <field name="fold">False</field>
+            <field name="description">Approvisionnement auprès des fournisseurs, contrôle des références VIN et préparation au magasin.</field>
+        </record>
+
+        <record id="stage_4_travaux" model="garage.workshop.stage">
+            <field name="name">Travaux Atelier</field>
+            <field name="sequence">40</field>
+            <field name="code">travaux</field>
+            <field name="mapped_state">in_repair</field>
+            <field name="responsible_role">mechanic</field>
+            <field name="fold">False</field>
+            <field name="description">Intervention active des mécaniciens, tôliers et électriciens selon la checklist de spécialité.</field>
+        </record>
+
+        <record id="stage_5_controle" model="garage.workshop.stage">
+            <field name="name">Contrôle Qualité</field>
+            <field name="sequence">50</field>
+            <field name="code">controle</field>
+            <field name="mapped_state">qc</field>
+            <field name="responsible_role">qc_inspector</field>
+            <field name="fold">False</field>
+            <field name="description">Essai dynamique sur route, scan électronique zéro défaut et validation de conformité.</field>
+        </record>
+
+        <record id="stage_6_prete" model="garage.workshop.stage">
+            <field name="name">Véhicule Prêt</field>
+            <field name="sequence">60</field>
+            <field name="code">prete</field>
+            <field name="mapped_state">ready</field>
+            <field name="responsible_role">receptionist</field>
+            <field name="fold">False</field>
+            <field name="description">Lavage de courtoisie, attestation d'immobilisation prête et notification de mise à disposition.</field>
+        </record>
+
+        <record id="stage_7_livree" model="garage.workshop.stage">
+            <field name="name">Livré &amp; Clôturé</field>
+            <field name="sequence">70</field>
+            <field name="code">livree</field>
+            <field name="mapped_state">delivered</field>
+            <field name="responsible_role">manager</field>
+            <field name="fold">True</field>
+            <field name="description">Véhicule restitué au client, décharge signée, facturation et encaissement soldés.</field>
+        </record>
+
+        <!-- Opérateurs d'Atelier & Codes PIN par Défaut (Compte Tablette Partagé) -->
+        <record id="operator_chef_karim" model="garage.workshop.operator">
+            <field name="name">M. Karim (Chef d'Atelier)</field>
+            <field name="pin_code">1111</field>
+            <field name="role">chef_atelier</field>
+            <field name="specialty">all</field>
+        </record>
+
+        <record id="operator_meca_youssef" model="garage.workshop.operator">
+            <field name="name">Youssef (Mécanicien Moteur)</field>
+            <field name="pin_code">2222</field>
+            <field name="role">mechanic</field>
+            <field name="specialty">mecanique</field>
+        </record>
+
+        <record id="operator_carross_hassan" model="garage.workshop.operator">
+            <field name="name">Hassan (Tôlier / Peintre Four)</field>
+            <field name="pin_code">3333</field>
+            <field name="role">bodywork</field>
+            <field name="specialty">carrosserie</field>
+        </record>
+
+        <record id="operator_elec_tariq" model="garage.workshop.operator">
+            <field name="name">Tariq (Électricien OBD)</field>
+            <field name="pin_code">4444</field>
+            <field name="role">electrician</field>
+            <field name="specialty">electricite</field>
+        </record>
+
+        <record id="operator_stock_amine" model="garage.workshop.operator">
+            <field name="name">Amine (Magasinier Stock)</field>
+            <field name="pin_code">5555</field>
+            <field name="role">magasinier</field>
+            <field name="specialty">all</field>
+        </record>
+
+        <record id="operator_qc_rachid" model="garage.workshop.operator">
+            <field name="name">Rachid (Contrôleur Qualité)</field>
+            <field name="pin_code">6666</field>
+            <field name="role">qc_inspector</field>
+            <field name="specialty">all</field>
+        </record>
+    </data>
+</odoo>

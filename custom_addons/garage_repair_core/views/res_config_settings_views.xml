@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_garage" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.garage</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Garage Pro" string="Garage Pro" name="garage_repair_core">
+                    <block title="Passerelle WhatsApp &amp; Notifications Devis / Prêt" name="garage_whatsapp_block">
+                        <setting string="Fournisseur WhatsApp" help="Choisissez le mode d'acheminement des notifications WhatsApp">
+                            <field name="whatsapp_provider" widget="radio"/>
+                        </setting>
+
+                        <setting string="Serveur Evolution API" help="Configuration de l'instance Evolution API auto-hébergée" invisible="whatsapp_provider != 'evolution'">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="evolution_api_url" string="URL Serveur" class="col-4 o_light_label"/>
+                                    <field name="evolution_api_url" placeholder="http://localhost:8080 ou https://wa.domaine.ma" class="col-8"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="evolution_api_key" string="Clé API Secrète" class="col-4 o_light_label"/>
+                                    <field name="evolution_api_key" password="True" class="col-8"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="evolution_instance_name" string="Nom Instance" class="col-4 o_light_label"/>
+                                    <field name="evolution_instance_name" placeholder="garage_workshop" class="col-8"/>
+                                </div>
+                            </div>
+                        </setting>
+
+                        <setting string="Meta Cloud API (Officiel)" help="Identifiants WhatsApp Cloud API Meta Business" invisible="whatsapp_provider != 'meta_cloud'">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="meta_api_token" string="Token d'Accès Permanent" class="col-4 o_light_label"/>
+                                    <field name="meta_api_token" password="True" class="col-8"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="meta_phone_number_id" string="Phone Number ID" class="col-4 o_light_label"/>
+                                    <field name="meta_phone_number_id" class="col-8"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+
+                    <block title="Supervision Canaux Externes &amp; API Tablette Android" name="garage_channels_block">
+                        <setting string="Routes API Tablette Mécanicien" help="Endpoints REST sécurisés utilisés par l'application tablette de l'atelier">
+                            <div class="text-muted small">
+                                <div><strong class="text-dark">POST</strong> /garage/tablet/api/login <em>(Authentification Code PIN)</em></div>
+                                <div><strong class="text-dark">GET</strong> /garage/tablet/api/vehicles <em>(Flux véhicules atelier en temps réel)</em></div>
+                                <div><strong class="text-dark">POST</strong> /garage/tablet/api/task/toggle <em>(Changement de statut tâche / pointage)</em></div>
+                                <div><strong class="text-dark">POST</strong> /garage/tablet/api/photo/upload <em>(Prise et envoi direct de photo avant/après)</em></div>
+                            </div>
+                        </setting>
+                        <setting string="Portail Client 1-Clic" help="Validation de devis et suivi des réparations sans login via lien magique sécurisé">
+                            <div class="text-muted small">
+                                <div><strong class="text-dark">Route :</strong> /garage/tracking/&lt;jeton&gt;</div>
+                                <div>Validation instantanée avec enregistrement de l'horodatage et de l'IP du client.</div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_garage_whatsapp_settings" model="ir.actions.act_window">
+        <field name="name">Configuration WhatsApp &amp; Canaux</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'garage_repair_core'}</field>
+    </record>
+</odoo>

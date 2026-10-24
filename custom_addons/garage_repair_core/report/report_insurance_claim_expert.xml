@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Action Rapport QWeb PDF Sinistre / Expertise -->
+    <record id="action_report_insurance_claim_expert" model="ir.actions.report">
+        <field name="name">Dossier d'Expertise Automobile &amp; Chiffrage Sinistre</field>
+        <field name="model">garage.insurance.claim</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">garage_repair_core.report_insurance_claim_expert_document</field>
+        <field name="report_file">garage_repair_core.report_insurance_claim_expert_document</field>
+        <field name="print_report_name">'Dossier_Expertise_' + (object.claim_number or object.name)</field>
+        <field name="binding_model_id" ref="garage_repair_core.model_garage_insurance_claim"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template Document QWeb -->
+    <template id="report_insurance_claim_expert_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; color: #1f2937;">
+
+                        <!-- En-tête Dossier Sinistre -->
+                        <div class="row mb-3 pb-2 border-bottom border-primary">
+                            <div class="col-8">
+                                <h4 class="text-uppercase fw-bold text-primary mb-1">
+                                    Dossier d'Expertise &amp; Accord de Réparation
+                                </h4>
+                                <div class="text-muted small">
+                                    Réf. Interne Atelier : <strong><span t-field="o.name"/></strong> |
+                                    Date : <span t-esc="time.strftime('%d/%m/%Y')"/>
+                                </div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="badge bg-light text-primary border border-primary p-2 fs-6">
+                                    N° Sinistre : <strong t-field="o.claim_number"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grille 2 Colonnes : Acteurs & Véhicule -->
+                        <div class="row g-2 mb-3">
+                            <!-- Bloc 1 : Assurance & Cabinet d'Expertise -->
+                            <div class="col-6">
+                                <div class="card h-100 border-secondary">
+                                    <div class="card-header bg-light py-1 fw-bold text-uppercase small text-secondary">
+                                        Assurance &amp; Cabinet d'Expertise
+                                    </div>
+                                    <div class="card-body py-2 small">
+                                        <div><strong>Compagnie :</strong> <span t-field="o.insurance_id.name"/></div>
+                                        <div t-if="o.insurance_ice"><strong>ICE Assureur :</strong> <span t-field="o.insurance_ice"/></div>
+                                        <div t-if="o.police_number"><strong>N° Police :</strong> <span t-field="o.police_number"/></div>
+                                        <div class="mt-2 pt-1 border-top">
+                                            <strong>Cabinet d'Expertise :</strong> <span t-field="o.expert_cabinet_id.name"/><br/>
+                                            <span t-if="o.expert_name"><strong>Expert Mandaté :</strong> <span t-field="o.expert_name"/><br/></span>
+                                            <span t-if="o.expert_phone"><strong>Tél / WhatsApp :</strong> <span t-field="o.expert_phone"/><br/></span>
+                                            <span t-if="o.expert_email"><strong>Email :</strong> <span t-field="o.expert_email"/></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bloc 2 : Véhicule & Assuré -->
+                            <div class="col-6">
+                                <div class="card h-100 border-secondary">
+                                    <div class="card-header bg-light py-1 fw-bold text-uppercase small text-secondary">
+                                        Véhicule &amp; Propriétaire Assuré
+                                    </div>
+                                    <div class="card-body py-2 small">
+                                        <div><strong>Immatriculation :</strong> <span class="badge bg-primary fs-6" t-field="o.license_plate"/></div>
+                                        <div><strong>Véhicule :</strong> <span t-field="o.vehicle_id.name"/></div>
+                                        <div t-if="o.vin_number"><strong>N° Châssis (VIN) :</strong> <span t-field="o.vin_number"/></div>
+                                        <div class="mt-2 pt-1 border-top">
+                                            <strong>Assuré :</strong> <span t-field="o.customer_id.name"/><br/>
+                                            <span t-if="o.customer_cin"><strong>CIN :</strong> <span t-field="o.customer_cin"/><br/></span>
+                                            <span t-if="o.customer_phone"><strong>Téléphone :</strong> <span t-field="o.customer_phone"/></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Circonstances du Choc -->
+                        <div class="card mb-3 border-info">
+                            <div class="card-body py-2 small bg-light">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <strong>Date Accident :</strong> <span t-field="o.accident_date"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong>Localisation Choc :</strong> <span t-field="o.shock_location"/>
+                                    </div>
+                                    <div class="col-4">
+                                        <strong>Visite Expert :</strong> <span t-field="o.expert_visit_date"/>
+                                    </div>
+                                </div>
+                                <div class="row mt-1" t-if="o.damage_notes">
+                                    <div class="col-12 text-muted">
+                                        <strong>Constat des Dégâts :</strong> <span t-field="o.damage_notes"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tableau de Chiffrage des Travaux & Fournitures -->
+                        <h6 class="fw-bold text-dark mb-1">Détail du Chiffrage Contradictoire</h6>
+                        <table class="table table-sm table-bordered mb-2">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Désignation des Travaux / Éléments</th>
+                                    <th class="text-center" style="width: 15%;">Type</th>
+                                    <th class="text-end" style="width: 25%;">Montant Estimé HT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Lignes de l'ordre de réparation si lié -->
+                                <t t-if="o.repair_order_id and o.repair_order_id.garage_parts_lines">
+                                    <tr t-foreach="o.repair_order_id.garage_parts_lines" t-as="p">
+                                        <td><span t-field="p.name"/></td>
+                                        <td class="text-center"><span class="badge bg-secondary">Pièce Dégât</span></td>
+                                        <td class="text-end"><span t-field="p.subtotal"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="o.repair_order_id and o.repair_order_id.garage_labor_lines">
+                                    <tr t-foreach="o.repair_order_id.garage_labor_lines" t-as="l">
+                                        <td><span t-field="l.name"/> (<span t-field="l.hours"/> h)</td>
+                                        <td class="text-center"><span class="badge bg-info">Main-d'Œuvre</span></td>
+                                        <td class="text-end"><span t-field="l.subtotal"/></td>
+                                    </tr>
+                                </t>
+                                <!-- Si pas de lignes OR détaillées, afficher les montants initiaux saisis -->
+                                <t t-if="not (o.repair_order_id and (o.repair_order_id.garage_parts_lines or o.repair_order_id.garage_labor_lines))">
+                                    <tr>
+                                        <td>Fournitures de carrosserie &amp; pièces de remplacement</td>
+                                        <td class="text-center"><span class="badge bg-secondary">Pièces</span></td>
+                                        <td class="text-end"><span t-field="o.initial_estimate_parts"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Main-d'œuvre Tôlerie, redressage marbre &amp; Peinture cabine four</td>
+                                        <td class="text-center"><span class="badge bg-info">Main-d'Œuvre</span></td>
+                                        <td class="text-end"><span t-field="o.initial_estimate_labor"/></td>
+                                    </tr>
+                                </t>
+                                <!-- Avenants (Dégâts Masqués) -->
+                                <t t-foreach="o.amendment_ids" t-as="am">
+                                    <tr class="table-warning">
+                                        <td><strong><span t-field="am.name"/></strong> : <span t-field="am.description"/></td>
+                                        <td class="text-center"><span class="badge bg-warning text-dark">Avenant Masqué</span></td>
+                                        <td class="text-end"><strong><span t-field="am.total_untaxed"/></strong></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Bilan Financier & Décompte Scindé -->
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="border rounded p-2 bg-light small" style="min-height: 100px;">
+                                    <strong class="text-dark">Décision &amp; Accord de Prise en Charge :</strong>
+                                    <p class="mb-1 text-muted" t-if="o.accord_date">
+                                        Accord contradictoire établi le <strong><span t-field="o.accord_date"/></strong>.
+                                    </p>
+                                    <p class="mb-0 text-muted" t-if="o.customer_payable > 0">
+                                        La franchise contractuelle et l'abattement de vétusté sur pièces d'usure
+                                        sont perçus directement auprès du propriétaire assuré.
+                                    </p>
+                                    <p class="mb-0 text-success fw-bold" t-if="o.customer_payable == 0">
+                                        Prise en charge intégrale par la compagnie sans franchise client.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-sm table-bordered">
+                                    <tr>
+                                        <td class="text-muted small">Total Chiffrage Atelier HT</td>
+                                        <td class="text-end small"><strong t-field="o.total_garage_claim_untaxed"/></td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <td><strong>Accord Définitif Expert (HT)</strong></td>
+                                        <td class="text-end"><strong t-field="o.expert_accord_amount_untaxed"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted small">TVA Réglementaire (20.0%)</td>
+                                        <td class="text-end small"><span t-field="o.expert_accord_amount_tax"/></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><strong>TOTAL VALIDÉ PAR L'EXPERT (TTC)</strong></td>
+                                        <td class="text-end fw-bold fs-6 text-success"><span t-field="o.expert_accord_amount_ttc"/></td>
+                                    </tr>
+                                    <tr t-if="o.customer_payable > 0" class="table-warning">
+                                        <td class="small">Quote-part Franchise &amp; Vétusté Client</td>
+                                        <td class="text-end small"><strong><span t-field="o.customer_payable"/></strong></td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td><strong>NET À PAYER COMPAGNIE (TTC)</strong></td>
+                                        <td class="text-end fw-bold text-primary"><span t-field="o.insurance_net_payable"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Cadres Signatures & Cachets -->
+                        <div class="row mt-4 pt-2">
+                            <div class="col-6 text-center">
+                                <div class="border rounded p-3 bg-light" style="min-height: 90px;">
+                                    <strong class="text-uppercase small">Pour le Garage Réparateur</strong><br/>
+                                    <span class="small text-muted">Cachet &amp; Signature</span>
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="border rounded p-3 bg-light" style="min-height: 90px;">
+                                    <strong class="text-uppercase small">Pour le Cabinet d'Expertise Automobile</strong><br/>
+                                    <span class="small text-muted" t-field="o.expert_cabinet_id.name"/><br/>
+                                    <span class="badge bg-success mt-1" t-if="o.state in ('accord_approved', 'in_repair', 'repaired', 'invoiced', 'closed')">
+                                        ACCORD VALIDÉ
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

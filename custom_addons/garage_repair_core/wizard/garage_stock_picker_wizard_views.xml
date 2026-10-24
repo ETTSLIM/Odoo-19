@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_garage_stock_picker_wizard_form" model="ir.ui.view">
+        <field name="name">garage.stock.picker.wizard.form</field>
+        <field name="model">garage.stock.picker.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Piocher du Stock Magasin Central">
+                <field name="currency_id" invisible="1"/>
+                
+                <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                    <i class="fa fa-cubes fa-2x me-3 text-primary" title="Magasin de Stock"/>
+                    <div>
+                        <strong>Affectation Directe de Pièces depuis le Stock Magasin :</strong><br/>
+                        Sélectionnez les articles reçus par le magasinier et saisissez la <strong>Qté à Prélever</strong> pour les imputer immédiatement à cet ordre de réparation.
+                    </div>
+                </div>
+
+                <group>
+                    <group>
+                        <field name="repair_order_id" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="stock_filter" widget="radio"/>
+                    </group>
+                </group>
+
+                <h6 class="fw-bold text-dark mt-3">Pièces Disponibles en Rayon Magasin</h6>
+                <field name="line_ids">
+                    <list editable="bottom" create="false" delete="false">
+                        <field name="bl_name" readonly="1"/>
+                        <field name="supplier_name" readonly="1"/>
+                        <field name="name" readonly="1"/>
+                        <field name="stock_destination" widget="badge" decoration-success="stock_destination == 'official'" decoration-warning="stock_destination == 'operational'"/>
+                        <field name="unit_cost" readonly="1" groups="garage_repair_core.group_garage_manager"/>
+                        <field name="qty_available" readonly="1" class="fw-bold text-primary"/>
+                        <field name="qty_to_pick" class="fw-bold text-success"/>
+                        <field name="sale_price"/>
+                    </list>
+                </field>
+
+                <footer>
+                    <button name="action_apply_pick" string="Valider le Prélèvement &amp; Imputer à l'Ordre" type="object" class="btn-primary" icon="fa-check"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_stock_picker_wizard" model="ir.actions.act_window">
+        <field name="name">Piocher du Stock Magasin</field>
+        <field name="res_model">garage.stock.picker.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -1,0 +1,201 @@
+// ============================================================================
+// Garage Pro Design Tokens - Semantic Components
+// Token-driven components for Moroccan plates, Hero banners, and Workshop KPIs
+// ============================================================================
+
+// --- 1. Moroccan Automotive License Plate Badge ---
+.o_garage_plate, span.o_garage_plate {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    box-sizing: border-box !important;
+    padding: 0 12px !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    background-color: var(--g-plate-bg, #ffffff) !important;
+    color: var(--g-plate-text, #0f172a) !important;
+    border: 1.5px solid var(--g-plate-border, #0f172a) !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    letter-spacing: 0.06em !important;
+    font-family: var(--g-font-plate, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace) !important;
+    font-variant-numeric: tabular-nums !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    white-space: nowrap;
+
+    // Ensure all internal tags (field widgets, chars, spans) are vertically centered with zero vertical drift
+    *, .o_field_widget, .o_field_char, span, div {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+}
+
+// In list views, keep plate compact and centered
+.o_list_table .o_garage_plate {
+    font-size: 0.85rem !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    padding: 0 8px !important;
+    border-radius: 6px !important;
+}
+
+// --- 2. Vehicle & Financial Hero Banner ---
+.o_garage_hero {
+    background-color: var(--g-surface-muted, #f8fafc);
+    border: 1px solid var(--g-border-subtle, #e2e8f0);
+    border-radius: var(--g-card-radius, 16px);
+    padding: 12px 20px;
+    margin-bottom: 20px;
+
+    .o_garage_hero_vehicle {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .o_garage_hero_title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--g-text-primary, #0f172a);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .o_garage_hero_subtitle {
+            font-size: 0.9rem;
+            color: var(--g-text-secondary, #475569);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    }
+}
+
+// --- 3. Financial KPI Summary Strip (Executive Logip Style) ---
+.o_garage_kpi_strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: stretch;
+
+    .o_garage_kpi_card {
+        padding: 12px 18px;
+        border-radius: var(--g-control-radius, 10px);
+        min-width: 170px;
+        flex: 1 1 0;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #ffffff;
+        border: 1px solid var(--g-border-subtle, #e2e8f0);
+        border-left: 4px solid var(--g-border-default, #cbd5e1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+        }
+
+        .o_garage_kpi_label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--g-text-secondary, #64748b);
+            margin-bottom: 4px;
+        }
+
+        .o_garage_kpi_value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1.2;
+            color: var(--g-text-primary, #0f172a);
+            font-variant-numeric: tabular-nums;
+        }
+
+        // Semantic Left-Border Accent Variants (0 Neon Glare)
+        &.o_garage_kpi_approved {
+            border-left-color: #10b981;
+            .o_garage_kpi_value {
+                color: #047857;
+            }
+        }
+
+        &.o_garage_kpi_covered {
+            border-left-color: #3b82f6;
+            .o_garage_kpi_value {
+                color: #1d4ed8;
+            }
+        }
+
+        &.o_garage_kpi_owed {
+            border-left-color: #f59e0b;
+            .o_garage_kpi_value {
+                color: #b45309;
+            }
+        }
+
+        &.o_garage_kpi_danger {
+            border-left-color: #ef4444;
+            .o_garage_kpi_value {
+                color: #b91c1c;
+            }
+        }
+    }
+}
+
+// --- 4. Inline WhatsApp Action Button ---
+.o_garage_whatsapp_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #16a34a !important;
+    background: transparent;
+    border: none;
+    padding: 2px 6px;
+    font-size: 1.15rem;
+    transition: color 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+        color: #15803d !important;
+        transform: scale(1.1);
+    }
+}
+
+// --- 5. Statusbar Active Stage High-Contrast Fix ---
+.o_field_statusbar > .o_statusbar_status {
+    gap: 2px;
+
+    > .o_arrow_button {
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        padding-top: 5px !important;
+        padding-bottom: 5px !important;
+
+        &.o_arrow_button_current {
+            --o-statusbar-background-active: var(--g-color-accent, #2563eb) !important;
+            --o-statusbar-border-active: var(--g-color-accent, #2563eb) !important;
+            background-color: var(--g-color-accent, #2563eb) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+
+            &::before {
+                background-color: var(--g-color-accent, #2563eb) !important;
+            }
+        }
+    }
+}

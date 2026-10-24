@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue Liste BL Pièces Fournisseurs -->
+    <record id="view_garage_parts_bl_list" model="ir.ui.view">
+        <field name="name">garage.parts.bl.list</field>
+        <field name="model">garage.parts.bl</field>
+        <field name="arch" type="xml">
+            <list string="Bons de Réception Pièces Fournisseurs" decoration-info="state == 'draft'" decoration-success="state in ('received', 'invoiced')">
+                <field name="name"/>
+                <field name="date_bl"/>
+                <field name="supplier_id"/>
+                <field name="supplier_ice"/>
+                <field name="stock_destination" widget="badge" decoration-success="stock_destination == 'official'" decoration-warning="stock_destination == 'operational'"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate" optional="show"/>
+                <field name="repair_order_id"/>
+                <field name="total_amount"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state in ('received', 'invoiced')"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire BL Pièces Fournisseurs -->
+    <record id="view_garage_parts_bl_form" model="ir.ui.view">
+        <field name="name">garage.parts.bl.form</field>
+        <field name="model">garage.parts.bl</field>
+        <field name="arch" type="xml">
+            <form string="Bon de Réception Pièces Fournisseur">
+                <header>
+                    <button name="action_receive" string="Réceptionner &amp; Imputer au Véhicule" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_cancel" string="Annuler" type="object" invisible="state in ('received', 'invoiced', 'cancel')"/>
+                    <button name="action_reset_draft" string="Remettre en Brouillon" type="object" invisible="state != 'cancel'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,received,invoiced"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="RÉCEPTIONNÉ" bg_color="text-bg-success" invisible="state != 'received'"/>
+                    <widget name="web_ribbon" title="RAPPROCHÉ" bg_color="text-bg-primary" invisible="state != 'invoiced'"/>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_repair_order" type="object" class="oe_stat_button" icon="oi-settings-adjust" invisible="not repair_order_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="repair_order_id" readonly="1"/></span>
+                                <span class="o_stat_text">Ordre Réparation</span>
+                            </div>
+                        </button>
+                        <button name="action_view_vehicle" type="object" class="oe_stat_button" icon="fa-car" invisible="not vehicle_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="license_plate" readonly="1"/></span>
+                                <span class="o_stat_text">Véhicule</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name" string="N° BL Fournisseur (Mention Papier)"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: BL-AUTOPLUS-89452"/>
+                        </h1>
+                    </div>
+
+                    <!-- Hero Banner Fournisseur & Affectation Véhicule en Ligne Unique (Résumé Lecture Seule) -->
+                    <div class="o_garage_hero mb-3" invisible="not supplier_id and not vehicle_id">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="o_garage_plate" invisible="not license_plate">
+                                    <field name="license_plate" readonly="1"/>
+                                </span>
+                                <span class="fs-5 fw-bold text-dark" invisible="not supplier_id">
+                                    <field name="supplier_id" readonly="1"/>
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="not supplier_ice">
+                                <i class="fa fa-id-card-o text-muted" title="ICE"/>
+                                <span class="small text-muted fw-bold">ICE :</span>
+                                <field name="supplier_ice" readonly="1"/>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="not date_bl">
+                                <i class="fa fa-calendar-o text-muted" title="Date"/>
+                                <field name="date_bl" readonly="1"/>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="not vehicle_id">
+                                <i class="fa fa-car text-primary" title="Véhicule Destinataire"/>
+                                <span class="small text-muted fw-bold">Véhicule :</span>
+                                <field name="vehicle_id" readonly="1"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KPI Strip Achat BL -->
+                    <div class="o_garage_kpi_strip mb-3">
+                        <div class="o_garage_kpi_card o_garage_kpi_covered">
+                            <span class="o_garage_kpi_label">Montant Total Achat BL</span>
+                            <span class="o_garage_kpi_value text-primary">
+                                <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card">
+                            <span class="o_garage_kpi_label">Destination Fiscale</span>
+                            <span class="o_garage_kpi_value">
+                                <field name="stock_destination" widget="badge" decoration-success="stock_destination == 'official'" decoration-warning="stock_destination == 'operational'"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Fournisseur &amp; Qualification Stock">
+                            <field name="supplier_id" options="{'no_quick_create': False}"/>
+                            <field name="supplier_ice"/>
+                            <field name="date_bl"/>
+                            <field name="stock_destination" widget="radio"/>
+                        </group>
+                        <group string="Affectation Atelier &amp; Rapprochement">
+                            <field name="repair_order_id" options="{'no_quick_create': True}"/>
+                            <field name="vehicle_id" readonly="repair_order_id"/>
+                            <field name="official_invoice_id" readonly="1" invisible="not official_invoice_id"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Lignes de Pièces Détachées">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="name"/>
+                                    <field name="qty"/>
+                                    <field name="unit_cost"/>
+                                    <field name="suggested_sale_price"/>
+                                    <field name="subtotal" sum="Total Achat"/>
+                                    <field name="qty_allocated_workshop" string="Alloué Atelier" readonly="1"/>
+                                    <field name="qty_available_shelf" string="Dispo Rayon" readonly="1"/>
+                                    <field name="qty_cleared_officially" string="Déclaré Sortie" readonly="1"/>
+                                    <field name="qty_remaining_official" string="Solde Fiscal" readonly="1"/>
+                                    <field name="is_fully_cleared" widget="badge" decoration-success="is_fully_cleared" decoration-warning="not is_fully_cleared" string="Statut Fiscal"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Recherche BL Pièces -->
+    <record id="view_garage_parts_bl_search" model="ir.ui.view">
+        <field name="name">garage.parts.bl.search</field>
+        <field name="model">garage.parts.bl</field>
+        <field name="arch" type="xml">
+            <search string="Recherche BL Pièces">
+                <field name="name"/>
+                <field name="supplier_id"/>
+                <field name="vehicle_id"/>
+                <field name="repair_order_id"/>
+                <filter name="filter_received" string="Réceptionnés" domain="[('state', '=', 'received')]"/>
+                <filter name="filter_draft" string="Brouillons" domain="[('state', '=', 'draft')]"/>
+                <group>
+                    <filter name="group_by_supplier" string="Fournisseur" context="{'group_by': 'supplier_id'}"/>
+                    <filter name="group_by_state" string="Statut" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre BL Pièces -->
+    <record id="action_garage_parts_bl" model="ir.actions.act_window">
+        <field name="name">Bons de Réception Pièces (BL Fournisseurs)</field>
+        <field name="res_model">garage.parts.bl</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Enregistrez un bon de livraison de pièces détachées !
+            </p>
+            <p>
+                Saisissez les achats de pièces effectués au comptoir ou auprès de vos grossistes pour les imputer immédiatement au coût de revient du véhicule.
+            </p>
+        </field>
+    </record>
+
+    <!-- ==================================================================== -->
+    <!-- CANAL 1 : ÉTAT DU STOCK MAGASIN (RAYON) & CATALOGUE PIÈCES           -->
+    <!-- ==================================================================== -->
+
+    <!-- Vue Liste État du Stock Magasin (Rayon) -->
+    <record id="view_garage_parts_shelf_stock_list" model="ir.ui.view">
+        <field name="name">garage.parts.bl.line.shelf.list</field>
+        <field name="model">garage.parts.bl.line</field>
+        <field name="arch" type="xml">
+            <list string="État du Stock Magasin (Rayon)" create="false" decoration-danger="qty_available_shelf &lt;= 0" decoration-success="qty_available_shelf &gt; 0">
+                <field name="name"/>
+                <field name="product_id" optional="show"/>
+                <field name="bl_id" string="BL d'Origine"/>
+                <field name="supplier_id"/>
+                <field name="date_bl"/>
+                <field name="stock_destination" widget="badge" decoration-success="stock_destination == 'official'" decoration-warning="stock_destination == 'operational'"/>
+                <field name="qty" string="Qté Entrée"/>
+                <field name="qty_allocated_workshop" string="Qté Allouée Atelier"/>
+                <field name="qty_available_shelf" string="Qté Disponible Rayon" widget="badge" decoration-success="qty_available_shelf &gt; 0" decoration-danger="qty_available_shelf &lt;= 0"/>
+                <field name="unit_cost" widget="monetary"/>
+                <field name="suggested_sale_price" widget="monetary"/>
+                <field name="currency_id" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire Lot Stock Magasin (Rayon) -->
+    <record id="view_garage_parts_shelf_stock_form" model="ir.ui.view">
+        <field name="name">garage.parts.bl.line.shelf.form</field>
+        <field name="model">garage.parts.bl.line</field>
+        <field name="arch" type="xml">
+            <form string="Détail Lot en Stock Magasin (Rayon)" create="false">
+                <header>
+                    <button name="action_open_parent_bl" string="Ouvrir le BL Fournisseur d'Origine" type="object" class="btn-primary" icon="fa-truck"/>
+                    <button name="action_open_catalog_product" string="Ouvrir la Fiche Article Catalogue" type="object" class="btn-secondary" icon="fa-book"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,received,invoiced"/>
+                </header>
+                <sheet>
+                    <field name="currency_id" invisible="1"/>
+                    <div class="oe_title">
+                        <label for="name" string="Désignation Pièce en Rayon"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <div class="o_garage_kpi_strip mb-3">
+                        <div class="o_garage_kpi_card">
+                            <span class="o_garage_kpi_label">Quantité Entrée BL</span>
+                            <span class="o_garage_kpi_value text-dark">
+                                <field name="qty" readonly="1"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card">
+                            <span class="o_garage_kpi_label">Allouée Atelier / Déclarée</span>
+                            <span class="o_garage_kpi_value text-warning">
+                                <field name="qty_allocated_workshop" readonly="1"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_approved">
+                            <span class="o_garage_kpi_label">Disponible en Rayon</span>
+                            <span class="o_garage_kpi_value text-success">
+                                <field name="qty_available_shelf" readonly="1"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_covered">
+                            <span class="o_garage_kpi_label">Prix Vente Conseillé HT</span>
+                            <span class="o_garage_kpi_value text-primary">
+                                <field name="suggested_sale_price" widget="monetary" readonly="1"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Origine Achat &amp; Fournisseur">
+                            <field name="bl_id" readonly="1"/>
+                            <field name="supplier_id" readonly="1"/>
+                            <field name="date_bl" readonly="1"/>
+                            <field name="product_id" readonly="1"/>
+                        </group>
+                        <group string="Qualification Fiscale &amp; Coûts">
+                            <field name="stock_destination" widget="badge" decoration-success="stock_destination == 'official'" decoration-warning="stock_destination == 'operational'" readonly="1"/>
+                            <field name="unit_cost" widget="monetary" readonly="1"/>
+                            <field name="suggested_sale_price" widget="monetary"/>
+                            <field name="qty_cleared_officially" readonly="1" invisible="stock_destination != 'official'"/>
+                            <field name="qty_remaining_official" readonly="1" invisible="stock_destination != 'official'"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Affectations aux Ordres de Réparation Atelier">
+                            <field name="repair_part_line_ids" readonly="1">
+                                <list>
+                                    <field name="repair_id" string="Ordre de Réparation"/>
+                                    <field name="name"/>
+                                    <field name="qty"/>
+                                    <field name="cost_price" widget="monetary"/>
+                                    <field name="sale_price" widget="monetary"/>
+                                    <field name="subtotal" widget="monetary"/>
+                                    <field name="is_officially_cleared" widget="badge" decoration-success="is_officially_cleared"/>
+                                    <field name="official_invoice_id"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue Kanban État du Stock Magasin (Rayon) -->
+    <record id="view_garage_parts_shelf_stock_kanban" model="ir.ui.view">
+        <field name="name">garage.parts.bl.line.shelf.kanban</field>
+        <field name="model">garage.parts.bl.line</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard" create="false">
+                <field name="name"/>
+                <field name="supplier_id"/>
+                <field name="qty_available_shelf"/>
+                <field name="qty"/>
+                <field name="stock_destination"/>
+                <field name="unit_cost"/>
+                <field name="suggested_sale_price"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-bold text-dark fs-6" t-esc="record.name.value"/>
+                            <field name="stock_destination" widget="badge" decoration-success="stock_destination == 'official'" decoration-warning="stock_destination == 'operational'"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <i class="fa fa-truck me-1" title="Fournisseur"/>
+                            <span t-esc="record.supplier_id.value"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <div>
+                                <span class="text-muted small">Disponible : </span>
+                                <span class="badge" t-attf-class="{{record.qty_available_shelf.raw_value &gt; 0 ? 'text-bg-success' : 'text-bg-danger'}}" t-esc="record.qty_available_shelf.value"/>
+                                <span class="text-muted small"> / <t t-esc="record.qty.value"/></span>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-primary" t-esc="record.suggested_sale_price.value"/>
+                                <div class="text-muted small" t-esc="'Coût: ' + record.unit_cost.value"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vue Recherche État du Stock Magasin (Rayon) -->
+    <record id="view_garage_parts_shelf_stock_search" model="ir.ui.view">
+        <field name="name">garage.parts.bl.line.shelf.search</field>
+        <field name="model">garage.parts.bl.line</field>
+        <field name="arch" type="xml">
+            <search string="Recherche Stock Magasin">
+                <field name="name"/>
+                <field name="supplier_id"/>
+                <filter name="filter_available" string="Disponible en Rayon" domain="[('qty_available_shelf', '&gt;', 0)]"/>
+                <filter name="filter_operational" string="Stock Opérationnel (BL)" domain="[('stock_destination', '=', 'operational')]"/>
+                <filter name="filter_official" string="Stock Fiscal Déclaré" domain="[('stock_destination', '=', 'official')]"/>
+                <group>
+                    <filter name="group_by_supplier" string="Fournisseur" context="{'group_by': 'supplier_id'}"/>
+                    <filter name="group_by_destination" string="Destination Fiscale" context="{'group_by': 'stock_destination'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre État du Stock Magasin (Rayon) -->
+    <record id="action_garage_stock_shelf" model="ir.actions.act_window">
+        <field name="name">État du Stock Magasin (Rayon)</field>
+        <field name="res_model">garage.parts.bl.line</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_ids" eval="[
+            Command.clear(),
+            Command.create({'view_mode': 'kanban', 'view_id': ref('view_garage_parts_shelf_stock_kanban')}),
+            Command.create({'view_mode': 'list', 'view_id': ref('view_garage_parts_shelf_stock_list')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('view_garage_parts_shelf_stock_form')})
+        ]"/>
+        <field name="domain">[('state', 'in', ('received', 'invoiced'))]</field>
+        <field name="context">{'search_default_filter_available': 1}</field>
+        <field name="search_view_id" ref="view_garage_parts_shelf_stock_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Visualisez vos pièces disponibles en rayon magasin !
+            </p>
+            <p>
+                Retrouvez instantanément les quantités achetées sur BL, allouées à l'atelier ou restant disponibles en rayon.
+            </p>
+        </field>
+    </record>
+
+    <!-- Vue Liste Catalogue Pièces Détachées -->
+    <record id="view_garage_product_template_list" model="ir.ui.view">
+        <field name="name">garage.product.template.list</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <list string="Catalogue Pièces Détachées Atelier">
+                <field name="name" string="Désignation Pièce"/>
+                <field name="default_code" string="Référence Interne"/>
+                <field name="oem_reference" string="Réf OEM"/>
+                <field name="shelf_location_note" string="Emplacement Rayon" optional="show"/>
+                <field name="standard_price" string="Prix d'Achat (Coût)" widget="monetary"/>
+                <field name="list_price" string="Prix de Vente HT" widget="monetary"/>
+                <field name="margin_amount" string="Marge Unitaire" widget="monetary" optional="show"/>
+                <field name="qty_stock_operational" string="Stock Atelier (BL)" widget="badge" decoration-info="qty_stock_operational &gt; 0"/>
+                <field name="qty_stock_official" string="Stock Fiscal Déclaré" widget="badge" decoration-success="qty_stock_official &gt; 0"/>
+                <field name="currency_id" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Kanban Catalogue Pièces Détachées -->
+    <record id="view_garage_product_template_kanban" model="ir.ui.view">
+        <field name="name">garage.product.template.kanban</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard">
+                <field name="name"/>
+                <field name="default_code"/>
+                <field name="oem_reference"/>
+                <field name="standard_price"/>
+                <field name="list_price"/>
+                <field name="qty_stock_operational"/>
+                <field name="qty_stock_official"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-bold text-dark fs-6" t-esc="record.name.value"/>
+                            <span class="badge text-bg-light border" t-if="record.default_code.value" t-esc="record.default_code.value"/>
+                        </div>
+                        <div class="text-muted small mb-2" t-if="record.oem_reference.value">
+                            <i class="fa fa-barcode me-1" title="Réf OEM"/>
+                            <span t-esc="'OEM: ' + record.oem_reference.value"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <div>
+                                <span class="badge text-bg-info me-1" title="Stock Rayon BL">
+                                    <i class="fa fa-cubes me-1" title="Stock BL"/>
+                                    <t t-esc="record.qty_stock_operational.value"/> BL
+                                </span>
+                                <span class="badge text-bg-success" title="Stock Fiscal Facturé">
+                                    <i class="fa fa-file-text-o me-1" title="Stock Fiscal"/>
+                                    <t t-esc="record.qty_stock_official.value"/> Fisc.
+                                </span>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold text-primary" t-esc="record.list_price.value"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire Dédiée Catalogue Pièces Détachées (Atelier & Double Stock) -->
+    <record id="view_garage_product_template_form" model="ir.ui.view">
+        <field name="name">garage.product.template.form</field>
+        <field name="model">product.template</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="Fiche Pièce Détachée Catalogue Atelier">
+                <header>
+                    <button name="action_create_restock_bl" string="Approvisionner sur BL Fournisseur" type="object" class="btn-primary" icon="fa-truck" invisible="not id"/>
+                </header>
+                <sheet>
+                    <field name="currency_id" invisible="1"/>
+                    <field name="is_storable" invisible="1"/>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_bl_lines" type="object" class="oe_stat_button" icon="fa-truck">
+                            <field name="bl_line_count" widget="statinfo" string="Entrées BL"/>
+                        </button>
+                        <button name="action_view_repair_usages" type="object" class="oe_stat_button" icon="fa-wrench">
+                            <field name="repair_part_count" widget="statinfo" string="Sorties Atelier"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name" string="Désignation de la Pièce Détachée"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: Batterie Bosch 12V 70Ah S4 ou Filtre à Huile Purflux LS932"/>
+                        </h1>
+                    </div>
+
+                    <!-- Bandeau KPI Double Stock & Rentabilité Pièce -->
+                    <div class="o_garage_kpi_strip mb-3">
+                        <div class="o_garage_kpi_card o_garage_kpi_covered">
+                            <span class="o_garage_kpi_label">Stock Rayon Atelier (BL)</span>
+                            <span class="o_garage_kpi_value text-primary">
+                                <field name="qty_stock_operational" readonly="1"/> unités
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_approved">
+                            <span class="o_garage_kpi_label">Stock Fiscal Déclaré (ICE)</span>
+                            <span class="o_garage_kpi_value text-success">
+                                <field name="qty_stock_official" readonly="1"/> unités
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card">
+                            <span class="o_garage_kpi_label">Prix d'Achat Moyen (Coût HT)</span>
+                            <span class="o_garage_kpi_value text-dark">
+                                <field name="standard_price" widget="monetary" readonly="1"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card">
+                            <span class="o_garage_kpi_label">Prix de Vente Atelier (HT)</span>
+                            <span class="o_garage_kpi_value text-primary">
+                                <field name="list_price" widget="monetary" readonly="1"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_approved">
+                            <span class="o_garage_kpi_label">Marge Unitaire HT</span>
+                            <span class="o_garage_kpi_value text-success">
+                                <field name="margin_amount" widget="monetary" readonly="1"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Identification Constructeur &amp; Rayon">
+                            <field name="oem_reference" placeholder="Ex: 0 092 S40 080 / LS932"/>
+                            <field name="default_code" string="Référence Interne Magasin" placeholder="Ex: BAT-BOSCH-70AH"/>
+                            <field name="barcode" string="Code-barres / EAN"/>
+                            <field name="shelf_location_note" placeholder="Ex: Rayon B - Étagère 2 - Casier 4"/>
+                            <field name="vehicle_compatibility" placeholder="Ex: Dacia Duster/Logan 1.5 dCi, Renault Clio 4..."/>
+                            <field name="categ_id" string="Catégorie de Pièce"/>
+                        </group>
+                        <group string="Tarification Atelier &amp; Fiscalité Maroc (MAD)">
+                            <field name="standard_price" string="Prix d'Achat Fournisseur (Coût HT)" widget="monetary"/>
+                            <field name="list_price" string="Prix de Vente Conseillé (HT)" widget="monetary"/>
+                            <field name="margin_rate" string="Taux de Marge Brute (%)" readonly="1"/>
+                            <field name="taxes_id" widget="many2many_tags" string="TVA Ventes (Facturation)"/>
+                            <field name="supplier_taxes_id" widget="many2many_tags" string="TVA Achats (Récupérable)"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Historique des Entrées BL Fournisseurs" name="bl_history_tab">
+                            <field name="garage_bl_line_ids" readonly="1">
+                                <list decoration-success="qty_available_shelf &gt; 0">
+                                    <field name="bl_id" string="N° BL Fournisseur"/>
+                                    <field name="date_bl"/>
+                                    <field name="supplier_id"/>
+                                    <field name="stock_destination" widget="badge" decoration-success="stock_destination == 'official'" decoration-warning="stock_destination == 'operational'"/>
+                                    <field name="qty" string="Qté Achetée"/>
+                                    <field name="qty_allocated_workshop" string="Qté Consommée"/>
+                                    <field name="qty_available_shelf" string="Dispo Rayon" widget="badge" decoration-success="qty_available_shelf &gt; 0" decoration-danger="qty_available_shelf &lt;= 0"/>
+                                    <field name="unit_cost" widget="monetary"/>
+                                    <field name="suggested_sale_price" widget="monetary"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Consommations sur Ordres de Réparation" name="ro_usages_tab">
+                            <field name="garage_repair_part_ids" readonly="1">
+                                <list>
+                                    <field name="repair_id" string="Ordre de Réparation"/>
+                                    <field name="source_type" widget="badge" decoration-warning="source_type == 'operational'" decoration-success="source_type == 'official'"/>
+                                    <field name="qty"/>
+                                    <field name="cost_price" widget="monetary"/>
+                                    <field name="sale_price" widget="monetary"/>
+                                    <field name="subtotal" widget="monetary"/>
+                                    <field name="margin" widget="monetary"/>
+                                    <field name="is_officially_cleared" widget="badge" decoration-success="is_officially_cleared"/>
+                                    <field name="official_invoice_id"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes &amp; Spécifications Techniques" name="notes_tab">
+                            <field name="description" placeholder="Notes techniques, équivalences constructeurs ou consignes de montage..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Catalogue Pièces -->
+    <record id="action_garage_parts_catalog" model="ir.actions.act_window">
+        <field name="name">Catalogue Pièces Détachées</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_ids" eval="[
+            Command.clear(),
+            Command.create({'view_mode': 'kanban', 'view_id': ref('view_garage_product_template_kanban')}),
+            Command.create({'view_mode': 'list', 'view_id': ref('view_garage_product_template_list')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('view_garage_product_template_form')})
+        ]"/>
+        <field name="domain">[('is_storable', '=', True)]</field>
+        <field name="context">{'default_is_storable': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez vos articles du catalogue de pièces détachées !
+            </p>
+            <p>
+                Renseignez les références constructeurs OEM, prix d'achat fournisseurs et prix de vente recommandés.
+            </p>
+        </field>
+    </record>
+</odoo>

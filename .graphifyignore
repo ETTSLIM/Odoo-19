@@ -1,0 +1,26 @@
+# Database & PostgreSQL / Odoo runtime storage (CRITICAL - DO NOT SCAN)
+db_data/
+odoo_data/
+**/db_data/**
+**/odoo_data/**
+*.log
+cookies.txt
+
+# Python cache & compiled files
+*.pyc
+__pycache__/
+**/__pycache__/**
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# IDE & System Artifacts
+.git/
+.vscode/
+.idea/
+.DS_Store
+
+# Scratch files & system logs
+scratch/
+.system_generated/

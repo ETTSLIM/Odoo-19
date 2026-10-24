@@ -1,0 +1,10 @@
+*.pyc
+__pycache__/
+*.pyo
+.DS_Store
+db_data/
+odoo_data/
+*.log
+cookies.txt
+scratch/
+.system_generated/

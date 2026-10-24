@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Action Impression Reçu Franchise & Vétusté -->
+    <record id="action_report_insurance_franchise_receipt" model="ir.actions.report">
+        <field name="name">Reçu de Règlement Franchise &amp; Vétusté</field>
+        <field name="model">garage.insurance.claim</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">garage_repair_core.report_franchise_receipt_template</field>
+        <field name="report_file">garage_repair_core.report_franchise_receipt_template</field>
+        <field name="print_report_name">'Recu_Franchise_%s' % (object.claim_number or object.name)</field>
+        <field name="binding_model_id" ref="model_garage_insurance_claim"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template QWeb du Reçu de Règlement -->
+    <template id="report_franchise_receipt_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="article page" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id"
+                     style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #212529;">
+
+                    <!-- En-Tête Atelier & Mention Fiscale -->
+                    <div style="border-bottom: 2px solid #0d6efd; padding-bottom: 15px; margin-bottom: 20px;">
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 60%; vertical-align: top;">
+                                    <h2 style="color: #0d6efd; margin: 0 0 5px 0; font-weight: 800; font-size: 24px;">
+                                        <t t-esc="o.env.company.name or 'GARAGE PRO ATELIER'"/>
+                                    </h2>
+                                    <div style="font-size: 12px; color: #495057; line-height: 1.5;">
+                                        <t t-if="o.env.company.street"><t t-esc="o.env.company.street"/><br/></t>
+                                        <t t-if="o.env.company.city"><t t-esc="o.env.company.city"/> - Maroc<br/></t>
+                                        <strong>ICE : </strong> <t t-esc="o.env.company.vat or 'En cours'"/><br/>
+                                        <strong>Tél : </strong> <t t-esc="o.env.company.phone or '+212 5 22 00 00 00'"/>
+                                    </div>
+                                </td>
+                                <td style="width: 40%; vertical-align: top; text-align: right;">
+                                    <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px 15px; display: inline-block; text-align: right;">
+                                        <div style="font-size: 11px; text-transform: uppercase; color: #6c757d; font-weight: 700;">Reçu de Caisse N°</div>
+                                        <div style="font-size: 18px; font-weight: 800; color: #0d6efd;">
+                                            REC-<t t-esc="o.claim_number or o.name"/>
+                                        </div>
+                                        <div style="font-size: 12px; color: #495057; margin-top: 4px;">
+                                            Date : <strong><t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/></strong>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Titre du Document -->
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="display: inline-block; background-color: #e7f1ff; border: 1px solid #b6d4fe; border-radius: 6px; padding: 10px 25px;">
+                            <h3 style="margin: 0; color: #084298; font-weight: 800; font-size: 18px; letter-spacing: 0.5px;">
+                                REÇU DE RÈGLEMENT FRANCHISE &amp; VÉTUSTÉ LÉGALE
+                            </h3>
+                            <div style="font-size: 11px; color: #495057; margin-top: 3px;">
+                                Document officiel d'acquittement délivré à l'assuré - Décompte Sinistre Automobile
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Encadré Dossier Sinistre, Véhicule & Client -->
+                    <table style="width: 100%; margin-bottom: 25px; border-collapse: separate; border-spacing: 15px 0;">
+                        <tr>
+                            <!-- Colonne 1 : Sinistre & Assurance -->
+                            <td style="width: 50%; vertical-align: top; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px;">
+                                <div style="font-weight: 700; color: #0d6efd; border-bottom: 1px solid #dee2e6; padding-bottom: 6px; margin-bottom: 8px; font-size: 12px; text-transform: uppercase;">
+                                    Référence Sinistre &amp; Compagnie
+                                </div>
+                                <table style="width: 100%; font-size: 12px; line-height: 1.6;">
+                                    <tr>
+                                        <td style="color: #6c757d; width: 45%;">N° Sinistre :</td>
+                                        <td><strong style="color: #0d6efd;"><t t-esc="o.claim_number"/></strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #6c757d;">Assurance :</td>
+                                        <td><strong><t t-esc="o.insurance_id.name"/></strong></td>
+                                    </tr>
+                                    <tr t-if="o.insurance_ice">
+                                        <td style="color: #6c757d;">ICE Assureur :</td>
+                                        <td><t t-esc="o.insurance_ice"/></td>
+                                    </tr>
+                                    <tr t-if="o.police_number">
+                                        <td style="color: #6c757d;">N° Police / Attest. :</td>
+                                        <td><t t-esc="o.police_number"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #6c757d;">Cabinet Expert :</td>
+                                        <td><strong><t t-esc="o.expert_cabinet_id.name or o.expert_name or 'Cabinet Agréé'"/></strong></td>
+                                    </tr>
+                                </table>
+                            </td>
+
+                            <!-- Colonne 2 : Véhicule & Assuré -->
+                            <td style="width: 50%; vertical-align: top; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px;">
+                                <div style="font-weight: 700; color: #0d6efd; border-bottom: 1px solid #dee2e6; padding-bottom: 6px; margin-bottom: 8px; font-size: 12px; text-transform: uppercase;">
+                                    Véhicule &amp; Propriétaire Assuré
+                                </div>
+                                <table style="width: 100%; font-size: 12px; line-height: 1.6;">
+                                    <tr>
+                                        <td style="color: #6c757d; width: 45%;">Immatriculation :</td>
+                                        <td>
+                                            <span style="background: #fff; border: 1px solid #000; border-radius: 4px; padding: 2px 8px; font-weight: 800;">
+                                                <t t-esc="o.license_plate"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #6c757d;">Marque / Modèle :</td>
+                                        <td><strong><t t-esc="o.vehicle_id.name"/></strong></td>
+                                    </tr>
+                                    <tr t-if="o.vin_number">
+                                        <td style="color: #6c757d;">N° Châssis (VIN) :</td>
+                                        <td><span style="font-family: monospace;"><t t-esc="o.vin_number"/></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #6c757d;">Nom de l'Assuré :</td>
+                                        <td><strong><t t-esc="o.customer_id.name"/></strong></td>
+                                    </tr>
+                                    <tr t-if="o.customer_cin">
+                                        <td style="color: #6c757d;">CIN Client :</td>
+                                        <td><strong><t t-esc="o.customer_cin"/></strong></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Tableau Détaillé du Décompte d'Expertise -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px;">
+                        <thead>
+                            <tr style="background-color: #0d6efd; color: #ffffff;">
+                                <th style="padding: 10px 12px; text-align: left; border: 1px solid #0d6efd; font-weight: 700;">Désignation / Décompte d'Accord Expert</th>
+                                <th style="padding: 10px 12px; text-align: right; border: 1px solid #0d6efd; width: 35%; font-weight: 700;">Montant (MAD TTC)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #dee2e6;">
+                                <td style="padding: 10px 12px; border: 1px solid #dee2e6;">
+                                    <strong>Montant Total des Travaux Agréé par l'Expert</strong><br/>
+                                    <span style="font-size: 11px; color: #6c757d;">
+                                        Arrêté contradictoirement avec le Cabinet <t t-esc="o.expert_cabinet_id.name or o.expert_name or 'Expert'"/>
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 12px; text-align: right; border: 1px solid #dee2e6; font-weight: 700;">
+                                    <t t-esc="'{:,.2f}'.format(o.expert_accord_amount_ttc)"/> MAD
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #dee2e6; background-color: #f8f9fa;">
+                                <td style="padding: 10px 12px; border: 1px solid #dee2e6; color: #198754;">
+                                    <i class="fa fa-minus-circle me-1" title="Déduction"/>
+                                    <strong>Prise en Charge Directe Compagnie d'Assurance</strong><br/>
+                                    <span style="font-size: 11px; color: #6c757d;">
+                                        Règlement direct par virement bancaire de <t t-esc="o.insurance_id.name"/> à l'atelier
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 12px; text-align: right; border: 1px solid #dee2e6; color: #198754; font-weight: 700;">
+                                    - <t t-esc="'{:,.2f}'.format(o.insurance_net_payable)"/> MAD
+                                </td>
+                            </tr>
+                            <tr t-if="o.franchise_amount > 0" style="border-bottom: 1px solid #dee2e6;">
+                                <td style="padding: 10px 12px; border: 1px solid #dee2e6;">
+                                    <strong>Franchise Contractuelle Police d'Assurance</strong><br/>
+                                    <span style="font-size: 11px; color: #6c757d;">
+                                        Part contractuelle légale fixée par votre contrat d'assurance (<t t-esc="o.franchise_rate"/>% ou fixe)
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 12px; text-align: right; border: 1px solid #dee2e6; font-weight: 600;">
+                                    <t t-esc="'{:,.2f}'.format(o.franchise_amount)"/> MAD
+                                </td>
+                            </tr>
+                            <tr t-if="(o.wear_amount + o.used_parts_vat_shortfall) > 0" style="border-bottom: 1px solid #dee2e6;">
+                                <td style="padding: 10px 12px; border: 1px solid #dee2e6;">
+                                    <strong>Vétusté &amp; Quote-part Pièces d'Usure / Réemploi Agréées</strong><br/>
+                                    <span style="font-size: 11px; color: #6c757d;">
+                                        Dépréciation d'ancienneté des pièces validée sur le rapport d'expertise automobile
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 12px; text-align: right; border: 1px solid #dee2e6; font-weight: 600;">
+                                    <t t-esc="'{:,.2f}'.format(o.wear_amount + o.used_parts_vat_shortfall)"/> MAD
+                                </td>
+                            </tr>
+                            <!-- Total Net Encaissé -->
+                            <tr style="background-color: #cfe2ff; border-top: 2px solid #0d6efd;">
+                                <td style="padding: 12px; border: 1px solid #b6d4fe; font-size: 14px; font-weight: 800; color: #084298;">
+                                    TOTAL NET ACQUITTÉ PAR L'ASSURÉ (TTC)
+                                </td>
+                                <td style="padding: 12px; text-align: right; border: 1px solid #b6d4fe; font-size: 16px; font-weight: 800; color: #084298;">
+                                    <t t-esc="'{:,.2f}'.format(o.customer_payable)"/> MAD
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Cadre de Décharge & Cachet d'Acquittement -->
+                    <table style="width: 100%; border: 1px solid #dee2e6; border-radius: 6px; border-collapse: separate; border-spacing: 0;">
+                        <tr>
+                            <td style="width: 50%; padding: 15px; vertical-align: top; border-right: 1px solid #dee2e6;">
+                                <div style="font-size: 11px; font-weight: 700; color: #6c757d; margin-bottom: 6px; text-transform: uppercase;">
+                                    Décharge &amp; Accord de l'Assuré
+                                </div>
+                                <div style="font-size: 11px; color: #495057; line-height: 1.5;">
+                                    Je soussigné(e), certifie avoir pris connaissance du rapport d'expertise, 
+                                    autoriser les réparations effectuées et avoir réglé l'intégralité de la franchise et vétusté ci-dessus mentionnées.
+                                </div>
+                                <div style="margin-top: 40px; font-size: 11px; color: #6c757d;">
+                                    Signature du Propriétaire / Assuré :
+                                </div>
+                            </td>
+                            <td style="width: 50%; padding: 15px; vertical-align: top; text-align: center; background-color: #fafafa;">
+                                <div style="font-size: 11px; font-weight: 700; color: #198754; margin-bottom: 6px; text-transform: uppercase;">
+                                    Cachet de l'Atelier &amp; Mention d'Acquittement
+                                </div>
+                                <div style="margin: 15px auto; width: 140px; height: 70px; border: 2px dashed #198754; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                    <div style="color: #198754; font-weight: 800; font-size: 13px; text-transform: uppercase;">
+                                        ACQUITTÉ<br/>
+                                        <span style="font-size: 10px; font-weight: 600;"><t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/></span>
+                                    </div>
+                                </div>
+                                <div style="font-size: 10px; color: #6c757d;">
+                                    Garage Pro - Facturation &amp; Encaissements
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

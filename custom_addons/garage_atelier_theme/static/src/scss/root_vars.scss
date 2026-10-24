@@ -1,0 +1,66 @@
+// ============================================================================
+// Garage Pro Design Tokens - Channel B: Runtime CSS Custom Properties
+// Emitted on :root for components, responsive density, and future dark mode
+// ============================================================================
+
+:root {
+    // --- Brand & Accent ---
+    --g-color-accent:         #{$g-color-accent};
+    --g-color-accent-hover:   #{$g-color-accent-hover};
+    --g-color-accent-soft:    #{$g-color-accent-soft};
+    --g-color-accent-text:    #{$g-color-accent-text};
+
+    // --- Surfaces & Borders ---
+    --g-surface-bg:           #{$g-surface-bg};
+    --g-surface-sheet:        #{$g-surface-sheet};
+    --g-surface-muted:        #{$g-surface-muted};
+    --g-border-subtle:        #{$g-border-subtle};
+    --g-border-default:       #{$g-border-default};
+    --g-border-strong:        #{$g-border-strong};
+
+    // --- Typography Colors ---
+    --g-text-primary:         #{$g-text-primary};
+    --g-text-secondary:       #{$g-text-secondary};
+    --g-text-muted:           #{$g-text-muted};
+
+    // --- Financial Semantics (Workshop KPIs) ---
+    --g-money-approved-fg:    #{$g-money-approved-fg};
+    --g-money-approved-bg:    #{$g-money-approved-bg};
+    --g-money-approved-bd:    #{$g-money-approved-bd};
+
+    --g-money-covered-fg:     #{$g-money-covered-fg};
+    --g-money-covered-bg:     #{$g-money-covered-bg};
+    --g-money-covered-bd:     #{$g-money-covered-bd};
+
+    --g-money-owed-fg:        #{$g-money-owed-fg};
+    --g-money-owed-bg:        #{$g-money-owed-bg};
+    --g-money-owed-bd:        #{$g-money-owed-bd};
+
+    --g-money-danger-fg:      #{$g-money-danger-fg};
+    --g-money-danger-bg:      #{$g-money-danger-bg};
+    --g-money-danger-bd:      #{$g-money-danger-bd};
+
+    // --- Moroccan Plate ---
+    --g-plate-bg:             #{$g-plate-bg};
+    --g-plate-text:           #{$g-plate-text};
+    --g-plate-border:         #{$g-plate-border};
+
+    // --- Input Field Tokens ---
+    --g-input-bg:             #{$g-input-bg};
+    --g-input-bg-focus:       #{$g-input-bg-focus};
+    --g-input-border:         #{$g-input-border};
+    --g-input-border-hover:   #{$g-input-border-hover};
+    --g-input-focus-ring:     #{$g-input-focus-ring};
+
+    // --- Control Geometry ---
+    --g-control-h:            #{$g-control-h-desktop};
+    --g-control-radius:       #{$g-control-radius};
+    --g-card-radius:          #{$g-card-radius};
+}
+
+// Tablet & Mobile Touch Density (Rugged Tablets, Workshop Floor)
+@media (pointer: coarse) {
+    :root {
+        --g-control-h: #{$g-control-h-touch};
+    }
+}

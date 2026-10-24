@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_garage_billing_wizard_form" model="ir.ui.view">
+        <field name="name">garage.billing.wizard.form</field>
+        <field name="model">garage.billing.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Moteur d'Équivalence Fiscale &amp; Facturation Officielle">
+                <sheet>
+                    <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                        <i class="fa fa-shield fa-2x me-3 text-primary" title="Sécurité Fiscale"/>
+                        <div>
+                            <strong>Protection Fiscale DGI &amp; Équivalence de Valeur :</strong><br/>
+                            Ce comparateur convertit en temps réel les pièces réelles atelier en 
+                            <strong>Forfaits Techniques de Réfection</strong>, <strong>Consommables</strong> et <strong>Stock Fiscal Déclaré (FIFO)</strong> pour garantir une conformité fiscale absolue tout en maintenant le total convenu au centime près.
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Dossier &amp; Client">
+                            <field name="repair_order_id" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="customer_type"/>
+                            <field name="customer_cin" invisible="customer_type == 'company'"/>
+                            <field name="customer_ice" invisible="customer_type == 'particulier'"/>
+                        </group>
+                        <group string="Paramètres Fiscaux">
+                            <field name="journal_id"/>
+                            <field name="invoice_date"/>
+                            <field name="tax_treatment" widget="radio"/>
+                        </group>
+                    </group>
+
+                    <!-- COMPARATEUR VISUEL CÔTE-À-CÔTE (2 COLONNES) -->
+                    <div class="row g-3 my-2">
+                        <!-- COLONNE GAUCHE : ATELIER RÉEL -->
+                        <div class="col-md-6 border-end pe-3">
+                            <div class="p-2 mb-2 rounded bg-light border-start border-4 border-info">
+                                <h6 class="fw-bold text-dark mb-0">
+                                    <i class="fa fa-wrench me-1 text-info" title="Atelier Réel"/> 1. ATELIER RÉEL (Bon de Travail)
+                                </h6>
+                                <small class="text-muted">Pièces et main-d'œuvre réelles consommées sur le véhicule</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="fw-bold small text-muted mb-1" for="ro_parts_line_ids">Pièces Posées sur le Véhicule :</label>
+                                <field name="ro_parts_line_ids" readonly="1">
+                                    <list create="false" delete="false" edit="false">
+                                        <field name="name"/>
+                                        <field name="source_type" widget="badge" decoration-success="source_type == 'official'" decoration-warning="source_type == 'operational'"/>
+                                        <field name="qty"/>
+                                        <field name="sale_price"/>
+                                        <field name="subtotal" sum="Total Pièces"/>
+                                    </list>
+                                </field>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="fw-bold small text-muted mb-1" for="ro_labor_line_ids">Main-d'Œuvre Réelle Atelier :</label>
+                                <field name="ro_labor_line_ids" readonly="1">
+                                    <list create="false" delete="false" edit="false">
+                                        <field name="name"/>
+                                        <field name="hours"/>
+                                        <field name="hourly_rate"/>
+                                        <field name="subtotal" sum="Total MO"/>
+                                    </list>
+                                </field>
+                            </div>
+
+                            <div class="d-flex justify-content-between p-2 bg-light rounded border">
+                                <span class="fw-bold">Total Atelier Réel (HT) :</span>
+                                <span class="fw-bold text-dark"><field name="ro_untaxed_total"/></span>
+                            </div>
+                        </div>
+
+                        <!-- COLONNE DROITE : MIROIR FISCAL DÉCLARÉ -->
+                        <div class="col-md-6 ps-3">
+                            <div class="p-2 mb-2 rounded bg-light border-start border-4 border-success">
+                                <h6 class="fw-bold text-dark mb-0">
+                                    <i class="fa fa-file-text-o me-1 text-success" title="Miroir Fiscal"/> 2. MIROIR FISCAL DÉCLARÉ (Facture Officielle)
+                                </h6>
+                                <small class="text-muted">Lignes déclarées pour la DGI &amp; déstockage fiscal légal</small>
+                            </div>
+
+                            <!-- Pilotage & Stock Magasin -->
+                            <div class="p-2 mb-2 bg-light rounded border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small fw-bold">Stock Fiscal Magasin Disponible : </span>
+                                    <span class="badge bg-primary fs-6"><field name="fiscal_pool_available_amount"/></span>
+                                </div>
+                                <div class="mb-2">
+                                    <field name="enable_smart_stock_clearance" widget="boolean_toggle"/>
+                                    <span class="small text-muted ms-2">Priorité Déstockage Fiscal Réel (FIFO)</span>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label for="service_percentage" class="small fw-bold mb-0"/>
+                                        <div class="input-group input-group-sm">
+                                            <field name="service_percentage" class="form-control"/>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="consumable_percentage" class="small fw-bold mb-0"/>
+                                        <div class="input-group input-group-sm">
+                                            <field name="consumable_percentage" class="form-control"/>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="fw-bold small text-muted mb-1" for="line_ids">Lignes de la Facture Fiscale (Éditables) :</label>
+                                <field name="line_ids">
+                                    <list editable="bottom">
+                                        <field name="line_category" widget="badge" decoration-success="line_category in ('declared_part', 'real_labor')" decoration-primary="line_category == 'sub_service'" decoration-info="line_category in ('sub_consumable', 'sub_official_stock')"/>
+                                        <field name="name"/>
+                                        <field name="quantity"/>
+                                        <field name="price_unit"/>
+                                        <field name="subtotal" sum="Total HT Proposé"/>
+                                    </list>
+                                </field>
+                            </div>
+
+                            <div class="d-flex justify-content-between p-2 bg-light rounded border">
+                                <span class="fw-bold">Total Proposé (HT) :</span>
+                                <span class="fw-bold text-success"><field name="amount_proposed_untaxed"/></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BANDEAU DE CONTRÔLE D'ÉQUILIBRE FINANCIER -->
+                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 rounded bg-light border">
+                        <div>
+                            <strong>Total Vente Atelier Convenu (HT) : </strong>
+                            <span class="h5 text-primary mb-0 ms-2"><field name="amount_target_untaxed"/></span>
+                        </div>
+                        <div>
+                            <field name="is_balanced" invisible="1"/>
+                            <span class="badge bg-success py-2 px-3 fs-6" invisible="not is_balanced">
+                                <i class="fa fa-check-circle me-1" title="Équilibré"/> PARFAITEMENT ÉQUILIBRÉ (Écart: 0.00 MAD)
+                            </span>
+                            <span class="badge bg-danger py-2 px-3 fs-6" invisible="is_balanced">
+                                <i class="fa fa-exclamation-triangle me-1" title="Erreur Écart"/> ÉCART DE <field name="amount_difference"/> MAD À AJUSTER
+                            </span>
+                        </div>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_create_invoice" string="Générer Facture Déclarée Validée" type="object" class="btn-primary" invisible="not is_balanced"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

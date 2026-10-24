@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue Formulaire de l'Assistant de Facturation Scindée -->
+    <record id="view_garage_insurance_invoice_wizard_form" model="ir.ui.view">
+        <field name="name">garage.insurance.invoice.wizard.form</field>
+        <field name="model">garage.insurance.invoice.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Facturation Scindée - Sinistre &amp; Assurance">
+                <sheet>
+                    <div class="alert alert-info" role="status">
+                        <div class="fw-bold fs-5 mb-1">
+                            <i class="fa fa-balance-scale me-2" title="Répartition Contradictoire"/>
+                            Décompte de Prise en Charge Contradictoire
+                        </div>
+                        <p class="mb-0">
+                            Ce processus génère simultanément la facture officielle à la <strong>Compagnie d'Assurance</strong>
+                            (sur son ICE marocain) et la facture/reçu de la <strong>Franchise contractuelle &amp; Vétusté</strong>
+                            au nom du client assuré.
+                        </p>
+                    </div>
+
+                    <!-- Synthèse KPI Facturation Scindée -->
+                    <div class="o_garage_kpi_strip mb-3">
+                        <div class="o_garage_kpi_card o_garage_kpi_approved">
+                            <span class="o_garage_kpi_label">Total Agréé Expert (TTC)</span>
+                            <span class="o_garage_kpi_value text-primary">
+                                <field name="expert_accord_amount_ttc" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_covered">
+                            <span class="o_garage_kpi_label">Part Compagnie Assurance</span>
+                            <span class="o_garage_kpi_value text-success">
+                                <field name="insurance_net_ttc" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_owed">
+                            <span class="o_garage_kpi_label">Quote-Part Assuré (Franchise)</span>
+                            <span class="o_garage_kpi_value text-warning">
+                                <field name="customer_share_ttc" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Dossier Sinistre">
+                            <field name="claim_id" invisible="1"/>
+                            <field name="claim_number"/>
+                            <field name="license_plate"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Paramètres Comptables">
+                            <field name="journal_id"/>
+                            <field name="invoice_date"/>
+                        </group>
+                    </group>
+
+                    <separator string="1. Facture Compagnie d'Assurance (Net Agréé HT + 20% TVA)"/>
+                    <group>
+                        <group>
+                            <field name="insurance_id"/>
+                            <field name="insurance_ice"/>
+                        </group>
+                        <group>
+                            <field name="insurance_net_ttc" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="insurance_net_ht" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                    </group>
+
+                    <separator string="2. Quote-Part Client (Franchise &amp; Vétusté)"/>
+                    <group>
+                        <group>
+                            <field name="customer_id"/>
+                            <field name="customer_cin"/>
+                            <field name="generate_customer_invoice"/>
+                        </group>
+                        <group>
+                            <field name="customer_share_ttc" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="customer_share_ht" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate_split_invoices"
+                            string="Générer les Factures Scindées"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-file-text-o"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_insurance_invoice_wizard" model="ir.actions.act_window">
+        <field name="name">Émettre Facturation Scindée</field>
+        <field name="res_model">garage.insurance.invoice.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

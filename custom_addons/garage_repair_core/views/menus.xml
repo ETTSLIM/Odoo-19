@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu Racine Principal Garage Pro -->
+    <menuitem id="menu_garage_root"
+              name="Garage Pro"
+              sequence="10"
+              groups="group_garage_access_workshop"
+              web_icon="garage_repair_core,static/description/icon.png"/>
+
+    <!-- Action Annuaire Partenaires / Contacts (Clients, Assurances, Fournisseurs) -->
+    <record id="action_garage_partners_unified" model="ir.actions.act_window">
+        <field name="name">Annuaire Contacts (Clients, Assurances, Fournisseurs)</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="garage_repair_core.view_res_partner_filter_inherit_garage"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Consultez et créez vos contacts : Clients, Sociétés, Assurances, Experts et Fournisseurs de pièces.
+            </p>
+        </field>
+    </record>
+
+    <!-- ==================================================================== -->
+    <!-- 6 ONGLETS PRINCIPAUX 1-CLIC (AUCUN DROPDOWN DANS LA TOP BAR)         -->
+    <!-- ==================================================================== -->
+
+    <!-- 1. Atelier & Entrées -->
+    <menuitem id="menu_garage_receptions"
+              name="Atelier &amp; Entrées"
+              parent="menu_garage_root"
+              action="action_garage_reception"
+              groups="group_garage_access_workshop"
+              sequence="10"/>
+
+    <!-- 2. Sinistres & Assurances -->
+    <menuitem id="menu_garage_insurance_claim"
+              name="Sinistres &amp; Assurances"
+              parent="menu_garage_root"
+              action="action_garage_insurance_claim"
+              groups="group_garage_access_insurance"
+              sequence="20"/>
+
+    <!-- 3. Pièces, Stock & BL -->
+    <menuitem id="menu_garage_stock"
+              name="Pièces, Stock &amp; BL"
+              parent="menu_garage_root"
+              action="action_garage_stock_shelf"
+              groups="group_garage_access_stock"
+              sequence="30"/>
+
+    <!-- 4. Caisse & Factures -->
+    <menuitem id="menu_garage_finance"
+              name="Caisse &amp; Factures"
+              parent="menu_garage_root"
+              action="action_garage_repair_payment"
+              groups="group_garage_access_finance"
+              sequence="40"/>
+
+    <!-- 5. Parc & Annuaire -->
+    <menuitem id="menu_garage_directory"
+              name="Parc &amp; Annuaire"
+              parent="menu_garage_root"
+              action="fleet.fleet_vehicle_action"
+              groups="group_garage_access_directory"
+              sequence="50"/>
+
+    <!-- 6. Configuration & Équipe (Manager) -->
+    <menuitem id="menu_garage_config"
+              name="Configuration &amp; Équipe"
+              parent="menu_garage_root"
+              action="action_res_users_garage"
+              groups="group_garage_manager"
+              sequence="60"/>
+</odoo>

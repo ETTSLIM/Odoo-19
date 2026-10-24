@@ -1,0 +1,76 @@
+// ============================================================================
+// Garage Pro Design Tokens - Tier 1: Primitives
+// Raw color palettes, typography, spacing, radius, and shadows
+// ============================================================================
+
+// --- Color Palette: Slates & Neutrals ---
+$g-slate-50:  #f8fafc;
+$g-slate-100: #f1f5f9;
+$g-slate-200: #e2e8f0;
+$g-slate-300: #cbd5e1;
+$g-slate-400: #94a3b8;
+$g-slate-500: #64748b;
+$g-slate-600: #475569;
+$g-slate-700: #334155;
+$g-slate-800: #1e293b;
+$g-slate-900: #0f172a;
+$g-white:     #ffffff;
+$g-black:     #000000;
+
+// --- Color Palette: Automotive Blue (Racing Blue) ---
+$g-blue-50:   #eff6ff;
+$g-blue-100:  #dbeafe;
+$g-blue-200:  #bfdbfe;
+$g-blue-500:  #3b82f6;
+$g-blue-600:  #2563eb;
+$g-blue-700:  #1d4ed8;
+$g-blue-800:  #1e40af;
+$g-blue-900:  #1e3a8a;
+
+// --- Color Palette: Workshop Emerald (Success / Agréé) ---
+$g-emerald-50:  #ecfdf5;
+$g-emerald-100: #d1fae5;
+$g-emerald-500: #10b981;
+$g-emerald-600: #059669;
+$g-emerald-700: #047857;
+
+// --- Color Palette: Workshop Amber (Franchise Alert / En Cours) ---
+$g-amber-50:  #fffbeb;
+$g-amber-100: #fef3c7;
+$g-amber-200: #fde68a;
+$g-amber-500: #f59e0b;
+$g-amber-600: #d97706;
+$g-amber-700: #b45309;
+
+// --- Color Palette: Warning & Danger Red ---
+$g-red-50:  #fef2f2;
+$g-red-100: #fee2e2;
+$g-red-500: #ef4444;
+$g-red-600: #dc2626;
+$g-red-700: #b91c1c;
+
+// --- Color Palette: Sky / Info ---
+$g-sky-50:  #f0f9ff;
+$g-sky-100: #e0f2fe;
+$g-sky-600: #0284c7;
+
+// --- Spacing Scale ---
+$g-space-1: 4px;
+$g-space-2: 8px;
+$g-space-3: 12px;
+$g-space-4: 16px;
+$g-space-5: 20px;
+$g-space-6: 24px;
+$g-space-8: 32px;
+
+// --- Border Radius Scale ---
+$g-radius-xs: 3px;
+$g-radius-sm: 6px;
+$g-radius-md: 8px;
+$g-radius-lg: 10px;
+$g-radius-xl: 16px;
+$g-radius-pill: 9999px;
+
+// --- Typography Stacks ---
+$g-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, sans-serif;
+$g-font-plate: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;

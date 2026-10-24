@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extension Formulaire Ordre de Réparation -->
+    <record id="view_repair_order_form_inherit_garage" model="ir.ui.view">
+        <field name="name">repair.order.form.inherit.garage</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Boutons d'Action Header épurés -->
+            <xpath expr="//header" position="inside">
+                <button name="action_send_whatsapp_quote" string="Envoyer Devis WhatsApp" type="object" class="btn-primary" icon="fa-whatsapp" invisible="state in ('done', 'cancel')"/>
+                <button name="action_open_payment_recovery_wizard" string="Encaisser Règlement" type="object" class="btn-success" icon="fa-money" invisible="state == 'draft' or payment_status == 'paid'"/>
+                <button name="action_generate_bl" string="Imprimer Bon de Travail / BL" type="object" class="btn-secondary" icon="fa-print" invisible="state == 'draft'"/>
+                <button name="action_open_billing_wizard" string="Générer Facture Fiscale" type="object" class="btn-primary" invisible="is_invoiced_officially or state not in ('under_repair', 'done')"/>
+            </xpath>
+
+            <!-- Masquer les boutons natifs Odoo inadaptés au garage automobile -->
+            <xpath expr="//header/button[@name='action_create_sale_order']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_assign']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_unreserve']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//div[@name='button_box']/button[@name='action_view_sale_order']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Boutons Statistiques / Raccourcis dans la Boîte de Boutons -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_reception" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="not reception_id">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="reception_id" readonly="1"/></span>
+                        <span class="o_stat_text">Réception</span>
+                    </div>
+                </button>
+                <button name="action_view_claim" type="object" class="oe_stat_button" icon="fa-shield" invisible="billing_channel != 'insurance' and not claim_id">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="claim_id" readonly="1"/></span>
+                        <span class="o_stat_text">Dossier Sinistre</span>
+                    </div>
+                </button>
+                <button name="action_view_parts_bl" type="object" class="oe_stat_button" icon="fa-truck" invisible="parts_bl_count == 0">
+                    <field name="parts_bl_count" widget="statinfo" string="Achats Pièces"/>
+                </button>
+                <button name="action_open_tracking_portal" type="object" class="oe_stat_button" icon="fa-globe" invisible="not tracking_token">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value">Suivi Direct</span>
+                        <span class="o_stat_text">Portail Client</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- Hero Banner & Indicateurs Financiers en haut de formulaire -->
+            <xpath expr="//sheet/group[1]" position="before">
+                <!-- Bandeau Alerte Traçabilité Bancaire (TPE / Chèque) -->
+                <div class="alert alert-danger d-flex justify-content-between align-items-center mb-2" role="alert" invisible="fiscal_compliance_status != 'alert_invoice_needed'">
+                    <div>
+                        <i class="fa fa-exclamation-triangle fa-lg me-2" title="Alerte Fiscale Bancaire"/>
+                        <strong>Alerte Fiscale Bancaire : </strong>
+                        Un montant de <strong><field name="bank_traceable_amount" readonly="1" class="ms-1"/></strong> a été encaissé par <strong>TPE / Chèque</strong> sans Facture Fiscale déclarée !
+                    </div>
+                    <button name="action_open_billing_wizard" string="Émettre Facture Fiscale Immédiatement" type="object" class="btn btn-sm btn-danger ms-3"/>
+                </div>
+
+                <!-- Bandeau Accord Client en Ligne -->
+                <div class="alert alert-success d-flex justify-content-between align-items-center mb-2" role="alert" invisible="client_approval_status != 'approved'">
+                    <div>
+                        <i class="fa fa-check-circle fa-lg me-2" title="Accord Client"/>
+                        <strong>Accord Client Validé en 1-Clic le : </strong> <field name="client_approval_date" readonly="1" class="ms-1"/>
+                    </div>
+                </div>
+
+                <!-- Bandeau Facture Fiscale Émise -->
+                <div class="alert alert-primary d-flex justify-content-between align-items-center mb-2" role="alert" invisible="not is_invoiced_officially">
+                    <div>
+                        <i class="fa fa-file-text-o me-1" title="Facturé"/> <strong>Facture Fiscale Déclarée Émise :</strong>
+                        <field name="official_invoice_id" readonly="1" class="ms-2"/>
+                    </div>
+                </div>
+
+                <!-- Hero Banner Véhicule & Client en Ligne Unique (Résumé Lecture Seule) -->
+                <div class="o_garage_hero mb-3" invisible="not vehicle_id and not partner_id">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="o_garage_plate" invisible="not license_plate">
+                                <field name="license_plate" readonly="1"/>
+                            </span>
+                            <span class="fs-5 fw-bold text-dark" invisible="not vehicle_id">
+                                <field name="vehicle_id" readonly="1"/>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="not partner_id">
+                            <i class="fa fa-user-o text-muted me-1" title="Client"/>
+                            <span class="fw-semibold text-dark">
+                                <field name="partner_id" readonly="1"/>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="not vin_number">
+                            <i class="fa fa-barcode text-muted me-1" title="VIN"/>
+                            <span class="small text-muted fw-bold">VIN :</span>
+                            <field name="vin_number" readonly="1"/>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="not odometer_order">
+                            <i class="fa fa-tachometer text-muted me-1" title="Kilométrage"/>
+                            <span class="small text-muted fw-bold">Km :</span>
+                            <field name="odometer_order" readonly="1"/> km
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bandeau KPI Financiers Clés -->
+                <div class="o_garage_kpi_strip mb-3">
+                    <div class="o_garage_kpi_card o_garage_kpi_covered">
+                        <span class="o_garage_kpi_label">Total Réparation TTC</span>
+                        <span class="o_garage_kpi_value text-primary">
+                            <field name="amount_total_ttc" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                    </div>
+                    <div class="o_garage_kpi_card o_garage_kpi_approved">
+                        <span class="o_garage_kpi_label">Total Encaissé</span>
+                        <span class="o_garage_kpi_value text-success">
+                            <field name="amount_paid" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                    </div>
+                    <div class="o_garage_kpi_card o_garage_kpi_danger" invisible="amount_residual &lt;= 0">
+                        <span class="o_garage_kpi_label">Reste à Régler</span>
+                        <span class="o_garage_kpi_value text-danger">
+                            <field name="amount_residual" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                    </div>
+                    <div class="o_garage_kpi_card o_garage_kpi_approved" invisible="amount_residual &gt; 0">
+                        <span class="o_garage_kpi_label">Solde Dossier</span>
+                        <span class="o_garage_kpi_value text-success">Soldé (0.00 MAD)</span>
+                    </div>
+                </div>
+
+                <group>
+                    <group string="Véhicule, Client &amp; Réception">
+                        <field name="vehicle_id"/>
+                        <field name="partner_id" context="{'res_partner_search_mode': 'customer', 'show_vat': True}"/>
+                        <field name="reception_id" options="{'no_quick_create': True}"/>
+                        <field name="odometer_order"/>
+                        <field name="client_approval_status" widget="badge" decoration-warning="client_approval_status == 'pending'" decoration-success="client_approval_status == 'approved'" decoration-danger="client_approval_status == 'rejected'"/>
+                        <field name="tracking_token" readonly="1" groups="base.group_no_one"/>
+                    </group>
+                    <group string="Mode de Facturation &amp; Règlement">
+                        <field name="billing_channel" widget="radio"/>
+                        <field name="claim_id" invisible="billing_channel != 'insurance'"/>
+                        <field name="bl_number" invisible="not bl_number"/>
+                        <field name="payment_status" widget="badge" decoration-danger="payment_status == 'unpaid'" decoration-warning="payment_status == 'partial'" decoration-success="payment_status == 'paid'"/>
+                        <field name="fiscal_compliance_status" widget="badge" decoration-danger="fiscal_compliance_status == 'alert_invoice_needed'" decoration-success="fiscal_compliance_status == 'ok_invoiced'" decoration-info="fiscal_compliance_status == 'ok_cash'"/>
+                        <field name="bank_traceable_amount" invisible="not has_bank_traceable_payment"/>
+                        <field name="has_bank_traceable_payment" invisible="1"/>
+                    </group>
+                </group>
+            </xpath>
+
+            <!-- Masquer le bloc natif Odoo générique pour éviter les colonnes vides ou doublons -->
+            <xpath expr="//sheet/group[2]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Reléguer l'onglet de mouvements de stock natif Odoo aux utilisateurs techniques -->
+            <xpath expr="//notebook/page[@name='parts']" position="attributes">
+                <attribute name="groups">base.group_no_one</attribute>
+                <attribute name="string">Mouvements Stock (Odoo)</attribute>
+            </xpath>
+
+            <!-- Onglets Atelier Métier placés en tête du notebook -->
+            <xpath expr="//notebook/page[@name='parts']" position="before">
+                <page string="Pièces &amp; Fournitures" name="garage_parts_page">
+                    <div class="mb-2">
+                        <button name="action_open_stock_picker_wizard" string="Piocher du Stock Magasin" type="object" class="btn btn-outline-primary" icon="fa-cubes"/>
+                    </div>
+                    <field name="garage_parts_lines">
+                        <list editable="bottom">
+                            <field name="product_id"/>
+                            <field name="name"/>
+                            <field name="source_type" widget="badge" decoration-warning="source_type == 'operational'" decoration-success="source_type == 'official'"/>
+                            <field name="is_officially_cleared" widget="badge" decoration-success="is_officially_cleared" decoration-muted="not is_officially_cleared" string="Sortie Fiscale"/>
+                            <field name="qty"/>
+                            <field name="cost_price" groups="garage_repair_core.group_garage_manager"/>
+                            <field name="sale_price"/>
+                            <field name="subtotal" sum="Total Vente Pièces"/>
+                            <field name="total_cost" sum="Total Coût Pièces" groups="garage_repair_core.group_garage_manager"/>
+                            <field name="margin" sum="Marge Nette Pièces" groups="garage_repair_core.group_garage_manager"/>
+                        </list>
+                    </field>
+                </page>
+
+                <page string="Main-d'Œuvre" name="garage_labor_page">
+                    <field name="garage_labor_lines">
+                        <list editable="bottom">
+                            <field name="work_type"/>
+                            <field name="name"/>
+                            <field name="mechanic_id"/>
+                            <field name="hours" sum="Total Heures"/>
+                            <field name="hourly_cost" groups="garage_repair_core.group_garage_manager"/>
+                            <field name="hourly_rate"/>
+                            <field name="subtotal" sum="Total Vente MO"/>
+                            <field name="total_cost" sum="Total Coût MO" groups="garage_repair_core.group_garage_manager"/>
+                            <field name="margin" sum="Marge Nette MO" groups="garage_repair_core.group_garage_manager"/>
+                        </list>
+                    </field>
+                </page>
+
+                <page string="Règlements Guichet" name="garage_payments_page">
+                    <field name="payment_ids" readonly="1">
+                        <list decoration-success="is_bank_traceable">
+                            <field name="payment_date"/>
+                            <field name="amount" sum="Total Encaissé"/>
+                            <field name="payment_method" widget="badge" decoration-info="payment_method == 'cash'" decoration-warning="payment_method in ('tpe', 'cheque', 'transfer')"/>
+                            <field name="transaction_ref"/>
+                            <field name="bank_name"/>
+                            <field name="is_bank_traceable" widget="boolean_toggle"/>
+                            <field name="cashier_id"/>
+                        </list>
+                    </field>
+                </page>
+
+                <page string="Marge &amp; Rentabilité" name="profitability_page" groups="garage_repair_core.group_garage_manager">
+                    <group col="4">
+                        <group string="Chiffre d'Affaires Réalisé">
+                            <field name="amount_parts_operational"/>
+                            <field name="amount_parts_official"/>
+                            <field name="amount_parts_untaxed"/>
+                            <field name="amount_labor_untaxed"/>
+                            <field name="amount_untaxed_total" class="oe_subtotal_footer_separator"/>
+                            <field name="amount_tax_total"/>
+                            <field name="amount_total_ttc" class="oe_subtotal_footer_separator"/>
+                        </group>
+                        <group string="Coûts de Revient &amp; Rentabilité Réelle">
+                            <field name="total_parts_cost"/>
+                            <field name="total_labor_cost"/>
+                            <field name="total_real_cost" class="oe_subtotal_footer_separator"/>
+                            <field name="real_gross_margin" decoration-success="real_gross_margin &gt; 0" decoration-danger="real_gross_margin &lt;= 0"/>
+                            <field name="real_margin_rate" widget="percentage"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Extension Vue Liste Ordres de Réparation & Devis BL -->
+    <record id="view_repair_order_tree_inherit_garage" model="ir.ui.view">
+        <field name="name">repair.order.list.inherit.garage</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="attributes">
+                <attribute name="column_invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='parts_availability']" position="attributes">
+                <attribute name="column_invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='product_qty']" position="attributes">
+                <attribute name="column_invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='sale_order_id']" position="attributes">
+                <attribute name="column_invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='picking_id']" position="attributes">
+                <attribute name="column_invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="bl_number" optional="show"/>
+                <field name="license_plate"/>
+                <field name="vehicle_id"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="billing_channel" widget="badge"
+                       decoration-info="billing_channel == 'bl_internal'"
+                       decoration-primary="billing_channel == 'official_invoice'"
+                       decoration-warning="billing_channel == 'insurance'"/>
+                <field name="amount_untaxed_total" sum="Total HT" widget="monetary" optional="hide"/>
+                <field name="amount_total_ttc" sum="Total TTC" widget="monetary"/>
+                <field name="amount_paid" sum="Total Encaissé" widget="monetary" optional="show"/>
+                <field name="amount_residual" sum="Reste à Régler" widget="monetary" optional="show"/>
+                <field name="payment_status" widget="badge"
+                       decoration-danger="payment_status == 'unpaid'"
+                       decoration-warning="payment_status == 'partial'"
+                       decoration-success="payment_status == 'paid'"/>
+                <field name="fiscal_compliance_status" widget="badge"
+                       decoration-danger="fiscal_compliance_status == 'alert_invoice_needed'"
+                       decoration-success="fiscal_compliance_status == 'ok_invoiced'"
+                       decoration-info="fiscal_compliance_status == 'ok_cash'"
+                       optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Filtres & Recherche Ordres de Réparation -->
+    <record id="view_repair_order_filter_inherit_garage" model="ir.ui.view">
+        <field name="name">repair.order.select.inherit.garage</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="license_plate"/>
+                <field name="vehicle_id"/>
+                <field name="bl_number"/>
+            </xpath>
+            <xpath expr="//filter[@name='filter_draft']" position="before">
+                <filter string="En Bon de Travail / BL" name="filter_bl" domain="[('billing_channel', '=', 'bl_internal')]"/>
+                <filter string="Devis Validés en Ligne" name="filter_approved" domain="[('client_approval_status', '=', 'approved')]"/>
+                <filter string="Facturés Officiellement" name="filter_invoiced" domain="[('is_invoiced_officially', '=', True)]"/>
+                <filter string="Avec Pièces Non Déclarées" name="filter_op_parts" domain="[('has_operational_parts', '=', True)]"/>
+                <filter string="Non Soldés (BL)" name="filter_unpaid" domain="[('payment_status', 'in', ('unpaid', 'partial'))]"/>
+                <filter string="Alerte Fiscale Bancaire" name="alert_compliance" domain="[('fiscal_compliance_status', '=', 'alert_invoice_needed')]"/>
+                <separator/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ==================================================================== -->
+    <!-- CANAL 2 : CAISSE GUICHET & FACTURES FISCALES                         -->
+    <!-- ==================================================================== -->
+
+    <!-- Vue Liste Journal Caisse & Règlements Guichet -->
+    <record id="view_garage_repair_payment_list" model="ir.ui.view">
+        <field name="name">garage.repair.payment.list</field>
+        <field name="model">garage.repair.payment</field>
+        <field name="arch" type="xml">
+            <list string="Journal Caisse &amp; Règlements Atelier" decoration-success="payment_method == 'cash'" decoration-info="is_bank_traceable">
+                <field name="payment_date"/>
+                <field name="repair_id"/>
+                <field name="partner_id"/>
+                <field name="payment_method" widget="badge" decoration-success="payment_method == 'cash'" decoration-info="payment_method == 'tpe'" decoration-warning="payment_method == 'cheque'" decoration-primary="payment_method == 'transfer'"/>
+                <field name="amount" widget="monetary"/>
+                <field name="is_bank_traceable" widget="boolean_toggle"/>
+                <field name="transaction_ref"/>
+                <field name="bank_name"/>
+                <field name="cashier_id"/>
+                <field name="currency_id" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Kanban Journal Caisse Guichet -->
+    <record id="view_garage_repair_payment_kanban" model="ir.ui.view">
+        <field name="name">garage.repair.payment.kanban</field>
+        <field name="model">garage.repair.payment</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard" create="true">
+                <field name="payment_date"/>
+                <field name="repair_id"/>
+                <field name="partner_id"/>
+                <field name="amount"/>
+                <field name="payment_method"/>
+                <field name="cashier_id"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-bold text-dark fs-6" t-esc="record.partner_id.value"/>
+                            <field name="payment_method" widget="badge"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <i class="fa fa-wrench me-1" title="Ordre de Réparation"/>
+                            <span t-esc="record.repair_id.value"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <div class="text-muted small">
+                                <i class="fa fa-clock-o me-1" title="Date"/>
+                                <span t-esc="record.payment_date.value"/>
+                            </div>
+                            <div class="fw-bold fs-6 text-success" t-esc="record.amount.value"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire Règlements Guichet -->
+    <record id="view_garage_repair_payment_form" model="ir.ui.view">
+        <field name="name">garage.repair.payment.form</field>
+        <field name="model">garage.repair.payment</field>
+        <field name="arch" type="xml">
+            <form string="Encaissement / Règlement Réparation">
+                <sheet>
+                    <group>
+                        <group string="Détails Règlement">
+                            <field name="repair_id"/>
+                            <field name="partner_id"/>
+                            <field name="payment_date"/>
+                            <field name="amount" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Mode &amp; Traçabilité">
+                            <field name="payment_method" widget="radio"/>
+                            <field name="transaction_ref" invisible="payment_method == 'cash'"/>
+                            <field name="bank_name" invisible="payment_method not in ('tpe', 'cheque', 'transfer')"/>
+                            <field name="is_bank_traceable" readonly="1"/>
+                            <field name="cashier_id"/>
+                        </group>
+                    </group>
+                    <group string="Observations &amp; Facture Liée">
+                        <field name="notes" placeholder="Observations ou référence du reçu..."/>
+                        <field name="official_invoice_id" invisible="not official_invoice_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue Recherche Journal Caisse -->
+    <record id="view_garage_repair_payment_search" model="ir.ui.view">
+        <field name="name">garage.repair.payment.search</field>
+        <field name="model">garage.repair.payment</field>
+        <field name="arch" type="xml">
+            <search string="Recherche Journal Caisse">
+                <field name="repair_id"/>
+                <field name="partner_id"/>
+                <field name="transaction_ref"/>
+                <filter name="filter_cash" string="Espèces (Caisse)" domain="[('payment_method', '=', 'cash')]"/>
+                <filter name="filter_bank" string="Bancaire Traçable (TPE / Chèque)" domain="[('is_bank_traceable', '=', True)]"/>
+                <group>
+                    <filter name="group_by_method" string="Mode de Règlement" context="{'group_by': 'payment_method'}"/>
+                    <filter name="group_by_cashier" string="Encaissé par" context="{'group_by': 'cashier_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Journal Caisse Guichet -->
+    <record id="action_garage_repair_payment" model="ir.actions.act_window">
+        <field name="name">Journal Caisse Guichet &amp; Règlements</field>
+        <field name="res_model">garage.repair.payment</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_garage_repair_payment_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Consultez le journal des encaissements de la caisse !
+            </p>
+            <p>
+                Enregistrez et contrôlez chaque règlement perçu au guichet : Espèces, TPE Carte Bancaire, Chèques ou Virements.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Factures Fiscales Officielles Clients (TVA 20%) -->
+    <record id="action_garage_official_invoices" model="ir.actions.act_window">
+        <field name="name">Factures Fiscales Clients (TVA 20%)</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('move_type', '=', 'out_invoice')]</field>
+        <field name="context">{'default_move_type': 'out_invoice'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Gérez vos factures de vente officielles avec TVA 20% !
+            </p>
+            <p>
+                Toutes les factures émises pour les clients professionnels (ICE) ou les règlements bancaires traçables sont centralisées ici.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Contrôle Conformité Bancaire -->
+    <record id="action_garage_bank_traceability_compliance" model="ir.actions.act_window">
+        <field name="name">Contrôle Conformité Bancaire (TPE / Chèques)</field>
+        <field name="res_model">repair.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('has_bank_traceable_payment', '=', True)]</field>
+        <field name="context">{'search_default_alert_compliance': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Contrôle de conformité fiscale des encaissements bancaires !
+            </p>
+            <p>
+                Visualisez les réparations réglées par carte ou chèque nécessitant l'émission d'une facture fiscale officielle pour éviter tout redressement.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Devis Sinistres & Assurances -->
+    <record id="action_garage_insurance_repair_orders" model="ir.actions.act_window">
+        <field name="name">Devis Sinistres &amp; Assurances</field>
+        <field name="res_model">repair.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('billing_channel', '=', 'insurance')]</field>
+        <field name="context">{'default_billing_channel': 'insurance'}</field>
+    </record>
+
+    <!-- Action Fenêtre Ordres de Travaux Actifs Atelier -->
+    <record id="action_garage_active_repair_orders" model="ir.actions.act_window">
+        <field name="name">Ordres de Travaux Actifs</field>
+        <field name="res_model">repair.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('state', 'in', ('under_repair', 'confirmed', 'draft'))]</field>
+    </record>
+
+    <!-- Action Fenêtre Supervision Portail Client 1-Clic & Liens Magiques -->
+    <record id="action_garage_external_portal_monitor" model="ir.actions.act_window">
+        <field name="name">Supervision Portail Client &amp; Liens Magiques</field>
+        <field name="res_model">repair.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('tracking_token', '!=', False)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Supervision des accès portail client en temps réel !
+            </p>
+            <p>
+                Consultez les jetons de suivi actifs, vérifiez les validations de devis en 1-clic et les adresses IP d'accord client.
+            </p>
+        </field>
+    </record>
+</odoo>

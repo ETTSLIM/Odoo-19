@@ -1,0 +1,12 @@
+{
+  "inherits": [
+    {
+      "path": "~/.gemini/config/skills",
+      "include_only": [
+        "debug",
+        "graphify",
+        "browseros-neo"
+      ]
+    }
+  ]
+}

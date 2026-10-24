@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue Formulaire UI Kit & Design System Debugger -->
+    <record id="view_garage_ui_kit_form" model="ir.ui.view">
+        <field name="name">garage.ui.kit.form</field>
+        <field name="model">garage.ui.kit</field>
+        <field name="arch" type="xml">
+            <form string="Laboratoire Composants &amp; Design System UI Kit">
+                <header>
+                    <button name="action_test_primary" string="Action Principale" type="object" class="btn-primary" icon="fa-check"/>
+                    <button name="action_test_secondary" string="Bouton Secondaire" type="object" class="btn-secondary" icon="fa-cog"/>
+                    <button name="action_test_secondary" string="Lien Discret" type="object" class="btn-link text-muted"/>
+                    <field name="stage_demo" widget="statusbar" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <div class="oe_title mb-4">
+                        <span class="text-muted small fw-bold text-uppercase">Garage Pro • Living Styleguide</span>
+                        <h1 class="mt-1">
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <!-- 1. Moroccan Plates & Hero Component -->
+                    <div class="o_garage_hero mb-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="o_garage_plate">
+                                    <field name="license_plate_demo" readonly="1"/>
+                                </span>
+                                <span class="o_garage_plate">
+                                    <field name="license_plate_casa" readonly="1"/>
+                                </span>
+                                <div>
+                                    <div class="fw-bold fs-5 text-dark">Spécimen Plaque Marocaine Normalisée (NARSA)</div>
+                                    <div class="text-muted small">Région | Lettre Série Latine | Numéro d'Ordre (Ordre 26 | B | 234556)</div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <button name="action_test_secondary" type="object" class="btn btn-outline-success btn-sm o_garage_whatsapp_btn" title="Tester WhatsApp" aria-label="Tester WhatsApp">
+                                    <i class="fa fa-whatsapp" title="WhatsApp"/>
+                                    <span class="ms-1">WhatsApp Live</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Financial KPI Metric Strip -->
+                    <div class="o_garage_kpi_strip mb-4">
+                        <div class="o_garage_kpi_card o_garage_kpi_approved">
+                            <span class="o_garage_kpi_label">Devis / Accord Validé</span>
+                            <span class="o_garage_kpi_value">12 450 DH</span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_covered">
+                            <span class="o_garage_kpi_label">Part Compagnie Assurance</span>
+                            <span class="o_garage_kpi_value">10 000 DH</span>
+                        </div>
+                        <div class="o_garage_kpi_card o_garage_kpi_owed">
+                            <span class="o_garage_kpi_label">Franchise Client</span>
+                            <span class="o_garage_kpi_value">2 450 DH</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Form Inputs Grid -->
+                    <group>
+                        <group string="Champs de Saisie Standard (40px, Radius 10px)">
+                            <field name="char_input"/>
+                            <field name="char_required" required="1"/>
+                            <field name="char_empty_required" required="1"/>
+                            <field name="char_readonly"/>
+                            <field name="integer_input"/>
+                            <field name="float_input"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="monetary_input" widget="monetary"/>
+                        </group>
+                        <group string="Relations &amp; Menus Déroulants">
+                            <field name="partner_id" options="{'no_create': True}"/>
+                            <field name="vehicle_id" options="{'no_create': True}"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                            <field name="selection_dropdown"/>
+                            <field name="date_input"/>
+                            <field name="datetime_input"/>
+                        </group>
+                    </group>
+
+                    <!-- 4. Segmented Control, Radios & Checkboxes -->
+                    <group>
+                        <group string="Contrôles Tactiles &amp; Radio Segmenté">
+                            <field name="fuel_level_demo" widget="radio" options="{'horizontal': true}"/>
+                            <field name="vertical_radio" widget="radio"/>
+                        </group>
+                        <group string="Booleans, Toggles &amp; Progression">
+                            <field name="boolean_checkbox"/>
+                            <field name="boolean_toggle" widget="boolean_toggle"/>
+                            <field name="progress_val" widget="progressbar"/>
+                            <field name="stock_status_badge" widget="badge" decoration-success="stock_status_badge == 'dispo'" decoration-warning="stock_status_badge == 'attente'" decoration-danger="stock_status_badge == 'alerte'"/>
+                        </group>
+                    </group>
+
+                    <!-- 5. Notebook with Tabs, Full-width Textarea & Alerts -->
+                    <notebook>
+                        <page string="Notes &amp; Observations" name="page_notes">
+                            <group>
+                                <field name="text_multiline" nolabel="1" colspan="2" placeholder="Saisir vos remarques ou observations techniques..."/>
+                            </group>
+                        </page>
+                        <page string="Alertes &amp; Composants Système" name="page_alerts">
+                            <div class="alert alert-info d-flex align-items-center gap-2 mb-3" role="status">
+                                <i class="fa fa-info-circle fs-5" title="Information"/>
+                                <div><strong>Système Nominal :</strong> Tous les modules d'atelier fonctionnent sur l'architecture Odoo 19 unifiée.</div>
+                            </div>
+                            <div class="alert alert-warning d-flex align-items-center gap-2 mb-3" role="alert">
+                                <i class="fa fa-exclamation-triangle fs-5" title="Avertissement"/>
+                                <div><strong>Véhicule en Attente de Pièces :</strong> Commande fournisseur requise pour continuer la réparation.</div>
+                            </div>
+                            <div class="alert alert-success d-flex align-items-center gap-2" role="status">
+                                <i class="fa fa-check-circle fs-5" title="Succès"/>
+                                <div><strong>Contrôle Qualité Validé :</strong> Le véhicule est prêt pour la restitution au client.</div>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action pour ouvrir l'UI Kit -->
+    <record id="action_garage_ui_kit" model="ir.actions.act_window">
+        <field name="name">Design System &amp; UI Kit (Debug)</field>
+        <field name="res_model">garage.ui.kit</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+</odoo>

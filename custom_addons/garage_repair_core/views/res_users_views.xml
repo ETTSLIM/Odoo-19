@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue Liste Utilisateurs & Permissions Garage -->
+    <record id="view_res_users_garage_list" model="ir.ui.view">
+        <field name="name">res.users.garage.list</field>
+        <field name="model">res.users</field>
+        <field name="arch" type="xml">
+            <list string="Utilisateurs &amp; Permissions Garage">
+                <field name="name"/>
+                <field name="login"/>
+                <field name="garage_role_preset" widget="badge" decoration-info="garage_role_preset == 'mechanic'" decoration-warning="garage_role_preset == 'storekeeper'" decoration-primary="garage_role_preset == 'receptionist'" decoration-danger="garage_role_preset == 'manager'"/>
+                <field name="garage_can_workshop" widget="boolean_toggle"/>
+                <field name="garage_can_insurance" widget="boolean_toggle"/>
+                <field name="garage_can_stock" widget="boolean_toggle"/>
+                <field name="garage_can_finance" widget="boolean_toggle"/>
+                <field name="garage_can_directory" widget="boolean_toggle"/>
+                <field name="share" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire Utilisateurs Garage & Matrice de Permissions -->
+    <record id="view_res_users_garage_form" model="ir.ui.view">
+        <field name="name">res.users.garage.form</field>
+        <field name="model">res.users</field>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <form string="Utilisateur &amp; Droits Atelier">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nom Complet"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: Karim Benjelloun"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identifiants de Connexion">
+                            <field name="login" string="Identifiant / Email"/>
+                            <field name="email"/>
+                            <field name="phone"/>
+                        </group>
+                        <group string="Profil Prédéfini">
+                            <field name="garage_role_preset" widget="radio"/>
+                        </group>
+                    </group>
+
+                    <group string="Interrupteurs d'Accès par Module (Personnalisation 1-Clic)">
+                        <group>
+                            <field name="garage_can_workshop" widget="boolean_toggle"/>
+                            <field name="garage_can_insurance" widget="boolean_toggle"/>
+                            <field name="garage_can_stock" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <field name="garage_can_finance" widget="boolean_toggle"/>
+                            <field name="garage_can_directory" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue Recherche Utilisateurs Garage -->
+    <record id="view_res_users_garage_search" model="ir.ui.view">
+        <field name="name">res.users.garage.search</field>
+        <field name="model">res.users</field>
+        <field name="arch" type="xml">
+            <search string="Recherche Équipe Atelier">
+                <field name="name"/>
+                <field name="login"/>
+                <filter name="filter_internal" string="Utilisateurs Internes" domain="[('share', '=', False)]"/>
+                <filter name="filter_mechanics" string="Mécaniciens" domain="[('garage_role_preset', '=', 'mechanic')]"/>
+                <filter name="filter_storekeepers" string="Magasiniers" domain="[('garage_role_preset', '=', 'storekeeper')]"/>
+                <filter name="filter_receptionists" string="Assistantes" domain="[('garage_role_preset', '=', 'receptionist')]"/>
+                <filter name="filter_managers" string="Gérants" domain="[('garage_role_preset', '=', 'manager')]"/>
+                <group>
+                    <filter name="group_by_role" string="Profil Métier" context="{'group_by': 'garage_role_preset'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Équipe & Permissions Garage -->
+    <record id="action_res_users_garage" model="ir.actions.act_window">
+        <field name="name">Équipe Atelier &amp; Permissions Modules</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[
+            Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('view_res_users_garage_list')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('view_res_users_garage_form')})
+        ]"/>
+        <field name="domain">[('share', '=', False)]</field>
+        <field name="context">{'search_default_filter_internal': 1}</field>
+        <field name="search_view_id" ref="view_res_users_garage_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Gérez votre équipe et attribuez les droits d'accès aux modules !
+            </p>
+            <p>
+                Activez ou désactivez les modules pour chaque mécanicien, magasinier ou assistante en 1 clic grâce aux interrupteurs.
+            </p>
+        </field>
+    </record>
+</odoo>

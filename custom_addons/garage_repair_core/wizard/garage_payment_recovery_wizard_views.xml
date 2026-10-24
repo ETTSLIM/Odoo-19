@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_garage_payment_recovery_wizard_form" model="ir.ui.view">
+        <field name="name">garage.payment.recovery.wizard.form</field>
+        <field name="model">garage.payment.recovery.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Guichet d'Encaissement &amp; Dénouement Règlement">
+                <field name="currency_id" invisible="1"/>
+                <field name="customer_type" invisible="1"/>
+                <field name="is_bank_traceable" invisible="1"/>
+                <field name="requires_official_invoice" invisible="1"/>
+                <field name="is_missing_tax_id" invisible="1"/>
+
+                <!-- Bandeau Alerte 1 : Règlement Caisse Espèces (BL Interne) -->
+                <div class="alert alert-success d-flex align-items-center mb-3" role="alert" invisible="requires_official_invoice">
+                    <i class="fa fa-money fa-2x me-3" title="Caisse Espèces"/>
+                    <div>
+                        <strong>Encaissement Caisse Espèces (BL Atelier Interne)</strong><br/>
+                        Ce paiement en espèces peut être soldé directement sur le Bon de Travail sans obligation de déclaration bancaire immédiate.
+                    </div>
+                </div>
+
+                <!-- Bandeau Alerte 2 : Règlement Bancaire Traçable (TPE / Chèque / Virement) -->
+                <div class="alert alert-warning d-flex align-items-center mb-3" role="alert" invisible="not requires_official_invoice">
+                    <i class="fa fa-university fa-2x me-3" title="Banque"/>
+                    <div>
+                        <strong>Obligation Fiscale Détectée : Règlement Bancaire Traçable</strong><br/>
+                        Ces fonds apparaîtront sur le <strong>relevé bancaire du garage</strong> (TPE / Chèque / Virement). 
+                        Une <strong>Facture Fiscale Officielle</strong> avec TVA 20% sera automatiquement préparée avec déstockage fiscal légal.
+                    </div>
+                </div>
+
+                <!-- Bandeau Alerte 3 : Identifiant fiscal manquant -->
+                <div class="alert alert-danger d-flex align-items-center mb-3" role="alert" invisible="not is_missing_tax_id">
+                    <i class="fa fa-exclamation-triangle fa-2x me-3" title="Attention"/>
+                    <div>
+                        <strong>Identifiant Fiscal Requis pour la Facture Officielle !</strong><br/>
+                        Veuillez renseigner le <strong>CIN</strong> (Particulier) ou l'<strong>ICE à 15 chiffres</strong> (Société) ci-dessous avant d'émettre la facture.
+                    </div>
+                </div>
+
+                <!-- Synthèse KPI Dossier & Solde -->
+                <div class="o_garage_kpi_strip mb-3">
+                    <div class="o_garage_kpi_card">
+                        <span class="o_garage_kpi_label">Client</span>
+                        <span class="o_garage_kpi_value text-dark fs-6">
+                            <field name="partner_id" readonly="1"/>
+                        </span>
+                    </div>
+                    <div class="o_garage_kpi_card">
+                        <span class="o_garage_kpi_label">Véhicule</span>
+                        <span class="o_garage_plate">
+                            <field name="license_plate" readonly="1"/>
+                        </span>
+                    </div>
+                    <div class="o_garage_kpi_card o_garage_kpi_covered">
+                        <span class="o_garage_kpi_label">Total Réparation</span>
+                        <span class="o_garage_kpi_value text-primary">
+                            <field name="amount_total" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                    </div>
+                    <div class="o_garage_kpi_card o_garage_kpi_danger">
+                        <span class="o_garage_kpi_label">Reste à Régler</span>
+                        <span class="o_garage_kpi_value text-danger">
+                            <field name="amount_residual" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Paramètres d'Encaissement -->
+                <group string="Modalités d'Encaissement au Guichet" col="2">
+                    <group>
+                        <field name="payment_amount" class="oe_title fs-4 fw-bold text-success"/>
+                        <field name="payment_method" widget="radio"/>
+                    </group>
+                    <group>
+                        <field name="transaction_ref" placeholder="ex: N° Chèque 849201 ou Réf Ticket TPE" invisible="not is_bank_traceable"/>
+                        <field name="bank_name" placeholder="ex: Attijariwafa, Banque Populaire, CIH" invisible="not is_bank_traceable"/>
+                        <field name="client_requested_invoice" widget="boolean_toggle"/>
+                    </group>
+                </group>
+
+                <!-- Mise à jour Identité Fiscale Client si nécessaire -->
+                <group string="Identité Fiscale pour Facturation Officielle" invisible="not requires_official_invoice" col="2">
+                    <field name="customer_cin" invisible="customer_type == 'company'" placeholder="ex: AB123456"/>
+                    <field name="customer_ice" invisible="customer_type == 'individual'" placeholder="ex: 002345678000045 (15 chiffres)"/>
+                </group>
+
+                <footer>
+                    <button name="action_confirm_payment" string="Encaisser &amp; Déclencher Facture Fiscale" type="object" class="btn-primary" icon="fa-file-text-o" invisible="not requires_official_invoice"/>
+                    <button name="action_confirm_payment" string="Valider Encaissement Caisse (BL)" type="object" class="btn-success" icon="fa-check-circle" invisible="requires_official_invoice"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_payment_recovery_wizard" model="ir.actions.act_window">
+        <field name="name">Encaisser Règlement</field>
+        <field name="res_model">garage.payment.recovery.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
