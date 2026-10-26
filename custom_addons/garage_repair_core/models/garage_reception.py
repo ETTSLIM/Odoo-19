@@ -152,15 +152,99 @@ class GarageReception(models.Model):
         for rec in self:
             rec.currency_id = rec.repair_order_id.currency_id or default_curr
 
-    @api.depends('vehicle_id', 'vehicle_id.model_id', 'vehicle_id.model_id.brand_id')
+    @api.depends('vehicle_id', 'vehicle_id.model_id', 'vehicle_id.model_id.brand_id', 'vehicle_id.model_id.name')
     def _compute_vehicle_model_name(self):
         for rec in self:
             if rec.vehicle_id:
-                brand = rec.vehicle_id.model_id.brand_id.name or ''
-                model = rec.vehicle_id.model_id.name or ''
-                rec.vehicle_model_name = f"{brand} {model}".strip() or rec.vehicle_id.name or _("Véhicule")
+                brand = (rec.vehicle_id.model_id.brand_id.name or '').strip()
+                model = (rec.vehicle_id.model_id.name or '').strip()
+                if brand and model:
+                    clean_model = model
+                    if clean_model.lower().startswith(brand.lower()):
+                        clean_model = clean_model[len(brand):].strip(" -_")
+                    rec.vehicle_model_name = f"{brand} {clean_model}".strip() if clean_model else brand
+                elif brand or model:
+                    rec.vehicle_model_name = brand or model
+                else:
+                    rec.vehicle_model_name = rec.vehicle_id.name or _("Véhicule")
             else:
                 rec.vehicle_model_name = False
+
+    # Référence Active (Affiche REC en réception, puis remplace par OR dès la transition devis/travaux)
+    active_reference = fields.Char(
+        string="Réf. Active Dossier",
+        compute='_compute_active_reference',
+        store=True,
+    )
+
+    @api.depends('name', 'repair_order_id', 'repair_order_id.name', 'stage_sequence')
+    def _compute_active_reference(self):
+        for rec in self:
+            if rec.repair_order_id and rec.repair_order_id.name and rec.stage_sequence > 10:
+                rec.active_reference = rec.repair_order_id.name
+            else:
+                rec.active_reference = rec.name or _("Nouveau")
+
+    # Miniature Véhicule (Face Avant en priorité)
+    image_128 = fields.Binary(
+        string="Miniature Véhicule (Face Avant)",
+        compute='_compute_image_128',
+        store=True,
+        readonly=False,
+    )
+
+    @api.depends('attachment_ids', 'attachment_ids.datas', 'vehicle_id', 'vehicle_id.image_128')
+    def _compute_image_128(self):
+        for rec in self:
+            # 1. Chercher en priorité la photo Face Avant / Choc Avant du véhicule
+            front_att = False
+            for att in rec.attachment_ids:
+                aname = (att.name or '').lower()
+                if any(k in aname for k in ['face avant', 'choc avant', 'avant', 'front']) and 'carte grise' not in aname:
+                    front_att = att
+                    break
+            if front_att and front_att.datas:
+                rec.image_128 = front_att.datas
+                if rec.vehicle_id and not rec.vehicle_id.image_128:
+                    try:
+                        rec.vehicle_id.image_128 = front_att.datas
+                    except Exception:
+                        pass
+                continue
+
+            # 2. Chercher la photo stockée sur le véhicule
+            if rec.vehicle_id and rec.vehicle_id.image_128:
+                rec.image_128 = rec.vehicle_id.image_128
+                continue
+
+            # 3. Prendre la première photo de check-in (en excluant les papiers administratifs)
+            other_att = False
+            papiers_ids = (rec.carte_grise_ids | rec.permis_ids | rec.constat_ids).ids
+            for att in rec.attachment_ids:
+                if att.id not in papiers_ids and att.datas:
+                    other_att = att
+                    break
+            if other_att and other_att.datas:
+                rec.image_128 = other_att.datas
+                if rec.vehicle_id and not rec.vehicle_id.image_128:
+                    try:
+                        rec.vehicle_id.image_128 = other_att.datas
+                    except Exception:
+                        pass
+            elif not rec.image_128:
+                rec.image_128 = False
+
+    # Logo et Nom Compagnie d'Assurance (pour affichage dynamique sur carte Kanban)
+    insurance_logo = fields.Binary(
+        related='claim_id.insurance_id.image_128',
+        string="Logo Compagnie Assurance",
+        readonly=True,
+    )
+    insurance_name = fields.Char(
+        related='claim_id.insurance_id.name',
+        string="Nom Compagnie Assurance",
+        readonly=True,
+    )
 
     # Photos associées à la réception / check-in
     attachment_ids = fields.Many2many(

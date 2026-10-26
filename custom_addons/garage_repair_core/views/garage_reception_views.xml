@@ -169,8 +169,9 @@
                     <!-- Hero Banner Véhicule, Client, Pièces, Progression & Finance Réalignés -->
                     <div class="o_garage_hero mb-4">
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                            <!-- 1. Immatriculation & Véhicule (Résumé Lecture Seule) -->
+                            <!-- 1. Immatriculation & Véhicule (Résumé Lecture Seule avec Miniature) -->
                             <div class="d-flex align-items-center gap-2" invisible="not vehicle_id">
+                                <field name="image_128" widget="image" class="rounded border shadow-sm" options="{'size': [42, 42]}" invisible="not image_128"/>
                                 <span class="o_garage_plate" invisible="not license_plate">
                                     <field name="license_plate" readonly="1"/>
                                 </span>
@@ -462,9 +463,11 @@
         <field name="arch" type="xml">
             <kanban default_group_by="stage_id" sample="1">
                 <field name="name"/>
+                <field name="active_reference"/>
                 <field name="state"/>
                 <field name="active"/>
                 <field name="vehicle_id"/>
+                <field name="vehicle_model_name"/>
                 <field name="license_plate"/>
                 <field name="customer_id"/>
                 <field name="specialty"/>
@@ -472,7 +475,10 @@
                 <field name="checklist_progress"/>
                 <field name="current_operator_id"/>
                 <field name="claim_id"/>
+                <field name="insurance_logo"/>
+                <field name="insurance_name"/>
                 <field name="date_reception"/>
+                <field name="image_128"/>
                 <templates>
                     <t t-name="menu">
                         <a role="menuitem" type="object" name="action_cancel" class="dropdown-item text-danger" confirm="Retirer ce véhicule du tableau de bord atelier ?">Retirer du tableau / Annuler</a>
@@ -480,43 +486,83 @@
                         <a role="menuitem" type="delete" class="dropdown-item" confirm="Supprimer définitivement cette fiche ?">Supprimer</a>
                     </t>
                     <t t-name="card">
+                        <!-- Ligne 1 : Plaque d'immatriculation & Référence unique (REC ou OR) -->
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="o_garage_plate"><field name="license_plate"/></span>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="text-muted small"><field name="name"/></span>
-                                <button name="action_cancel" type="object" class="btn btn-sm btn-outline-danger p-0 px-1 border-0" title="Retirer du tableau" confirm="Retirer ce véhicule du tableau de bord atelier ?">
-                                    <i class="fa fa-times text-danger" title="Retirer"/>
-                                </button>
+                            <span class="o_garage_plate">
+                                <field name="license_plate"/>
+                            </span>
+                            <span class="badge bg-light text-secondary border font-monospace px-2 py-1 text-nowrap" style="font-size: 0.75rem;" title="Référence Active Dossier">
+                                <field name="active_reference"/>
+                            </span>
+                        </div>
+
+                        <!-- Ligne 2 : Miniature Face Avant Véhicule + Modèle épuré + Client -->
+                        <div class="d-flex gap-2 align-items-center mb-2">
+                            <t t-if="record.image_128.raw_value">
+                                <img t-att-src="'/web/image/garage.reception/' + record.id.raw_value + '/image_128'" 
+                                     class="rounded border shadow-sm flex-shrink-0" 
+                                     style="width: 50px; height: 50px; object-fit: cover;" 
+                                     alt="Photo Véhicule"/>
+                            </t>
+                            <t t-else="">
+                                <div class="rounded border bg-light d-flex align-items-center justify-content-center flex-shrink-0 text-muted" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="fa fa-car fa-lg text-secondary opacity-50" title="Véhicule"/>
+                                </div>
+                            </t>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-bold text-dark text-truncate" title="Modèle Véhicule">
+                                    <field name="vehicle_model_name"/>
+                                </div>
+                                <div class="text-muted small text-truncate">
+                                    <i class="fa fa-user-o me-1 text-muted" title="Client"/>
+                                    <field name="customer_id"/>
+                                </div>
                             </div>
                         </div>
-                        <div class="fw-bold text-dark mb-1">
-                            <i class="fa fa-car text-primary me-1" title="Véhicule"/>
-                            <field name="vehicle_id"/>
-                        </div>
-                        <div class="text-muted small mb-2 d-flex justify-content-between align-items-center">
-                            <span><i class="fa fa-user-o text-muted me-1" title="Client"/><field name="customer_id"/></span>
-                            <span invisible="not claim_id" class="badge bg-warning text-dark" title="Dossier Sinistre Assuré">
-                                <i class="fa fa-shield me-1" title="Assurance"/>Sinistre
-                            </span>
-                        </div>
-                        <div class="mb-2">
+
+                        <!-- Ligne 3 : Spécialité & Logo Compagnie Assurance -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <field name="specialty" widget="badge"/>
-                            <span invisible="stock_status != 'envoye_stock'" class="badge bg-danger ms-1" title="Note transmise au magasinier">
+                            <t t-if="record.claim_id.raw_value">
+                                <t t-if="record.insurance_logo.raw_value">
+                                    <span class="badge bg-white border border-warning shadow-sm d-inline-flex align-items-center gap-1 p-1" title="Dossier Sinistre Agréé">
+                                        <img t-att-src="'/web/image/garage.reception/' + record.id.raw_value + '/insurance_logo'" 
+                                             class="rounded" style="height: 18px; max-width: 55px; object-fit: contain;" 
+                                             alt="Logo Assurance"/>
+                                    </span>
+                                </t>
+                                <t t-else="">
+                                    <span class="badge bg-warning text-dark" title="Dossier Sinistre Assuré">
+                                        <i class="fa fa-shield me-1" title="Assurance"/><field name="insurance_name"/>
+                                    </span>
+                                </t>
+                            </t>
+                        </div>
+
+                        <!-- Ligne 4 : Alertes Pièces & Progression -->
+                        <div class="mb-2" invisible="stock_status not in ('envoye_stock', 'pieces_dispo')">
+                            <span invisible="stock_status != 'envoye_stock'" class="badge bg-danger" title="Note transmise au magasinier">
                                 <i class="fa fa-cube me-1" title="Stock"/>Attente Stock
                             </span>
-                            <span invisible="stock_status != 'pieces_dispo'" class="badge bg-success ms-1" title="Pièces prêtes à l'atelier">
+                            <span invisible="stock_status != 'pieces_dispo'" class="badge bg-success" title="Pièces prêtes à l'atelier">
                                 <i class="fa fa-check me-1" title="Prêt"/>Pièces Dispo
                             </span>
                         </div>
                         <div class="mb-2">
                             <field name="checklist_progress" widget="progressbar"/>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                            <span class="badge rounded-pill bg-light text-dark">
-                                <i class="fa fa-wrench me-1" title="Opérateur"/>
+
+                        <!-- Ligne 5 : Opérateur & Date d'Entrée explicite -->
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top small text-muted">
+                            <span class="badge rounded-pill bg-light text-secondary border">
+                                <i class="fa fa-wrench me-1 text-muted" title="Opérateur"/>
                                 <field name="current_operator_id"/>
                             </span>
-                            <span class="small text-muted"><field name="date_reception" widget="date"/></span>
+                            <span title="Date d'Entrée Atelier">
+                                <i class="fa fa-calendar-check-o me-1 text-primary"/>
+                                <strong>Entrée :</strong> <field name="date_reception" widget="date"/>
+                            </span>
                         </div>
                     </t>
                 </templates>

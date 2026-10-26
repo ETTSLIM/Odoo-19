@@ -240,10 +240,12 @@ class FleetVehicle(models.Model):
                     vehicle.plate_letter_part = lat_let if lat_let in valid_letters else False
 
     def _compute_display_name(self):
-        """Affiche un nom de véhicule lisible et élégant sans doublon de plaque avec affichage bilingue si disponible."""
+        """Affiche un nom de véhicule lisible et élégant sans doublon de marque ni de plaque."""
         for vehicle in self:
-            brand = vehicle.model_id.brand_id.name or ''
-            model = vehicle.model_id.name or ''
+            brand = (vehicle.model_id.brand_id.name or '').strip()
+            model = (vehicle.model_id.name or '').strip()
+            if brand and model and model.lower().startswith(brand.lower()):
+                model = model[len(brand):].strip(" -_")
             model_info = f"{brand} {model}".strip() if (brand or model) else (vehicle.name or '')
             plate_str = vehicle.license_plate_display or vehicle.license_plate
             if plate_str:

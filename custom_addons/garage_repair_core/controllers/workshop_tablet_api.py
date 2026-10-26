@@ -567,19 +567,30 @@ class GarageWorkshopTabletApiController(http.Controller):
             odometer_val = body.get('odometer')
             categorized_images = body.get('categorized_images') or []
 
-            # Extraction de la photo avatar principale du véhicule (Face avant / Carte grise / Première photo)
+            # Extraction de la photo avatar principale du véhicule (Face avant du véhicule en priorité absolue)
             primary_image_b64 = None
             if categorized_images:
+                # Priorité 1 : Photo Face Avant / Choc Avant du véhicule
                 for item in categorized_images:
                     c_type = (item.get('doc_type') or item.get('category') or '').lower()
                     c_b64 = item.get('image_base64') or item.get('imageBase64')
-                    if c_b64 and c_type in ('choc_avant', 'carte_grise', 'carte_grise_recto'):
+                    if c_b64 and c_type in ('choc_avant', 'face_avant', 'avant', 'front'):
                         primary_image_b64 = c_b64.split(',')[-1].strip()
                         break
+                # Priorité 2 : Autres photos carrosserie (choc_arriere, choc_cote, choc)
                 if not primary_image_b64:
                     for item in categorized_images:
+                        c_type = (item.get('doc_type') or item.get('category') or '').lower()
                         c_b64 = item.get('image_base64') or item.get('imageBase64')
-                        if c_b64:
+                        if c_b64 and c_type in ('choc_arriere', 'choc_cote', 'choc'):
+                            primary_image_b64 = c_b64.split(',')[-1].strip()
+                            break
+                # Priorité 3 : Première photo non administrative
+                if not primary_image_b64:
+                    for item in categorized_images:
+                        c_type = (item.get('doc_type') or item.get('category') or '').lower()
+                        c_b64 = item.get('image_base64') or item.get('imageBase64')
+                        if c_b64 and c_type not in ('carte_grise', 'carte_grise_recto', 'carte_grise_verso', 'permis', 'constat', 'assurance'):
                             primary_image_b64 = c_b64.split(',')[-1].strip()
                             break
             if not primary_image_b64 and images_b64:
@@ -710,7 +721,7 @@ class GarageWorkshopTabletApiController(http.Controller):
                     'permis': "Permis de Conduire (Checkin)",
                     'constat': "Constat Amiable (Checkin)",
                     'assurance': "Attestation Assurance (Checkin)",
-                    'choc_avant': "Dégât / Choc Avant (Checkin)",
+                    'choc_avant': "Photo Véhicule (Face Avant / Choc)",
                     'choc_arriere': "Dégât / Choc Arrière (Checkin)",
                     'choc_cote': "Dégât / Choc Côtés (Checkin)",
                     'compteur': "Compteur Kilométrique (Checkin)",
@@ -755,6 +766,14 @@ class GarageWorkshopTabletApiController(http.Controller):
                         rec.write({'attachment_ids': [Command.link(att.id)]})
                     except Exception as ie:
                         _logger.warning("Error saving checkin image: %s", ie)
+
+            # Affectation de l'image miniature du véhicule (Face avant)
+            if primary_image_b64:
+                try:
+                    rec.write({'image_128': primary_image_b64})
+                    vehicle.write({'image_128': primary_image_b64})
+                except Exception as ime:
+                    _logger.warning("Error assigning primary vehicle image: %s", ime)
 
             # Traitement IA uniquement si note ou tâches ou audio fourni (Mode B Mécanicien)
             if not is_mode_a_receptionist:
