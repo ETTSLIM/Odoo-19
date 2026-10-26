@@ -13,7 +13,7 @@
         </record>
 
         <record id="stage_2_devis" model="garage.workshop.stage">
-            <field name="name">Devis &amp; Accord</field>
+            <field name="name">Devis</field>
             <field name="sequence">20</field>
             <field name="code">devis</field>
             <field name="mapped_state">quoted</field>
@@ -23,7 +23,7 @@
         </record>
 
         <record id="stage_3_pieces" model="garage.workshop.stage">
-            <field name="name">Commande Pièces</field>
+            <field name="name">Pièces</field>
             <field name="sequence">30</field>
             <field name="code">pieces</field>
             <field name="mapped_state">quoted</field>
@@ -33,7 +33,7 @@
         </record>
 
         <record id="stage_4_travaux" model="garage.workshop.stage">
-            <field name="name">Travaux Atelier</field>
+            <field name="name">Travaux</field>
             <field name="sequence">40</field>
             <field name="code">travaux</field>
             <field name="mapped_state">in_repair</field>
@@ -43,7 +43,7 @@
         </record>
 
         <record id="stage_5_controle" model="garage.workshop.stage">
-            <field name="name">Contrôle Qualité</field>
+            <field name="name">Contrôle</field>
             <field name="sequence">50</field>
             <field name="code">controle</field>
             <field name="mapped_state">qc</field>
@@ -53,7 +53,7 @@
         </record>
 
         <record id="stage_6_prete" model="garage.workshop.stage">
-            <field name="name">Véhicule Prêt</field>
+            <field name="name">Prêt</field>
             <field name="sequence">60</field>
             <field name="code">prete</field>
             <field name="mapped_state">ready</field>
@@ -63,7 +63,7 @@
         </record>
 
         <record id="stage_7_livree" model="garage.workshop.stage">
-            <field name="name">Livré &amp; Clôturé</field>
+            <field name="name">Livré</field>
             <field name="sequence">70</field>
             <field name="code">livree</field>
             <field name="mapped_state">delivered</field>

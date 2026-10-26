@@ -104,14 +104,14 @@
 
                     <group>
                         <group string="Fournisseur &amp; Qualification Stock">
-                            <field name="supplier_id" options="{'no_quick_create': False}"/>
+                            <field name="supplier_id" options="{'no_create_edit': True}" context="{'default_partner_role': 'parts_supplier', 'default_is_parts_supplier': True, 'default_is_company': True}"/>
                             <field name="supplier_ice"/>
                             <field name="date_bl"/>
                             <field name="stock_destination" widget="radio"/>
                         </group>
                         <group string="Affectation Atelier &amp; Rapprochement">
-                            <field name="repair_order_id" options="{'no_quick_create': True}"/>
-                            <field name="vehicle_id" readonly="repair_order_id"/>
+                            <field name="repair_order_id" options="{'no_quick_create': True, 'no_create_edit': True}"/>
+                            <field name="vehicle_id" readonly="repair_order_id" options="{'no_create_edit': True}"/>
                             <field name="official_invoice_id" readonly="1" invisible="not official_invoice_id"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
@@ -121,7 +121,7 @@
                         <page string="Lignes de Pièces Détachées">
                             <field name="line_ids">
                                 <list editable="bottom">
-                                    <field name="product_id"/>
+                                    <field name="product_id" options="{'no_create_edit': True}"/>
                                     <field name="name"/>
                                     <field name="qty"/>
                                     <field name="unit_cost"/>

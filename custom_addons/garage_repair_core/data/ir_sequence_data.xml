@@ -27,5 +27,14 @@
             <field name="padding">4</field>
             <field name="company_id" eval="False"/>
         </record>
+
+        <!-- Séquence Diagnostic Audio Atelier -->
+        <record id="seq_garage_diagnostic_log" model="ir.sequence">
+            <field name="name">Séquence Diagnostic Audio Atelier</field>
+            <field name="code">garage.diagnostic.log</field>
+            <field name="prefix">DIAG/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
     </data>
 </odoo>

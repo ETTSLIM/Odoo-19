@@ -28,21 +28,107 @@
         <field name="arch" type="xml">
             <form string="Fiche de Réception &amp; Suivi Atelier">
                 <header>
-                    <button name="action_create_or_view_repair_order" string="Créer Devis / Ordre de Travail" type="object" class="btn-primary" icon="fa-wrench" invisible="repair_order_id"/>
-                    <button name="action_reception_send_whatsapp_quote" string="Envoyer Devis WhatsApp" type="object" class="btn-primary" icon="fa-whatsapp" invisible="not repair_order_id or ro_client_approval_status == 'approved'"/>
-                    <button name="action_reception_open_payment_wizard" string="Encaisser Règlement" type="object" class="btn-success" icon="fa-money" invisible="not repair_order_id or ro_payment_status == 'paid'"/>
-                    <button name="action_reception_print_bl" string="Imprimer BL / Bon de Travail" type="object" class="btn-secondary" icon="fa-print" invisible="not repair_order_id"/>
-                    <button name="action_reception_open_billing_wizard" string="Facture Fiscale" type="object" class="btn-primary" icon="fa-file-text-o" invisible="not repair_order_id or ro_is_invoiced_officially"/>
-                    <button name="action_open_ai_diagnostic_wizard" string="Diagnostic IA" type="object" class="btn-secondary" icon="fa-microphone" groups="garage_repair_core.group_garage_mechanic,garage_repair_core.group_garage_manager"/>
-                    <field name="stage_id" widget="statusbar" options="{'clickable': '1'}"/>
+                    <!-- Étape 10 : Accueil -->
+                    <button name="action_advance_to_quote" 
+                            string="Transmettre au Chiffrage (Devis)" 
+                            type="object" class="btn-primary" icon="fa-arrow-right" 
+                            invisible="stage_sequence != 10 or not id"
+                            confirm="Confirmez-vous la fin de l'accueil ? Le véhicule sera transmis au magasinier pour chiffrage (Étape 20)."/>
+
+                    <!-- Étape 20 : Devis -->
+                    <button name="action_open_magasinier_devis_cockpit" 
+                            string="Chiffrer le Devis (Magasinier)" 
+                            type="object" class="btn-primary" icon="fa-calculator" 
+                            invisible="stage_sequence != 20 or stock_status == 'devis_pret'"
+                            confirm="Ouvrir l'espace de chiffrage pour préparer les pièces et la main-d'œuvre ?"/>
+                    <button name="action_advance_to_accord" 
+                            string="Passer à l'Accord Client / Expert" 
+                            type="object" class="btn-primary" icon="fa-arrow-right" 
+                            invisible="stage_sequence != 20 or stock_status != 'devis_pret'"
+                            confirm="Le chiffrage est terminé. Confirmez-vous le passage à l'étape d'accord client et assurance (Étape 30) ?"/>
+
+                    <!-- Étape 30 : Accord Client / Sinistre -->
+                    <button name="action_reception_send_whatsapp_quote" 
+                            string="Envoyer Devis WhatsApp" 
+                            type="object" class="btn-primary" icon="fa-whatsapp" 
+                            invisible="stage_sequence != 30 or is_assurance or ro_client_approval_status == 'approved'"
+                            confirm="Confirmez-vous l'envoi immédiat du devis par WhatsApp au numéro du client avec le lien d'approbation 1-clic ?"/>
+                    <button name="action_create_or_view_claim" 
+                            string="Gérer Dossier Sinistre" 
+                            type="object" class="btn-primary" icon="fa-shield" 
+                            invisible="stage_sequence != 30 or not is_assurance or (claim_id and claim_state in ('accord_approved', 'in_repair', 'repaired'))"
+                            confirm="Accéder au dossier sinistre pour gérer les échanges avec l'expert et la compagnie d'assurance ?"/>
+                    <button name="action_advance_to_repair" 
+                            string="Lancer Travaux Atelier" 
+                            type="object" class="btn-primary" icon="fa-wrench" 
+                            invisible="stage_sequence != 30 or (not is_assurance and ro_client_approval_status != 'approved') or (is_assurance and claim_state != 'accord_approved')"
+                            confirm="L'accord est validé. Confirmez-vous le démarrage officiel des travaux ? L'équipe atelier sera notifiée (Étape 40)."/>
+
+                    <!-- Étape 40 : Travaux -->
+                    <button name="action_advance_to_control" 
+                            string="Terminer Travaux Atelier" 
+                            type="object" class="btn-primary" icon="fa-check-circle" 
+                            invisible="stage_sequence != 40"
+                            confirm="Confirmez-vous que toutes les réparations mécaniques/carrosserie sont terminées ? Le véhicule passera en Contrôle Qualité (Étape 50)."/>
+
+                    <!-- Étape 50 : Contrôle Qualité -->
+                    <button name="action_advance_to_ready" 
+                            string="Valider Contrôle Qualité (Véhicule Prêt)" 
+                            type="object" class="btn-primary" icon="fa-check-square-o" 
+                            invisible="stage_sequence != 50"
+                            confirm="Confirmez-vous la conformité de l'inspection qualité ? Le véhicule sera marqué PRÊT pour restitution au client (Étape 60)."/>
+
+                    <!-- Étape 60 : Restitution & Caisse -->
+                    <button name="action_reception_open_payment_wizard" 
+                            string="Encaisser &amp; Restituer le Véhicule" 
+                            type="object" class="btn-success" icon="fa-money" 
+                            invisible="stage_sequence != 60 or ro_payment_status == 'paid'"
+                            confirm="Ouvrir l'assistant d'encaissement et de clôture pour restituer le véhicule ?"/>
+                    <button name="action_reception_print_bl" 
+                            string="Imprimer Bon de Sortie (BL)" 
+                            type="object" class="btn-secondary" icon="fa-print" 
+                            invisible="stage_sequence not in (60, 70)"
+                            confirm="Imprimer le Bon de Sortie / Bon de Livraison (BL) ?"/>
+                    <button name="action_reception_open_billing_wizard" 
+                            string="Facture Fiscale" 
+                            type="object" class="btn-outline-secondary" icon="fa-file-text-o" 
+                            invisible="stage_sequence not in (60, 70) or ro_is_invoiced_officially" 
+                            groups="garage_repair_core.group_garage_manager"
+                            confirm="Générer la facture fiscale officielle pour ce véhicule ?"/>
+
+                    <!-- Bouton secondaire accès devis/réparation si besoin de consultation aux étapes intermédiaires -->
+                    <button name="action_view_repair_order" 
+                            string="Ouvrir Devis / Réparation" 
+                            type="object" class="btn-outline-secondary" icon="fa-wrench" 
+                            invisible="not id or not repair_order_id or stage_sequence in (10, 20, 60, 70)"
+                            confirm="Ouvrir le formulaire de l'ordre de réparation associé ?"/>
+
+                    <!-- Gestion Annulation -->
+                    <button name="action_cancel" 
+                            string="Annuler la Réception" 
+                            type="object" class="btn-outline-danger" icon="fa-times" 
+                            invisible="state in ('delivered', 'cancel')" 
+                            confirm="ATTENTION : Êtes-vous certain de vouloir annuler ce dossier et retirer ce véhicule du tableau de bord atelier ?"/>
+                    <button name="action_reset_draft" 
+                            string="Remettre en Réception" 
+                            type="object" class="btn-outline-secondary" 
+                            invisible="state != 'cancel'"
+                            confirm="Remettre ce dossier en état brouillon de réception ?"/>
+
+                    <field name="stage_id" widget="statusbar"/>
                 </header>
                 <sheet>
+                    <field name="state" invisible="1"/>
+                    <field name="active" invisible="1"/>
                     <field name="currency_id" invisible="1"/>
                     <field name="repair_order_id" invisible="1"/>
+                    <field name="claim_state" invisible="1"/>
                     <field name="ro_payment_status" invisible="1"/>
                     <field name="ro_client_approval_status" invisible="1"/>
                     <field name="ro_is_invoiced_officially" invisible="1"/>
                     <field name="stage_sequence" invisible="1"/>
+                    <widget name="web_ribbon" title="ANNULÉ" bg_color="text-bg-danger" invisible="state != 'cancel'"/>
+                    <widget name="web_ribbon" title="ARCHIVÉ" bg_color="text-bg-secondary" invisible="active"/>
                     <widget name="web_ribbon" title="PRÊT" bg_color="text-bg-success" invisible="stage_sequence != 60"/>
                     <widget name="web_ribbon" title="LIVRÉ" bg_color="text-bg-secondary" invisible="stage_sequence != 70"/>
                     
@@ -50,28 +136,34 @@
                         <button name="action_view_attachments" type="object" class="oe_stat_button" icon="fa-picture-o">
                             <field name="attachment_count" widget="statinfo" string="Photos"/>
                         </button>
-                        <button name="action_view_repair_order" type="object" class="oe_stat_button" icon="oi-settings-adjust">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value"><field name="repair_order_count" readonly="1"/></span>
-                                <span class="o_stat_text">Ordre Réparation</span>
-                            </div>
+                        <button name="action_view_diagnostic_logs" type="object" class="oe_stat_button" icon="fa-microphone">
+                            <field name="diagnostic_log_count" widget="statinfo" string="Diagnostics"/>
                         </button>
-                        <button name="action_create_or_view_claim" type="object" class="oe_stat_button" icon="fa-shield">
+                        <button name="action_view_damage_items" type="object" class="oe_stat_button" icon="fa-car" invisible="damage_item_count == 0">
+                            <field name="damage_item_count" widget="statinfo" string="Dégâts"/>
+                        </button>
+                        <button name="action_create_or_view_claim" type="object" class="oe_stat_button" icon="fa-shield" invisible="not is_assurance and claim_count == 0">
                             <field name="claim_count" widget="statinfo" string="Dossier Sinistre"/>
-                        </button>
-                        <button name="action_open_tracking_portal" type="object" class="oe_stat_button" icon="fa-globe" invisible="not tracking_token">
-                            <div class="o_field_widget o_stat_info">
-                                <span class="o_stat_value">Suivi Direct</span>
-                                <span class="o_stat_text">Portail Client</span>
-                            </div>
                         </button>
                     </div>
 
                     <div class="oe_title">
-                        <label for="name" string="Fiche Réception N°"/>
-                        <h1>
+                        <label for="name" string="Fiche Réception N°" invisible="not id"/>
+                        <h1 invisible="not id">
                             <field name="name" readonly="1"/>
                         </h1>
+                        <h1 class="text-muted fw-normal" invisible="id">
+                            Nouvelle Fiche de Réception
+                        </h1>
+                    </div>
+
+                    <!-- Alerte Véhicule sans Ordre de Travail dès l'étape Devis -->
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3" role="alert" invisible="stage_sequence &lt; 20 or repair_order_id">
+                        <div>
+                            <i class="fa fa-exclamation-triangle me-2" title="Attention Chiffrage Requis"/>
+                            <strong>Aucun Ordre de Travail associé :</strong> Le véhicule a quitté l'étape Réception mais aucun ordre de travail n'a été créé pour le chiffrage.
+                        </div>
+                        <button name="action_create_or_view_repair_order" string="Créer l'Ordre de Travail Maintenant" type="object" class="btn btn-sm btn-warning fw-bold"/>
                     </div>
 
                     <!-- Hero Banner Véhicule, Client, Pièces, Progression & Finance Réalignés -->
@@ -83,7 +175,7 @@
                                     <field name="license_plate" readonly="1"/>
                                 </span>
                                 <span class="fs-5 fw-bold text-dark">
-                                    <field name="vehicle_id" readonly="1"/>
+                                    <field name="vehicle_model_name" readonly="1"/>
                                 </span>
                             </div>
 
@@ -105,19 +197,19 @@
                             </div>
 
                             <!-- 3. Statut Pièces -->
-                            <div class="d-flex align-items-center gap-2 ps-3 border-start">
+                            <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="stock_status == 'attente_diag'">
                                 <span class="small text-muted fw-bold text-uppercase text-nowrap">Pièces :</span>
                                 <field name="stock_status" widget="badge" decoration-warning="stock_status == 'envoye_stock'" decoration-info="stock_status == 'devis_pret'" decoration-success="stock_status == 'pieces_dispo'"/>
                             </div>
 
                             <!-- 4. Progression -->
-                            <div class="d-flex align-items-center gap-2 ps-3 border-start">
+                            <div class="d-flex align-items-center gap-2 ps-3 border-start" invisible="checklist_progress == 0">
                                 <span class="small text-muted fw-bold text-uppercase text-nowrap">Progression :</span>
                                 <field name="checklist_progress" widget="progressbar"/>
                             </div>
 
-                            <!-- 5. Ruban Financier & Facturation (Visible si Ordre de Réparation lié) -->
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-2 mt-2 border-top w-100" invisible="not repair_order_id">
+                            <!-- 5. Statut Financier & Facturation (Devis Chiffré uniquement) -->
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-2 mt-2 border-top w-100" invisible="stage_sequence &lt;= 10 or not repair_order_id or (stock_status in ('attente_diag', 'envoye_stock') and ro_amount_total_ttc == 0)">
                                 <div class="d-flex align-items-center gap-4">
                                     <div>
                                         <span class="text-muted small text-uppercase fw-semibold d-block">Total Réparation</span>
@@ -143,86 +235,218 @@
                                     <field name="ro_payment_status" widget="badge" decoration-danger="ro_payment_status == 'unpaid'" decoration-warning="ro_payment_status == 'partial'" decoration-success="ro_payment_status == 'paid'"/>
                                 </div>
                             </div>
+
+                            <!-- Statut Chiffrage en attente à la réception -->
+                            <div class="d-flex align-items-center gap-2 pt-2 mt-2 border-top w-100 text-muted small" invisible="stage_sequence &gt; 10 and ro_amount_total_ttc &gt; 0">
+                                <i class="fa fa-info-circle text-info me-1" title="Info"/>
+                                <span class="fw-semibold">Statut Chiffrage :</span>
+                                <span class="badge bg-light text-secondary border">Véhicule en réception • Devis en attente de chiffrage par le magasinier</span>
+                            </div>
                         </div>
                     </div>
 
                     <group>
                         <group string="Véhicule, Client &amp; Atelier">
-                            <field name="vehicle_id"/>
-                            <field name="customer_id"/>
+                            <field name="vehicle_id" options="{'no_create_edit': True}" invisible="id and stage_sequence &gt; 10"/>
+                            <field name="customer_id" options="{'no_create_edit': True}" invisible="id and stage_sequence &gt; 10"/>
                             <field name="specialty"/>
-                            <field name="receptionist_id"/>
+                            <field name="receptionist_id" invisible="1"/>
                             <field name="mechanic_id"/>
                             <field name="is_assurance"/>
                             <field name="statut_expertise" invisible="not is_assurance" widget="badge" decoration-info="statut_expertise == 'attente'" decoration-success="statut_expertise in ('chiffrage_valide', 'recours_accepte')" decoration-danger="statut_expertise == 'refuse'"/>
-                            <field name="auto_whatsapp_notify"/>
+                            <field name="auto_whatsapp_notify" invisible="1"/>
                         </group>
-                        <group string="Prise en Charge &amp; Tablette">
-                            <field name="date_reception"/>
+                        <group string="Prise en Charge &amp; Diagnostic">
+                            <field name="date_reception" readonly="1"/>
                             <field name="estimated_completion_date"/>
                             <field name="odometer_in"/>
                             <field name="fuel_level" widget="radio" options="{'horizontal': true}"/>
-                            <field name="current_operator_id" readonly="1"/>
-                            <field name="tracking_token" readonly="1" groups="base.group_no_one"/>
+                            <field name="current_operator_id" invisible="1"/>
+                            <field name="tracking_token" invisible="1"/>
                         </group>
                     </group>
 
                     <notebook>
-                        <page string="Sous-tâches" name="subtasks_page">
-                            <field name="can_toggle_workshop_tasks" invisible="1"/>
-                            <field name="task_ids" readonly="not can_toggle_workshop_tasks">
-                                <list string="Sous-tâches Atelier" create="0" delete="0" editable="bottom"
-                                      decoration-muted="state == '1_done'"
-                                      decoration-bf="state != '1_done'">
-                                    <field name="sequence" widget="handle"/>
-                                    <button name="action_toggle_state" type="object"
-                                            icon="fa-check-circle text-success"
-                                            title="Terminé (Cliquer pour basculer)"
-                                            aria-label="Terminé"
-                                            invisible="state != '1_done'"/>
-                                    <button name="action_toggle_state" type="object"
-                                            icon="fa-dot-circle-o text-warning"
-                                            title="En cours (Cliquer pour terminer)"
-                                            aria-label="En cours"
-                                            invisible="state != '01_in_progress'"/>
-                                    <button name="action_toggle_state" type="object"
-                                            icon="fa-circle-thin text-muted"
-                                            title="En attente (Cliquer pour terminer)"
-                                            aria-label="En attente"
-                                            invisible="state != '04_waiting_normal'"/>
-                                    <field name="name" string="Titre" readonly="1"/>
-                                    <field name="completed_by_operator_id" string="Assignés" readonly="1" optional="show"/>
-                                    <field name="specialty" string="Atelier / Spécialité" widget="badge" readonly="1"
-                                           decoration-danger="specialty == 'carrosserie'"
-                                           decoration-primary="specialty == 'mecanique'"
-                                           decoration-warning="specialty == 'electricite'"
-                                           decoration-success="specialty == 'entretien'"
-                                           decoration-info="specialty == 'climatisation'"/>
-                                    <field name="stage_id" string="Grande Étape" readonly="1"/>
-                                    <field name="planned_hours" string="Durée Estimée" widget="float_time" sum="Total Heures" readonly="1"/>
-                                    <field name="state" column_invisible="True"/>
-                                    <field name="is_done" column_invisible="True"/>
-                                </list>
-                            </field>
+                        <!-- ONGLET 1 : ACCUEIL & ÉTAT DES LIEUX (INTAKE, DÉGÂTS, PHOTOS & DOCUMENTS) -->
+                        <page string="Accueil &amp; État des Lieux" name="intake_inspection_tab">
+                            <div class="mb-3">
+                                <group string="Constat d'Accueil &amp; Demande Client">
+                                    <group>
+                                        <field name="symptoms" placeholder="Symptômes signalés par le client lors du dépôt (Ex: Bruit train avant, vibration freinage, choc pare-choc)..."/>
+                                        <div class="mt-1">
+                                            <button name="action_open_ai_diagnostic_wizard" 
+                                                    string="Dictée Vocale / Diagnostic IA" 
+                                                    type="object" 
+                                                    class="btn btn-outline-primary btn-sm" 
+                                                    icon="fa-microphone"
+                                                    confirm="Lancer l'assistant de diagnostic vocal IA pour enregistrer et analyser les symptômes ?"/>
+                                        </div>
+                                    </group>
+                                    <group>
+                                        <field name="valuable_items" placeholder="Ex: Lunettes de soleil, sacoche dans le coffre..."/>
+                                    </group>
+                                </group>
+                            </div>
+
+                            <!-- Inventaire Physique des Dégâts & Chocs Carrosserie -->
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-primary">
+                                        <i class="fa fa-car me-2" title="Dégâts"/>INVENTAIRE PHYSIQUE DES DÉGÂTS &amp; CARROSSERIE
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        <field name="damage_item_count"/> Dégât(s) Inventorié(s)
+                                    </span>
+                                </div>
+                                <div class="card-body p-2">
+                                    <field name="damage_item_ids">
+                                        <list string="Dégâts" editable="bottom">
+                                            <field name="zone"/>
+                                            <field name="name" string="Élément Endommagé"/>
+                                            <field name="damage_type" widget="badge"/>
+                                            <field name="severity" widget="badge" decoration-warning="severity == 'light'" decoration-primary="severity == 'medium'" decoration-danger="severity == 'heavy'"/>
+                                            <field name="action_type" widget="badge"/>
+                                            <field name="discovery_stage" widget="badge"/>
+                                            <field name="is_hidden_damage" widget="boolean_toggle" string="Masqué"/>
+                                            <field name="expert_decision" widget="badge" decoration-warning="expert_decision == 'pending'" decoration-success="expert_decision == 'approved'" decoration-danger="expert_decision == 'rejected'"/>
+                                        </list>
+                                    </field>
+                                </div>
+                            </div>
+
+                            <!-- Dossier Administratif (Papiers Légaux) -->
+                            <div class="card mb-3 border-secondary">
+                                <div class="card-header bg-light py-2 fw-bold text-uppercase small text-dark d-flex justify-content-between align-items-center">
+                                    <span><i class="fa fa-id-card-o text-primary me-2" title="Papiers"/>Dossier Administratif (Papiers Légaux du Véhicule)</span>
+                                    <span class="badge bg-secondary">Contrôle Réception</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="border rounded p-2 bg-light h-100">
+                                                <label for="carte_grise_ids" class="fw-bold small text-dark d-block mb-1">
+                                                    <i class="fa fa-car text-primary me-1" title="Carte Grise"/>Carte Grise (Recto / Verso)
+                                                </label>
+                                                <field name="carte_grise_ids" widget="many2many_binary" string="Carte Grise"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="border rounded p-2 bg-light h-100">
+                                                <label for="permis_ids" class="fw-bold small text-dark d-block mb-1">
+                                                    <i class="fa fa-address-card text-success me-1" title="Permis"/>Permis de Conduire Conducteur
+                                                </label>
+                                                <field name="permis_ids" widget="many2many_binary" string="Permis"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="border rounded p-2 bg-light h-100">
+                                                <label for="constat_ids" class="fw-bold small text-dark d-block mb-1">
+                                                    <i class="fa fa-file-text-o text-warning me-1" title="Constat"/>Constat Amiable / Récépissé
+                                                </label>
+                                                <field name="constat_ids" widget="many2many_binary" string="Constat"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Galerie Photos Chocs & État des Lieux -->
+                            <div class="card border-secondary mb-2">
+                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-dark">
+                                        <i class="fa fa-camera text-danger me-2" title="Photos"/>Photos du Véhicule (Chocs, Carrosserie, Compteur &amp; Atelier)
+                                    </span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <button name="action_view_attachments" type="object" string="Galerie Plein Écran" class="btn btn-outline-secondary btn-sm" icon="fa-arrows-alt"/>
+                                    </div>
+                                </div>
+                                <div class="card-body p-2">
+                                    <field name="photos_grid_html" widget="html" nolabel="1"/>
+                                    <field name="attachment_ids" invisible="1"/>
+                                </div>
+                            </div>
+
+                            <!-- Champs historiques conservés de manière transparente pour rétrocompatibilité -->
+                            <field name="bodywork_notes" invisible="1"/>
+                            <field name="diagnostic_parts_note" invisible="1"/>
+                            <field name="diagnostic_notes" invisible="1"/>
+                            <field name="custom_todo_json" invisible="1"/>
                         </page>
 
-                        <page string="Fiche Diagnostic &amp; Liaison Stock (Magasinier)">
-                            <group>
-                                <field name="diagnostic_parts_note" placeholder="Note interne pour le magasinier : pièces demandées, références OEM, dégradations au démontage... (Strictement masquée au client)."/>
-                                <field name="symptoms" placeholder="Symptômes signalés par le client lors du dépôt..."/>
-                                <field name="diagnostic_notes" placeholder="Constat technique du mécanicien..."/>
-                            </group>
-                        </page>
+                        <!-- ONGLET 2 : ATELIER & DIAGNOSTICS VOCAUX (AUDIOS, COCKPIT & CHECKLIST) -->
+                        <page string="Atelier &amp; Diagnostics" name="workshop_diagnostic_tab">
+                            <!-- Enregistrements Multi-Audios & Diagnostics Vocaux -->
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-primary">
+                                        <i class="fa fa-headphones me-2" title="Audios"/>HISTORIQUE DES ENREGISTREMENTS AUDIOS &amp; DIAGNOSTICS
+                                    </span>
+                                    <button name="action_open_ai_diagnostic_wizard" string="Enregistrer Nouveau Diagnostic Audio" type="object" class="btn btn-outline-primary btn-sm" icon="fa-microphone"/>
+                                </div>
+                                <div class="card-body p-2">
+                                    <field name="diagnostic_log_ids">
+                                        <list string="Diagnostics" decoration-info="state == 'submitted_to_stock'" decoration-success="state in ('validated', 'invoiced')">
+                                            <field name="name"/>
+                                            <field name="create_date" string="Date"/>
+                                            <field name="stage_id" widget="badge"/>
+                                            <field name="operator_id"/>
+                                            <field name="task_count" string="Nb. Tâches"/>
+                                            <field name="validated_task_count" string="Validées"/>
+                                            <field name="is_hidden_damage" widget="boolean_toggle" string="Dégât Masqué"/>
+                                            <field name="state" widget="badge" decoration-info="state == 'submitted_to_stock'" decoration-success="state in ('validated', 'invoiced')"/>
+                                        </list>
+                                    </field>
+                                </div>
+                            </div>
 
-                        <page string="État des Lieux Carrosserie">
-                            <group>
-                                <field name="bodywork_notes" placeholder="Ex: Rayure aile avant droite, choc pare-choc arrière..."/>
-                                <field name="valuable_items" placeholder="Ex: Effets personnels laissés à bord..."/>
-                            </group>
-                        </page>
-
-                        <page string="Photos Check-in &amp; Pièces">
-                            <field name="attachment_ids" widget="many2many_binary" string="Photos"/>
+                            <!-- Gamme d'Atelier & Micro-Tâches par Étape -->
+                            <div class="card border-secondary">
+                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-dark">
+                                        <i class="fa fa-wrench text-primary me-2" title="Atelier"/>GAMME DES TRAVAUX &amp; CHECKLIST OPÉRATIONNELLE PAR ÉTAPE
+                                    </span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <field name="checklist_progress" widget="progressbar"/>
+                                    </div>
+                                </div>
+                                <div class="card-body p-2">
+                                    <field name="can_toggle_workshop_tasks" invisible="1"/>
+                                    <field name="task_ids" readonly="not can_toggle_workshop_tasks">
+                                        <list string="Sous-tâches Atelier" create="0" delete="0" editable="bottom"
+                                              decoration-muted="state == '1_done'"
+                                              decoration-bf="state != '1_done'">
+                                            <field name="sequence" widget="handle"/>
+                                            <button name="action_toggle_state" type="object"
+                                                    icon="fa-check-circle text-success"
+                                                    title="Terminé (Cliquer pour basculer)"
+                                                    aria-label="Terminé"
+                                                    invisible="state != '1_done'"/>
+                                            <button name="action_toggle_state" type="object"
+                                                    icon="fa-dot-circle-o text-warning"
+                                                    title="En cours (Cliquer pour terminer)"
+                                                    aria-label="En cours"
+                                                    invisible="state != '01_in_progress'"/>
+                                            <button name="action_toggle_state" type="object"
+                                                    icon="fa-circle-thin text-muted"
+                                                    title="En attente (Cliquer pour terminer)"
+                                                    aria-label="En attente"
+                                                    invisible="state != '04_waiting_normal'"/>
+                                            <field name="name" string="Titre" readonly="1"/>
+                                            <field name="completed_by_operator_id" string="Assignés" readonly="1" optional="show"/>
+                                            <field name="specialty" string="Atelier / Spécialité" widget="badge" readonly="1"
+                                                   decoration-danger="specialty == 'carrosserie'"
+                                                   decoration-primary="specialty == 'mecanique'"
+                                                   decoration-warning="specialty == 'electricite'"
+                                                   decoration-success="specialty == 'entretien'"
+                                                   decoration-info="specialty == 'climatisation'"/>
+                                            <field name="stage_id" string="Grande Étape" readonly="1"/>
+                                            <field name="planned_hours" string="Durée Estimée" widget="float_time" sum="Total Heures" readonly="1"/>
+                                            <field name="state" column_invisible="True"/>
+                                            <field name="is_done" column_invisible="True"/>
+                                        </list>
+                                    </field>
+                                </div>
+                            </div>
                         </page>
                     </notebook>
                     <chatter/>
@@ -238,6 +462,8 @@
         <field name="arch" type="xml">
             <kanban default_group_by="stage_id" sample="1">
                 <field name="name"/>
+                <field name="state"/>
+                <field name="active"/>
                 <field name="vehicle_id"/>
                 <field name="license_plate"/>
                 <field name="customer_id"/>
@@ -248,10 +474,20 @@
                 <field name="claim_id"/>
                 <field name="date_reception"/>
                 <templates>
+                    <t t-name="menu">
+                        <a role="menuitem" type="object" name="action_cancel" class="dropdown-item text-danger" confirm="Retirer ce véhicule du tableau de bord atelier ?">Retirer du tableau / Annuler</a>
+                        <a role="menuitem" type="edit" class="dropdown-item">Modifier</a>
+                        <a role="menuitem" type="delete" class="dropdown-item" confirm="Supprimer définitivement cette fiche ?">Supprimer</a>
+                    </t>
                     <t t-name="card">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="o_garage_plate"><field name="license_plate"/></span>
-                            <span class="text-muted small"><field name="name"/></span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="text-muted small"><field name="name"/></span>
+                                <button name="action_cancel" type="object" class="btn btn-sm btn-outline-danger p-0 px-1 border-0" title="Retirer du tableau" confirm="Retirer ce véhicule du tableau de bord atelier ?">
+                                    <i class="fa fa-times text-danger" title="Retirer"/>
+                                </button>
+                            </div>
                         </div>
                         <div class="fw-bold text-dark mb-1">
                             <i class="fa fa-car text-primary me-1" title="Véhicule"/>
@@ -301,11 +537,14 @@
                 <field name="specialty"/>
                 <field name="stage_id"/>
                 <field name="stock_status"/>
-                <filter name="filter_in_progress" string="En cours à l'atelier" domain="[('stage_sequence', '&lt;', 70)]"/>
+                <filter name="filter_in_progress" string="En cours à l'atelier" domain="[('stage_sequence', '&lt;', 70), ('state', 'not in', ('delivered', 'cancel'))]"/>
                 <filter name="filter_stock_needed" string="À chiffrer par le Stock (Magasinier)" domain="[('stock_status', '=', 'envoye_stock')]"/>
                 <filter name="filter_pieces_ready" string="Pièces Disponibles" domain="[('stock_status', '=', 'pieces_dispo')]"/>
                 <filter name="filter_insurance" string="Dossiers Sinistres" domain="[('claim_id', '!=', False)]"/>
                 <filter name="filter_ready" string="Prêts pour livraison" domain="[('stage_sequence', '=', 60)]"/>
+                <separator/>
+                <filter name="filter_canceled" string="Véhicules Retirés / Annulés" domain="[('state', '=', 'cancel')]"/>
+                <filter name="filter_archived" string="Archivés" domain="[('active', '=', False)]"/>
                 <separator/>
                 <group>
                     <filter name="group_by_stage" string="Étape Atelier (7 Étapes)" context="{'group_by': 'stage_id'}"/>
@@ -320,7 +559,7 @@
 
     <!-- Action Fenêtre Réceptions -->
     <record id="action_garage_reception" model="ir.actions.act_window">
-        <field name="name">Réceptions &amp; Tableau Atelier</field>
+        <field name="name">Véhicules à l'Atelier</field>
         <field name="res_model">garage.reception</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="context">{'search_default_filter_in_progress': 1}</field>

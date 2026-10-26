@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_garage_photo_gallery_wizard_form" model="ir.ui.view">
+        <field name="name">garage.photo.gallery.wizard.form</field>
+        <field name="model">garage.photo.gallery.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Galerie Visuelle &amp; Visionneuse Plein Écran">
+                <field name="has_images" invisible="1"/>
+                <field name="current_index" invisible="1"/>
+                <field name="category_filter" invisible="1"/>
+                <field name="current_image_id" invisible="1"/>
+
+                <!-- En-tête avec informations véhicule et filtres de catégorie -->
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">
+                            <i class="fa fa-camera-retro text-primary me-2" title="Galerie"/>
+                            <field name="license_plate" readonly="1" class="text-primary"/>
+                            <span class="text-muted fw-normal ms-2"><field name="vehicle_name" readonly="1"/></span>
+                        </h5>
+                        <div class="small text-muted mt-1">
+                            <field name="current_image_category" readonly="1" class="fw-semibold text-secondary me-2"/>
+                            <span invisible="not current_image_date">| Date : <field name="current_image_date" readonly="1"/></span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge bg-dark fs-6 px-3 py-2" invisible="not has_images">
+                            <field name="counter_display" readonly="1"/>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Barre des boutons filtres -->
+                <div class="d-flex gap-2 mb-3">
+                    <button name="action_filter_all" type="object"
+                            string="Tout"
+                            class="btn btn-sm btn-outline-primary"
+                            icon="fa-th-large"/>
+                    <button name="action_filter_papiers" type="object"
+                            string="Papiers &amp; Documents"
+                            class="btn btn-sm btn-outline-primary"
+                            icon="fa-id-card-o"/>
+                    <button name="action_filter_chocs" type="object"
+                            string="Chocs &amp; Dégâts"
+                            class="btn btn-sm btn-outline-primary"
+                            icon="fa-car"/>
+                    <button name="action_filter_atelier" type="object"
+                            string="Travaux Atelier"
+                            class="btn btn-sm btn-outline-primary"
+                            icon="fa-wrench"/>
+                </div>
+
+                <!-- Zone d'affichage Photo avec Navigation Flèches -->
+                <div class="position-relative bg-dark rounded p-2 text-center" style="min-height: 420px; display: flex; align-items: center; justify-content: center;" invisible="not has_images">
+                    <!-- Flèche Précédente -->
+                    <button name="action_prev" type="object"
+                            class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3 shadow rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 44px; height: 44px; z-index: 10;"
+                            title="Photo Précédente" aria-label="Photo Précédente">
+                        <i class="fa fa-chevron-left text-dark" title="Précédente"/>
+                    </button>
+
+                    <!-- Image Active Haute Résolution -->
+                    <div style="max-height: 480px; max-width: 90%; margin: 0 auto;">
+                        <field name="current_image_binary" widget="image" class="img-fluid rounded shadow" style="max-height: 460px; object-fit: contain;"/>
+                    </div>
+
+                    <!-- Flèche Suivante -->
+                    <button name="action_next" type="object"
+                            class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-3 shadow rounded-circle d-flex align-items-center justify-content-center"
+                            style="width: 44px; height: 44px; z-index: 10;"
+                            title="Photo Suivante" aria-label="Photo Suivante">
+                        <i class="fa fa-chevron-right text-dark" title="Suivante"/>
+                    </button>
+                </div>
+
+                <div class="text-center py-5 bg-light rounded" invisible="has_images">
+                    <i class="fa fa-picture-o fa-3x text-muted mb-3" title="Aucune image"/>
+                    <h5 class="fw-bold text-muted">Aucune photo dans cette catégorie</h5>
+                    <p class="small text-muted mb-0">Ajoutez des photos depuis la fiche réception ou l'application mobile pour les visionner ici.</p>
+                </div>
+
+                <!-- Nom du fichier en pied d'image -->
+                <div class="d-flex justify-content-between align-items-center mt-2 px-1 text-muted small" invisible="not has_images">
+                    <span><i class="fa fa-file-image-o me-1" title="Fichier"/><field name="current_image_name" readonly="1"/></span>
+                </div>
+
+                <footer>
+                    <button string="Fermer (Retour)" class="btn btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_garage_photo_gallery_wizard" model="ir.actions.act_window">
+        <field name="name">Galerie Photos &amp; Documents</field>
+        <field name="res_model">garage.photo.gallery.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -217,6 +217,41 @@
                             </div>
                         </div>
 
+                        <!-- Annexe Photographique Dossier Expert (Grille 2x3) -->
+                        <t t-if="o.include_photos_in_expert_report and o.attachment_ids">
+                            <div style="page-break-before: always;"/>
+                            <div class="row mb-3 pb-2 border-bottom border-primary mt-3">
+                                <div class="col-8">
+                                    <h4 class="text-uppercase fw-bold text-primary mb-1">
+                                        Annexe Photographique - Constat des Dégâts
+                                    </h4>
+                                    <div class="text-muted small">
+                                        Dossier Sinistre N° <strong><span t-field="o.claim_number"/></strong> |
+                                        Immatriculation : <strong><span t-field="o.license_plate"/></strong>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <span class="badge bg-secondary p-2">
+                                        <span t-esc="len(o.attachment_ids)"/> Photos Annexées
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <t t-foreach="o.attachment_ids" t-as="att">
+                                    <div class="col-6 mb-3 text-center" style="page-break-inside: avoid;">
+                                        <div class="border rounded p-2 bg-light shadow-sm">
+                                            <t t-if="att.datas">
+                                                <img t-att-src="image_data_uri(att.datas)"
+                                                     style="max-height: 220px; max-width: 100%; object-fit: contain; border-radius: 4px;"
+                                                     alt="Photo Constat Sinistre"/>
+                                            </t>
+                                            <div class="small fw-bold text-truncate mt-1 text-dark" t-esc="att.name"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+
                     </div>
                 </t>
             </t>

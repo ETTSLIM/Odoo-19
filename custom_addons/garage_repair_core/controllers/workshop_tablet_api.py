@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
 import base64
+import os
+import re
+import requests
 import logging
-from odoo import http, fields, Command, _
+from odoo import http, fields, Command, _, SUPERUSER_ID
 from odoo.http import request
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -45,7 +49,9 @@ def _reception_to_vehicle_card(r):
     if not active_sub:
         active_sub = next((s['name'] for s in subtasks if s['state'] != '1_done'), "")
 
-    images = [f"/web/image/{att.id}" for att in r.attachment_ids]
+    images = []
+    for att in r.attachment_ids:
+        images.append(f"/web/image/{att.id}")
 
     vin = ""
     if r.vehicle_id:
@@ -243,7 +249,8 @@ class GarageWorkshopTabletApiController(http.Controller):
         if request.httprequest.method == 'OPTIONS':
             return _json_response({}, status=200)
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'error': f"Vehicle task #{task_id} not found"}, status=404)
 
@@ -254,7 +261,8 @@ class GarageWorkshopTabletApiController(http.Controller):
         if request.httprequest.method == 'OPTIONS':
             return _json_response({}, status=200)
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
 
@@ -268,6 +276,22 @@ class GarageWorkshopTabletApiController(http.Controller):
             body = {}
 
         target_state = body.get('state', '1_done')
+        operator_id = body.get('operator_id')
+        pin_code = body.get('pin_code')
+        operator = None
+        if operator_id:
+            try:
+                op_record = request.env['garage.workshop.operator'].sudo().browse(int(operator_id))
+                if op_record.exists():
+                    operator = op_record
+                    if pin_code and not operator.verify_pin(pin_code, target_stage_id=subtask.stage_id.id):
+                        return _json_response({
+                            'status': 'error',
+                            'message': f"Code PIN invalide pour l'opérateur {operator.name}."
+                        }, status=403)
+            except Exception:
+                operator = None
+
         state_map = {
             'done': '1_done',
             '1_done': '1_done',
@@ -280,13 +304,17 @@ class GarageWorkshopTabletApiController(http.Controller):
 
         prev_stage_seq = (rec.stage_sequence // 10) if rec.stage_sequence else 1
 
-        if clean_state == '1_done':
-            subtask.with_context(auto_workflow_sync=True).action_toggle_state()
-        else:
-            subtask.with_context(auto_workflow_sync=True).write({
-                'state': clean_state,
-                'is_done': (clean_state == '1_done'),
-                'completed_date': False if clean_state != '1_done' else fields.Datetime.now(),
+        try:
+            subtask.with_context(auto_workflow_sync=True).action_toggle_state(
+                operator=operator, target_state=clean_state
+            )
+        except (UserError, ValidationError) as ue:
+            return _json_response({
+                'status': 'interlock_locked',
+                'interlock_message': str(ue),
+                'message': str(ue),
+                'stage_advanced': False,
+                'task': _reception_to_vehicle_detail(rec),
             })
 
         new_stage_seq = (rec.stage_sequence // 10) if rec.stage_sequence else 1
@@ -320,31 +348,184 @@ class GarageWorkshopTabletApiController(http.Controller):
 
         audio_b64 = body.get('audio_base64', '')
         task_id = body.get('task_id', 0)
+        context_hint = body.get('context_hint') or body.get('contextHint') or ''
 
-        rec = request.env['garage.reception'].sudo().browse(task_id) if task_id else None
+        if not audio_b64:
+            return _json_response({
+                'status': 'ok',
+                'transcription': '',
+                'transcription_summary': '',
+                'todo_tasks': [],
+                'is_assurance': False,
+                'workshop_type': 'mecanique',
+            })
 
-        if rec and rec.exists():
-            res = rec.process_ai_diagnostic(audio_base64=audio_b64)
+        try:
+            admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+            rec = request.env['garage.reception'].with_user(admin_user).browse(task_id) if task_id else None
+
+            if rec and rec.exists():
+                res = rec.process_ai_diagnostic(audio_base64=audio_b64, raw_note=context_hint)
+                return _json_response({
+                    'status': 'ok',
+                    'transcription': res.get('transcription', ''),
+                    'transcription_summary': res.get('transcription_summary', ''),
+                    'todo_tasks': res.get('todo_tasks', []),
+                    'is_assurance': res.get('is_assurance', False),
+                    'workshop_type': res.get('specialty', 'mecanique'),
+                })
+
+            dummy_rec = request.env['garage.reception'].sudo().new({
+                'symptoms': 'Diagnostic vocal',
+                'customer_id': request.env.ref('base.partner_admin').id if request.env.ref('base.partner_admin', False) else 1,
+                'vehicle_id': request.env['fleet.vehicle'].sudo().search([], limit=1).id or 1,
+            })
+            res = dummy_rec.process_ai_diagnostic(audio_base64=audio_b64, raw_note=context_hint)
             return _json_response({
                 'status': 'ok',
                 'transcription': res.get('transcription', ''),
+                'transcription_summary': res.get('transcription_summary', ''),
                 'todo_tasks': res.get('todo_tasks', []),
                 'is_assurance': res.get('is_assurance', False),
                 'workshop_type': res.get('specialty', 'mecanique'),
             })
+        except Exception as e:
+            _logger.exception("Error in /api/workshop/transcribe: %s", e)
+            return _json_response({
+                'status': 'ok',
+                'transcription': '',
+                'todo_tasks': [],
+                'is_assurance': False,
+                'workshop_type': 'mecanique',
+                'warning': str(e),
+            })
 
-        dummy_rec = request.env['garage.reception'].sudo().new({
-            'symptoms': 'Diagnostic vocal',
-            'customer_id': request.env.ref('base.partner_admin').id if request.env.ref('base.partner_admin', False) else 1,
-            'vehicle_id': request.env['fleet.vehicle'].sudo().search([], limit=1).id or 1,
-        })
-        res = dummy_rec.process_ai_diagnostic(audio_base64=audio_b64)
+    @http.route('/api/workshop/ocr-document', type='http', auth='none', methods=['POST', 'OPTIONS'], csrf=False)
+    def api_ocr_document(self, **kwargs):
+        if request.httprequest.method == 'OPTIONS':
+            return _json_response({}, status=200)
+
+        try:
+            body = json.loads(request.httprequest.data or '{}')
+        except Exception:
+            body = {}
+
+        img_b64 = body.get('image_base64') or body.get('imageBase64') or ''
+        doc_type = body.get('doc_type') or 'carte_grise'
+
+        if not img_b64:
+            return _json_response({
+                'status': 'error',
+                'message': 'No image provided',
+                'matricule': '',
+                'brand_model': '',
+                'vin': '',
+                'customer_name': '',
+                'odometer': None,
+            })
+
+        clean_b64 = img_b64.split(',')[-1].strip()
+        img_mime = "image/jpeg"
+        try:
+            raw_bytes = base64.b64decode(clean_b64[:64])
+            if raw_bytes.startswith(b'\x89PNG'):
+                img_mime = 'image/png'
+            elif raw_bytes.startswith(b'RIFF') and b'WEBP' in raw_bytes[:16]:
+                img_mime = 'image/webp'
+        except Exception:
+            pass
+
+        gemini_api_key = os.environ.get('GEMINI_API_KEY') or request.env['ir.config_parameter'].sudo().get_param('garage.gemini_api_key', '')
+
+        if not gemini_api_key:
+            _logger.warning("Gemini API key not configured for OCR")
+            return _json_response({
+                'status': 'ok',
+                'message': 'Gemini API key not configured',
+                'matricule': '',
+                'brand_model': '',
+                'vin': '',
+                'customer_name': '',
+                'odometer': None,
+            })
+
+        prompt = (
+            "CRITICAL AUTOMOTIVE DOCUMENT OCR & VEHICLE REGISTRATION PROTOCOL (MOROCCO):\n"
+            "You are an expert AI OCR specialist for Moroccan vehicle documents (Carte Grise - Certificat d'Immatriculation) "
+            "and vehicle odometer dashboards (Compteur Kilométrique).\n"
+            "Examine this image carefully and extract all relevant vehicle data.\n\n"
+            "RULES FOR MOROCCAN CARTE GRISE (RECTO OU VERSO):\n"
+            "1. 'matricule': Registration plate number in standard Moroccan format (e.g. '12345 | أ | 6' or '12345-A-6' or 'WW 123456'). Keep the Arabic character (e.g. أ, ب, د, هـ, etc.) if visible, or its letter code.\n"
+            "2. 'brand_model': Combined Make and Model (e.g. 'DACIA DUSTER', 'RENAULT CLIO 4', 'PEUGEOT 208', 'VOLKSWAGEN GOLF 7'). Look at D.1 (Marque) and D.3 (Dénomination commerciale / Modèle).\n"
+            "3. 'vin': Exact 17-character Vehicle Identification Number (NIV / Numéro de châssis / E). Example: 'VF1HSD...'.\n"
+            "4. 'customer_name': Full Name of the owner / titulaire (Nom et prénom du propriétaire / C.1 / C.4.1).\n"
+            "5. 'odometer': Total mileage if indicated on the document, otherwise null.\n\n"
+            "RULES FOR ODOMETER DASHBOARD (COMPTEUR KILOMÉTRIQUE):\n"
+            "1. 'odometer': Integer value of total accumulated kilometers (e.g. 142500). Ignore trip meters (Trip A / Trip B) unless it is the only displayed mileage.\n"
+            "2. 'matricule', 'brand_model', 'vin', 'customer_name': null unless clearly visible.\n\n"
+            "Return STRICTLY a JSON object matching this schema:\n"
+            "{\n"
+            "  'status': 'ok',\n"
+            "  'doc_type': 'carte_grise' | 'compteur' | 'other',\n"
+            "  'matricule': 'string or empty',\n"
+            "  'brand_model': 'string or empty',\n"
+            "  'vin': 'string or empty',\n"
+            "  'customer_name': 'string or empty',\n"
+            "  'odometer': integer or null,\n"
+            "  'confidence': float between 0.0 and 1.0\n"
+            "}"
+        )
+
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"inline_data": {"mime_type": img_mime, "data": clean_b64}},
+                        {"text": prompt}
+                    ]
+                }],
+                "generationConfig": {
+                    "temperature": 0.1,
+                    "response_mime_type": "application/json"
+                }
+            }
+            res = requests.post(url, json=payload, timeout=25)
+            if res.status_code == 200:
+                text_resp = res.json().get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '{}')
+                m = re.search(r'\{.*\}', text_resp, re.DOTALL)
+                if m:
+                    p_data = json.loads(m.group(0))
+                    odo_val = p_data.get('odometer')
+                    if odo_val is not None:
+                        try:
+                            odo_val = int(odo_val)
+                        except Exception:
+                            odo_val = None
+                    return _json_response({
+                        'status': 'ok',
+                        'doc_type': p_data.get('doc_type', doc_type),
+                        'matricule': p_data.get('matricule') or '',
+                        'brand_model': p_data.get('brand_model') or '',
+                        'vin': p_data.get('vin') or '',
+                        'customer_name': p_data.get('customer_name') or '',
+                        'odometer': odo_val,
+                        'confidence': p_data.get('confidence', 0.95),
+                        'message': 'Extraction OCR réussie',
+                    })
+            else:
+                _logger.warning("Gemini OCR HTTP error %s: %s", res.status_code, res.text[:200])
+        except Exception as e:
+            _logger.exception("Error in /api/workshop/ocr-document: %s", e)
+
         return _json_response({
             'status': 'ok',
-            'transcription': res.get('transcription', ''),
-            'todo_tasks': res.get('todo_tasks', []),
-            'is_assurance': res.get('is_assurance', False),
-            'workshop_type': res.get('specialty', 'mecanique'),
+            'matricule': '',
+            'brand_model': '',
+            'vin': '',
+            'customer_name': '',
+            'odometer': None,
+            'message': 'Échec de lecture automatique',
         })
 
     @http.route('/api/workshop/checkin', type='http', auth='none', methods=['POST', 'OPTIONS'], csrf=False)
@@ -357,92 +538,276 @@ class GarageWorkshopTabletApiController(http.Controller):
         except Exception:
             body = {}
 
-        images_b64 = body.get('images_base64') or []
-        if body.get('image_base64') and body.get('image_base64') not in images_b64:
-            images_b64.insert(0, body['image_base64'])
+        try:
+            images_b64 = body.get('images_base64') or []
+            if body.get('image_base64') and body.get('image_base64') not in images_b64:
+                images_b64.insert(0, body['image_base64'])
 
-        audio_b64 = body.get('audio_base64')
-        audio_note = body.get('audio_note', '')
-        todo_tasks = body.get('todo_tasks') or []
-        is_assurance = bool(body.get('is_assurance', False))
+            audio_b64 = body.get('audio_base64')
+            audio_note = body.get('audio_note', '')
+            todo_tasks = body.get('todo_tasks') or []
+            is_assurance = bool(body.get('is_assurance', False))
 
-        # Création ou recherche du partenaire client
-        Partner = request.env['res.partner'].sudo()
-        customer_name = body.get('customer_name') or "Client Atelier"
-        customer = Partner.search([('name', '=', customer_name)], limit=1)
-        if not customer:
-            customer = Partner.create({'name': customer_name})
+            admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+            env = request.env(user=admin_user)
 
-        # Création ou recherche du véhicule
-        Vehicle = request.env['fleet.vehicle'].sudo()
-        model_name = body.get('brand_model') or "Véhicule Atelier"
-        plate = body.get('matricule') or f"ATELIER-{fields.Datetime.now().strftime('%M%S')}"
+            # Création ou recherche du partenaire client
+            Partner = env['res.partner']
+            customer_name = (body.get('customer_name') or '').strip() or "Client Atelier"
+            customer = Partner.search([('name', '=', customer_name)], limit=1)
+            if not customer:
+                customer = Partner.create({'name': customer_name})
 
-        vehicle_model = request.env['fleet.vehicle.model'].sudo().search([('name', '=', model_name)], limit=1)
-        if not vehicle_model:
-            brand = request.env['fleet.vehicle.model.brand'].sudo().search([], limit=1)
+            # Création ou recherche du véhicule
+            Vehicle = env['fleet.vehicle']
+            model_name = (body.get('brand_model') or '').strip() or "Véhicule Atelier"
+            plate = (body.get('matricule') or '').strip() or f"ATELIER-{fields.Datetime.now().strftime('%M%S')}"
+            vin = (body.get('vin') or '').strip()
+            clean_vin = re.sub(r'[\s\-]', '', vin).upper() if vin else ''
+            odometer_val = body.get('odometer')
+            categorized_images = body.get('categorized_images') or []
+
+            # Extraction de la photo avatar principale du véhicule (Face avant / Carte grise / Première photo)
+            primary_image_b64 = None
+            if categorized_images:
+                for item in categorized_images:
+                    c_type = (item.get('doc_type') or item.get('category') or '').lower()
+                    c_b64 = item.get('image_base64') or item.get('imageBase64')
+                    if c_b64 and c_type in ('choc_avant', 'carte_grise', 'carte_grise_recto'):
+                        primary_image_b64 = c_b64.split(',')[-1].strip()
+                        break
+                if not primary_image_b64:
+                    for item in categorized_images:
+                        c_b64 = item.get('image_base64') or item.get('imageBase64')
+                        if c_b64:
+                            primary_image_b64 = c_b64.split(',')[-1].strip()
+                            break
+            if not primary_image_b64 and images_b64:
+                primary_image_b64 = images_b64[0].split(',')[-1].strip()
+
+            # Extraction intelligente de la marque et du modèle (Élimination du bug d'injection Abarth)
+            clean_brand_model = model_name.strip()
+            known_brands = [
+                'DACIA', 'RENAULT', 'PEUGEOT', 'VOLKSWAGEN', 'CITROEN', 'CITROËN',
+                'HYUNDAI', 'KIA', 'TOYOTA', 'FORD', 'FIAT', 'MERCEDES-BENZ', 'MERCEDES',
+                'BMW', 'AUDI', 'SEAT', 'SKODA', 'NISSAN', 'OPEL', 'JEEP', 'LAND ROVER',
+                'RANGE ROVER', 'VOLVO', 'SUZUKI', 'HONDA', 'MITSUBISHI', 'CHEVROLET',
+                'ALFA ROMEO', 'PORSCHE', 'DS', 'CUPRA', 'MG', 'GEELY', 'CHERY', 'BYD'
+            ]
+            extracted_brand_name = None
+            extracted_model_name = clean_brand_model
+            upper_bm = clean_brand_model.upper()
+            for kb in sorted(known_brands, key=len, reverse=True):
+                if upper_bm.startswith(kb):
+                    extracted_brand_name = clean_brand_model[:len(kb)].strip()
+                    remainder = clean_brand_model[len(kb):].strip(' -_')
+                    if remainder:
+                        extracted_model_name = remainder
+                    break
+
+            if not extracted_brand_name:
+                words = clean_brand_model.split()
+                if len(words) >= 2:
+                    extracted_brand_name = words[0].strip()
+                    extracted_model_name = " ".join(words[1:]).strip()
+                else:
+                    extracted_brand_name = clean_brand_model or "Atelier"
+                    extracted_model_name = clean_brand_model or "Véhicule"
+
+            Brand = env['fleet.vehicle.model.brand']
+            brand = Brand.search([('name', '=ilike', extracted_brand_name)], limit=1)
             if not brand:
-                brand = request.env['fleet.vehicle.model.brand'].sudo().create({'name': 'Atelier'})
-            vehicle_model = request.env['fleet.vehicle.model'].sudo().create({'name': model_name, 'brand_id': brand.id})
+                brand = Brand.create({'name': extracted_brand_name.title()})
 
-        vehicle = Vehicle.search([('license_plate', '=', plate)], limit=1)
-        if not vehicle:
-            vehicle = Vehicle.create({
-                'license_plate': plate,
+            vehicle_model = env['fleet.vehicle.model'].search([
+                ('name', '=ilike', extracted_model_name),
+                ('brand_id', '=', brand.id)
+            ], limit=1)
+            if not vehicle_model:
+                vehicle_model = env['fleet.vehicle.model'].create({
+                    'name': extracted_model_name,
+                    'brand_id': brand.id
+                })
+
+            # Normalisation et recherche du véhicule par plaque NARSA bilingue
+            num_p, lat_p, ar_p, reg_p, canonical_p = Vehicle.normalize_moroccan_plate(plate)
+            search_plate = canonical_p if canonical_p else plate
+            vehicle = Vehicle.search(['|', ('license_plate', '=', plate), ('license_plate', '=', search_plate)], limit=1)
+            if not vehicle and num_p and reg_p and lat_p:
+                vehicle = Vehicle.search([
+                    ('plate_number_part', '=', num_p),
+                    ('plate_region_part', '=', reg_p),
+                    ('plate_letter_part', '=', lat_p)
+                ], limit=1)
+
+            vehicle_vals = {
+                'license_plate': search_plate,
                 'model_id': vehicle_model.id,
                 'customer_id': customer.id,
-            })
-
-        # Création de la fiche de réception
-        Reception = request.env['garage.reception'].sudo()
-        rec_vals = {
-            'vehicle_id': vehicle.id,
-            'customer_id': customer.id,
-            'symptoms': audio_note or "Check-in Atelier",
-            'is_assurance': is_assurance,
-        }
-        rec = Reception.create(rec_vals)
-
-        # Ajout des pièces jointes photos
-        if images_b64:
-            for idx, img_b64 in enumerate(images_b64):
+            }
+            if num_p and reg_p and lat_p:
+                vehicle_vals['plate_number_part'] = num_p
+                vehicle_vals['plate_region_part'] = reg_p
+                vehicle_vals['plate_letter_part'] = lat_p
+            if primary_image_b64:
+                vehicle_vals['image_128'] = primary_image_b64
+            if vin:
+                if 'vin_sn' in Vehicle._fields:
+                    vehicle_vals['vin_sn'] = clean_vin or vin
+                if 'vin_number' in Vehicle._fields and 5 <= len(clean_vin) <= 17:
+                    vehicle_vals['vin_number'] = clean_vin
+            if odometer_val is not None:
                 try:
-                    clean_b64 = img_b64.split(',')[-1].strip()
-                    att = request.env['ir.attachment'].sudo().create({
-                        'name': f"Photo Checkin #{idx + 1}",
-                        'type': 'binary',
-                        'datas': clean_b64,
-                        'res_model': 'garage.reception',
-                        'res_id': rec.id,
-                    })
-                    rec.write({'attachment_ids': [Command.link(att.id)]})
-                except Exception as ie:
-                    _logger.warning("Error saving checkin image: %s", ie)
+                    vehicle_vals['odometer'] = float(odometer_val)
+                except Exception:
+                    pass
 
-        # Traitement IA pour tâches dynamiques et note pièces
-        rec.process_ai_diagnostic(
-            audio_base64=audio_b64,
-            raw_note=audio_note,
-            custom_todos=todo_tasks,
-            is_assurance=is_assurance,
-        )
+            if not vehicle:
+                vehicle = Vehicle.create(vehicle_vals)
+            else:
+                upd_vals = {}
+                if primary_image_b64:
+                    upd_vals['image_128'] = primary_image_b64
+                if vin:
+                    if 'vin_sn' in Vehicle._fields and not vehicle.vin_sn:
+                        upd_vals['vin_sn'] = clean_vin or vin
+                    if 'vin_number' in Vehicle._fields and not vehicle.vin_number and 5 <= len(clean_vin) <= 17:
+                        upd_vals['vin_number'] = clean_vin
+                if odometer_val is not None and 'odometer' in Vehicle._fields:
+                    try:
+                        upd_vals['odometer'] = float(odometer_val)
+                    except Exception:
+                        pass
+                if upd_vals:
+                    vehicle.write(upd_vals)
 
-        overview_data = self.api_get_workshop_tasks()
-        parsed_overview = json.loads(overview_data.response[0]) if hasattr(overview_data, 'response') else {}
+            # Mode A vs Mode B : Détection intake réceptionniste (sans audio ni tâches) vs mécanicien
+            is_mode_a_receptionist = not audio_b64 and not audio_note and not todo_tasks
 
-        return _json_response({
-            'status': 'ok',
-            'task_id': rec.id,
-            'matricule': plate,
-            'brand_model': model_name,
-            'customer_name': customer.name,
-            'diagnostic_note': rec.diagnostic_parts_note or audio_note,
-            'todo_tasks': todo_tasks,
-            'is_assurance': rec.is_assurance,
-            'message': f"Véhicule [{plate}] réceptionné avec succès !",
-            'stages': parsed_overview.get('stages', []),
-            'tasks': parsed_overview.get('tasks', []),
-        })
+            # Création de la fiche de réception
+            Reception = env['garage.reception']
+            rec_vals = {
+                'vehicle_id': vehicle.id,
+                'customer_id': customer.id,
+                'symptoms': audio_note or ("En attente de diagnostic mécanicien" if is_mode_a_receptionist else "Check-in Atelier"),
+                'is_assurance': is_assurance,
+                'stock_status': 'attente_diag' if is_mode_a_receptionist else 'envoye_stock',
+            }
+            if odometer_val is not None:
+                try:
+                    rec_vals['odometer_in'] = int(odometer_val)
+                except Exception:
+                    pass
+            rec = Reception.create(rec_vals)
+
+            # Ajout des pièces jointes photos catégorisées
+            categorized_images = body.get('categorized_images') or []
+            if categorized_images:
+                name_map = {
+                    'carte_grise_recto': "Carte Grise (Face Avant)",
+                    'carte_grise_verso': "Carte Grise (Face Arrière)",
+                    'carte_grise': "Carte Grise (Checkin)",
+                    'permis': "Permis de Conduire (Checkin)",
+                    'constat': "Constat Amiable (Checkin)",
+                    'assurance': "Attestation Assurance (Checkin)",
+                    'choc_avant': "Dégât / Choc Avant (Checkin)",
+                    'choc_arriere': "Dégât / Choc Arrière (Checkin)",
+                    'choc_cote': "Dégât / Choc Côtés (Checkin)",
+                    'compteur': "Compteur Kilométrique (Checkin)",
+                    'choc': "Photo Dégât Atelier (Checkin)",
+                }
+                for item in categorized_images:
+                    try:
+                        c_b64 = item.get('image_base64') or item.get('imageBase64')
+                        c_type = (item.get('doc_type') or item.get('category') or 'choc').lower()
+                        if c_b64:
+                            clean_b64 = c_b64.split(',')[-1].strip()
+                            att_name = name_map.get(c_type, f"Photo Checkin ({c_type})")
+
+                            att = env['ir.attachment'].create({
+                                'name': att_name,
+                                'type': 'binary',
+                                'datas': clean_b64,
+                                'res_model': 'garage.reception',
+                                'res_id': rec.id,
+                            })
+                            rec.write({'attachment_ids': [Command.link(att.id)]})
+                            if c_type in ('carte_grise', 'carte_grise_recto', 'carte_grise_verso'):
+                                rec.write({'carte_grise_ids': [Command.link(att.id)]})
+                            elif c_type == 'permis':
+                                rec.write({'permis_ids': [Command.link(att.id)]})
+                            elif c_type in ('constat', 'assurance'):
+                                rec.write({'constat_ids': [Command.link(att.id)]})
+                    except Exception as ie:
+                        _logger.warning("Error saving categorized checkin image: %s", ie)
+
+            if images_b64:
+                for idx, img_b64 in enumerate(images_b64):
+                    try:
+                        clean_b64 = img_b64.split(',')[-1].strip()
+                        att = env['ir.attachment'].create({
+                            'name': f"Photo Checkin #{idx + 1}",
+                            'type': 'binary',
+                            'datas': clean_b64,
+                            'res_model': 'garage.reception',
+                            'res_id': rec.id,
+                        })
+                        rec.write({'attachment_ids': [Command.link(att.id)]})
+                    except Exception as ie:
+                        _logger.warning("Error saving checkin image: %s", ie)
+
+            # Traitement IA uniquement si note ou tâches ou audio fourni (Mode B Mécanicien)
+            if not is_mode_a_receptionist:
+                rec.process_ai_diagnostic(
+                    audio_base64=audio_b64,
+                    raw_note=audio_note,
+                    custom_todos=todo_tasks,
+                    is_assurance=is_assurance,
+                )
+
+            # Initialisation automatique du dossier Sinistre & Assurance si coché à la réception
+            if is_assurance and not rec.claim_id:
+                try:
+                    rec.action_create_or_view_claim()
+                except Exception as ce:
+                    _logger.warning("Error auto-initiating insurance claim in checkin: %s", ce)
+
+            # Création de l'ordre de réparation (1:1)
+            rec.action_create_or_view_repair_order()
+            ro = rec.repair_order_id
+
+            # Maintien strict du véhicule à l'étape 10 Réception dans le Kanban atelier (pas de saut vers Devis)
+            stage_reception = env['garage.workshop.stage'].search([('sequence', '=', 10)], limit=1)
+            if stage_reception and rec.stage_id.id != stage_reception.id:
+                rec.write({'stage_id': stage_reception.id})
+
+            overview_data = self.api_get_workshop_tasks()
+            parsed_overview = json.loads(overview_data.response[0]) if hasattr(overview_data, 'response') else {}
+
+            return _json_response({
+                'status': 'ok',
+                'task_id': rec.id,
+                'reception_id': rec.id,
+                'repair_order_id': ro.id if ro else False,
+                'repair_order_name': ro.name if ro else '',
+                'matricule': plate,
+                'brand_model': model_name,
+                'vin': vin or (vehicle.vin_sn if hasattr(vehicle, 'vin_sn') else ''),
+                'customer_name': customer.name,
+                'odometer': rec.odometer_in if hasattr(rec, 'odometer_in') else odometer_val,
+                'diagnostic_note': rec.diagnostic_parts_note or audio_note,
+                'todo_tasks': todo_tasks,
+                'is_assurance': rec.is_assurance,
+                'message': f"Véhicule [{plate}] réceptionné et Ordre de Réparation {ro.name if ro else ''} initialisé avec succès !",
+                'stages': parsed_overview.get('stages', []),
+                'tasks': parsed_overview.get('tasks', []),
+            })
+        except Exception as e:
+            _logger.exception("Error in /api/workshop/checkin: %s", e)
+            return _json_response({
+                'status': 'error',
+                'message': str(e),
+            }, status=400)
 
     @http.route('/api/workshop/task/<int:task_id>/voice-update', type='http', auth='none', methods=['POST', 'OPTIONS'], csrf=False)
     def api_voice_update(self, task_id, **kwargs):
@@ -458,11 +823,19 @@ class GarageWorkshopTabletApiController(http.Controller):
         audio_b64 = body.get('audio_base64')
         tech_name = body.get('technician_name', "Chef d'Atelier")
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
 
-        if note:
+        if audio_b64:
+            # Traitement complet multimodal du diagnostic audio mécanicien
+            try:
+                res = rec.process_ai_diagnostic(audio_base64=audio_b64, raw_note=note)
+                note = res.get('transcription') or note
+            except Exception as ae:
+                _logger.warning("Error processing voice update audio: %s", ae)
+        elif note:
             # Vérifier si c'est une demande de pièce supplémentaire
             if any(w in note.lower() for w in ['supplémentaire', 'pièce en plus', 'devis en plus', 'لقينا', 'خاص تزيد', 'خاص تزاد']):
                 rec.submit_supplementary_diagnostic(note, technician_name=tech_name)
@@ -486,7 +859,8 @@ class GarageWorkshopTabletApiController(http.Controller):
         except Exception:
             body = {}
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
 
@@ -513,7 +887,8 @@ class GarageWorkshopTabletApiController(http.Controller):
         except Exception:
             body = {}
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
 
@@ -538,21 +913,52 @@ class GarageWorkshopTabletApiController(http.Controller):
         except Exception:
             body = {}
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
 
         img_b64 = body.get('imageBase64') or body.get('image_base64')
+        doc_type = (body.get('doc_type') or body.get('photo_category') or body.get('category') or 'atelier').lower()
         if img_b64:
             clean_b64 = img_b64.split(',')[-1].strip()
+            now_str = fields.Datetime.now().strftime('%d/%m %H:%M')
+            if doc_type == 'carte_grise':
+                att_name = f"Carte Grise ({now_str})"
+            elif doc_type == 'permis':
+                att_name = f"Permis de Conduire ({now_str})"
+            elif doc_type == 'constat':
+                att_name = f"Constat Amiable ({now_str})"
+            elif doc_type == 'assurance':
+                att_name = f"Attestation Assurance ({now_str})"
+            elif doc_type in ('choc', 'damage', 'compteur'):
+                att_name = f"Photo Choc / Dégât ({now_str})"
+            else:
+                att_name = f"Photo Atelier {fields.Datetime.now().strftime('%H:%M:%S')}"
+
             att = request.env['ir.attachment'].sudo().create({
-                'name': f"Photo Atelier {fields.Datetime.now().strftime('%H:%M:%S')}",
+                'name': att_name,
                 'type': 'binary',
                 'datas': clean_b64,
                 'res_model': 'garage.reception',
                 'res_id': rec.id,
             })
             rec.write({'attachment_ids': [Command.link(att.id)]})
+
+            if doc_type == 'carte_grise':
+                rec.write({'carte_grise_ids': [Command.link(att.id)]})
+                if rec.claim_id:
+                    rec.claim_id.write({'carte_grise_ids': [Command.link(att.id)]})
+            elif doc_type == 'permis':
+                rec.write({'permis_ids': [Command.link(att.id)]})
+                if rec.claim_id:
+                    rec.claim_id.write({'permis_ids': [Command.link(att.id)]})
+            elif doc_type == 'constat':
+                rec.write({'constat_ids': [Command.link(att.id)]})
+                if rec.claim_id:
+                    rec.claim_id.write({'constat_ids': [Command.link(att.id)]})
+            elif doc_type == 'assurance' and rec.claim_id:
+                rec.claim_id.write({'assurance_ids': [Command.link(att.id)]})
 
         return _json_response({
             'status': 'ok',
@@ -564,7 +970,8 @@ class GarageWorkshopTabletApiController(http.Controller):
         if request.httprequest.method == 'OPTIONS':
             return _json_response({}, status=200)
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
 
@@ -576,10 +983,37 @@ class GarageWorkshopTabletApiController(http.Controller):
         reason = body.get('reason', 'Sortie anticipée')
         note = body.get('note', '')
         rec.message_post(body=f"<b>Sortie anticipée du véhicule :</b> {reason}. {note}")
-        rec.write({'state': 'delivered'})
+        stage_delivered = request.env['garage.workshop.stage'].sudo().search([('sequence', '=', 70)], limit=1)
+        vals = {'state': 'delivered'}
+        if stage_delivered:
+            vals['stage_id'] = stage_delivered.id
+        rec.write(vals)
         return _json_response({
             'status': 'ok',
             'message': "تم تسجيل خروج المركبة بنجاح",
+        })
+
+    @http.route('/api/workshop/task/<int:task_id>/cancel', type='http', auth='none', methods=['POST', 'OPTIONS'], csrf=False)
+    def api_cancel_task(self, task_id, **kwargs):
+        if request.httprequest.method == 'OPTIONS':
+            return _json_response({}, status=200)
+
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
+        if not rec.exists():
+            return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
+
+        try:
+            body = json.loads(request.httprequest.data or '{}')
+        except Exception:
+            body = {}
+
+        reason = body.get('reason', 'Annulation / Retrait du tableau')
+        rec.message_post(body=f"<b>Véhicule retiré du tableau atelier :</b> {reason}")
+        rec.action_cancel()
+        return _json_response({
+            'status': 'ok',
+            'message': "تم سحب المركبة من لوحة التحكم بنجاح",
         })
 
     @http.route('/api/workshop/task/<int:task_id>/shift-update', type='http', auth='none', methods=['POST', 'OPTIONS'], csrf=False)
@@ -587,7 +1021,8 @@ class GarageWorkshopTabletApiController(http.Controller):
         if request.httprequest.method == 'OPTIONS':
             return _json_response({}, status=200)
 
-        rec = request.env['garage.reception'].sudo().browse(task_id)
+        admin_user = request.env['res.users'].sudo().browse(SUPERUSER_ID)
+        rec = request.env['garage.reception'].with_user(admin_user).browse(task_id)
         if not rec.exists():
             return _json_response({'status': 'error', 'message': f"Vehicle #{task_id} not found"}, status=404)
 
@@ -601,3 +1036,82 @@ class GarageWorkshopTabletApiController(http.Controller):
         notes = body.get('notes', '')
         rec.message_post(body=f"<b>Pointage {shift_name} ({tech_name}) :</b> {notes}")
         return _json_response({'status': 'ok', 'message': "Shift update recorded"})
+
+    @http.route('/api/workshop/operators', type='http', auth='none', methods=['GET', 'OPTIONS'], csrf=False)
+    def api_get_operators(self, **kwargs):
+        if request.httprequest.method == 'OPTIONS':
+            return _json_response({}, status=200)
+
+        operators = request.env['garage.workshop.operator'].sudo().search([('active', '=', True)], order='name asc')
+        data = [{
+            'id': op.id,
+            'name': op.name,
+            'role': op.role or 'mechanic',
+            'specialty': op.specialty or 'general',
+            'pin_code': op.pin_code or '',
+        } for op in operators]
+        return _json_response({
+            'status': 'ok',
+            'operators': data,
+        })
+
+    @http.route('/api/admin/chat', type='http', auth='none', methods=['POST', 'OPTIONS'], csrf=False)
+    def api_admin_chat(self, **kwargs):
+        if request.httprequest.method == 'OPTIONS':
+            return _json_response({}, status=200)
+
+        try:
+            body = json.loads(request.httprequest.data or '{}')
+        except Exception:
+            body = {}
+
+        message = body.get('message', '').strip()
+        if not message:
+            return _json_response({'reply': "أهلاً بك! كيف يمكنني مساعدتك في ورشة السيارات اليوم؟"})
+
+        receptions = request.env['garage.reception'].sudo().search(
+            [('state', 'not in', ('delivered', 'cancel'))],
+            order='stage_sequence asc, date_reception desc',
+            limit=25
+        )
+        context_lines = []
+        for r in receptions:
+            st_name = r.stage_id.name if r.stage_id else "Réception"
+            context_lines.append(
+                f"- السيارة [{r.license_plate}] ({r.vehicle_id.name if r.vehicle_id else 'Atelier'}), "
+                f"الزبون: {r.customer_id.name if r.customer_id else ''}, المرحلة: {st_name}, "
+                f"حالة القطع: {r.stock_status or 'عادية'}, تقدم المهام: {int(r.checklist_progress)}%"
+            )
+        active_fleet_summary = "\n".join(context_lines) if context_lines else "لا توجد سيارات حالياً في الورشة."
+
+        gemini_api_key = os.environ.get('GEMINI_API_KEY') or request.env['ir.config_parameter'].sudo().get_param('garage.gemini_api_key', '')
+        if not gemini_api_key:
+            return _json_response({
+                'reply': f"مرحباً! وضعية السيارات النشطة في ورشة Odoo 19:\n{active_fleet_summary}\n(يرجى إدخال GEMINI_API_KEY في إعدادات Odoo للتواصل الذكي الكامل)."
+            })
+
+        system_instruction = (
+            "أنت المساعد الذكي ورئيس العمليات التقني لورشة تصليح السيارات (Chef d'Atelier Copilot) في المغرب.\n"
+            "تتحدث بالدارجة المغربية المهنية الممزوجة بالمصطلحات التقنية الفرنسية الخاصة بالسيارات.\n"
+            "إليك الوضعية الحالية للسيارات النشطة في ورشة Odoo 19:\n"
+            f"{active_fleet_summary}\n\n"
+            "أجب باقتضاب واحترافية ودقة على أسئلة المشرف أو الميكانيكي."
+        )
+
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
+            payload = {
+                "contents": [{"role": "user", "parts": [{"text": message}]}],
+                "systemInstruction": {"parts": [{"text": system_instruction}]},
+                "generationConfig": {"temperature": 0.3, "maxOutputTokens": 600}
+            }
+            resp = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=12)
+            if resp.status_code == 200:
+                res_data = resp.json()
+                reply_text = res_data.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+                return _json_response({'reply': reply_text or "تم فحص الورشة بنجاح."})
+            else:
+                return _json_response({'reply': f"حالة السيارات في الورشة:\n{active_fleet_summary}"})
+        except Exception as ge:
+            _logger.error("Gemini Copilot exception: %s", ge)
+            return _json_response({'reply': f"حالة السيارات في الورشة:\n{active_fleet_summary}"})

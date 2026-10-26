@@ -86,25 +86,32 @@
                 <header>
                     <button name="action_send_dossier_expert" string="Transmettre à l'Expert"
                             type="object" class="btn-primary"
-                            invisible="state != 'draft'"/>
+                            invisible="state != 'draft'"
+                            confirm="Confirmer la transmission du dossier complet à l'expert d'assurance ?"/>
                     <button name="action_expert_visit" string="Enregistrer Visite Expert"
                             type="object" class="btn-secondary"
-                            invisible="state != 'dossier_sent'"/>
+                            invisible="state != 'dossier_sent'"
+                            confirm="Confirmer le passage et l'enregistrement de la visite de l'expert d'assurance ?"/>
                     <button name="action_approve_accord" string="Valider Bon d'Accord Expert"
                             type="object" class="btn-success"
-                            invisible="state not in ('expert_review', 'amendment_pending')"/>
+                            invisible="state not in ('expert_review', 'amendment_pending')"
+                            confirm="Confirmer la validation du Bon d'Accord (montant chiffré agréé par l'expert) ?"/>
                     <button name="action_client_approve_expert" string="Valider Accord Client"
                             type="object" class="btn-warning"
-                            invisible="state != 'accord_approved' or client_accord_status == 'approved'"/>
+                            invisible="state != 'accord_approved' or client_accord_status == 'approved'"
+                            confirm="Confirmer que le client a accepté le montant du devis expert et sa part (franchise / vétusté) ?"/>
                     <button name="action_start_repair" string="Lancer Travaux Atelier"
                             type="object" class="btn-primary"
-                            invisible="state != 'accord_approved' or client_accord_status != 'approved'"/>
+                            invisible="state != 'accord_approved' or client_accord_status != 'approved'"
+                            confirm="Lancer officiellement les travaux en atelier pour ce véhicule ? Cela synchronisera le statut de la réception."/>
                     <button name="action_complete_repair" string="Terminer Travaux"
                             type="object" class="btn-success"
-                            invisible="state != 'in_repair'"/>
+                            invisible="state != 'in_repair'"
+                            confirm="Confirmer la fin des travaux de réparation ? Le véhicule passera en contrôle qualité / prêt."/>
                     <button name="action_open_split_invoicing_wizard" string="Émettre Facturation Scindée"
                             type="object" class="btn-primary"
-                            invisible="state not in ('repaired', 'invoiced') or client_accord_status != 'approved'"/>
+                            invisible="state not in ('repaired', 'invoiced') or client_accord_status != 'approved'"
+                            confirm="Ouvrir l'assistant pour générer la facturation scindée (Assurance et Client) ?"/>
 
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,expert_review,accord_approved,in_repair,repaired,invoiced"/>
@@ -139,14 +146,14 @@
                     </div>
 
                     <!-- Bandeaux Validation Accord Client -->
-                    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3" role="alert" invisible="state != 'accord_approved' or client_accord_status == 'approved'">
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3" role="alert" invisible="not id or state != 'accord_approved' or client_accord_status == 'approved'">
                         <div>
                             <i class="fa fa-clock-o fa-lg me-2" title="En attente client"/>
                             <strong>En Attente de l'Accord Client : </strong>
                             L'avis de l'expert (<field name="expert_accord_amount_ttc" readonly="1" class="fw-bold"/>) doit obligatoirement être validé par le client avant de démarrer l'atelier (Franchise/Vétusté: <field name="customer_payable" readonly="1" class="fw-bold"/>).
                         </div>
                     </div>
-                    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3" role="alert" invisible="client_accord_status != 'approved'">
+                    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3" role="alert" invisible="not id or client_accord_status != 'approved'">
                         <div>
                             <i class="fa fa-check-circle fa-lg me-2" title="Accord client validé"/>
                             <strong>Avis Expert Validé par le Client : </strong>
@@ -189,7 +196,8 @@
                                         class="btn btn-outline-success btn-sm o_garage_whatsapp_btn ms-1" icon="fa-whatsapp"
                                         title="WhatsApp Client (Message adapté à l'étape)"
                                         aria-label="WhatsApp Client"
-                                        invisible="not customer_phone"/>
+                                        invisible="not customer_phone"
+                                        confirm="Envoyer le point de situation par WhatsApp au client ?"/>
                             </div>
                         </div>
 
@@ -213,26 +221,27 @@
                     <!-- Synthèse Administrative Compacte -->
                     <group>
                         <group string="Compagnie d'Assurance &amp; Cabinet">
-                            <field name="insurance_id"/>
+                            <field name="insurance_id" options="{'no_create_edit': True}" context="{'default_partner_role': 'insurance_company', 'default_is_insurance_company': True, 'default_is_company': True}"/>
                             <field name="insurance_ice"/>
                             <field name="police_number"/>
                             <field name="insurance_agent"/>
-                            <field name="expert_cabinet_id"/>
+                            <field name="expert_cabinet_id" options="{'no_create_edit': True}" context="{'default_partner_role': 'expert_cabinet', 'default_is_expert_cabinet': True, 'default_is_company': True}"/>
                             <field name="expert_name"/>
                             <label for="expert_phone"/>
                             <div class="o_row">
                                 <field name="expert_phone" widget="phone"/>
                                 <button name="action_send_whatsapp_expert" type="object"
                                         class="o_garage_whatsapp_btn" icon="fa-whatsapp"
-                                        title="WhatsApp Expert"/>
+                                        title="WhatsApp Expert"
+                                        confirm="Envoyer la notification par WhatsApp au cabinet d'expertise ?"/>
                             </div>
                             <field name="expert_email" widget="email"/>
                         </group>
                         <group string="Véhicule, Assuré &amp; Circonstances">
-                            <field name="vehicle_id"/>
-                            <field name="customer_id"/>
-                            <field name="reception_id"/>
-                            <field name="repair_order_id"/>
+                            <field name="vehicle_id" options="{'no_create_edit': True}"/>
+                            <field name="customer_id" options="{'no_create_edit': True}"/>
+                            <field name="reception_id" options="{'no_create_edit': True}"/>
+                            <field name="repair_order_id" options="{'no_create_edit': True}"/>
                             <field name="accident_date"/>
                             <field name="shock_location"/>
                             <field name="expert_visit_date"/>
@@ -303,33 +312,114 @@
                                     <field name="labor_amount_untaxed" widget="monetary"/>
                                     <field name="total_untaxed" widget="monetary"/>
                                     <field name="state" widget="badge"/>
-                                    <button name="action_submit_to_expert" string="Soumettre" type="object" icon="fa-paper-plane-o" invisible="state != 'draft'" title="Soumettre"/>
-                                    <button name="action_approve_by_expert" string="Valider" type="object" icon="fa-check-circle-o" class="text-success" invisible="state != 'submitted'" title="Valider"/>
-                                    <button name="action_reject_by_expert" string="Refuser" type="object" icon="fa-times-circle-o" class="text-danger" invisible="state != 'submitted'" title="Refuser"/>
+                                    <button name="action_submit_to_expert" string="Soumettre" type="object" icon="fa-paper-plane-o" invisible="state != 'draft'" title="Soumettre" confirm="Soumettre cet avenant à l'expert pour validation ?"/>
+                                    <button name="action_approve_by_expert" string="Valider" type="object" icon="fa-check-circle-o" class="text-success" invisible="state != 'submitted'" title="Valider" confirm="Valider l'acceptation de cet avenant par l'expert ?"/>
+                                    <button name="action_reject_by_expert" string="Refuser" type="object" icon="fa-times-circle-o" class="text-danger" invisible="state != 'submitted'" title="Refuser" confirm="Enregistrer le refus de cet avenant par l'expert ?"/>
                                 </list>
                             </field>
                         </page>
 
-                        <page string="Constat Visuel &amp; Dégâts" name="damages_tab">
-                            <group>
-                                <field name="damage_notes" placeholder="Descriptif détaillé des chocs tôlerie, marbre, soubassement, airbags, optiques..."/>
-                            </group>
-                        </page>
-
-                        <page string="Dossier Administratif &amp; Photos" name="photos_tab">
-                            <div class="row">
-                                <div class="col-md-5">
-                                    <h6 class="text-dark border-bottom pb-1 fw-bold">Checklist Pièces Justificatives</h6>
-                                    <group>
-                                        <field name="doc_carte_grise" widget="boolean_toggle"/>
-                                        <field name="doc_permis" widget="boolean_toggle"/>
-                                        <field name="doc_constat" widget="boolean_toggle"/>
-                                        <field name="doc_bon_accord" widget="boolean_toggle"/>
-                                    </group>
+                        <page string="Dégâts, Justificatifs &amp; Photos" name="photos_tab">
+                            <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">
+                                        <i class="fa fa-camera-retro text-primary me-2" title="Photos Dossier"/>Dossier Visuel Expert &amp; Pièces Justificatives
+                                    </h6>
+                                    <span class="text-muted small">Contrôle visuel des justificatifs administratifs et éléments endommagés pour expertise.</span>
                                 </div>
-                                <div class="col-md-7">
-                                    <h6 class="text-dark border-bottom pb-1 fw-bold">Photos du Véhicule (Choc, Avant / Après)</h6>
-                                    <field name="attachment_ids" widget="many2many_binary" string="Photos et Justificatifs"/>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex align-items-center">
+                                        <label for="include_photos_in_expert_report" class="me-2 small fw-bold text-dark mb-0">Joindre Photos Rapport PDF</label>
+                                        <field name="include_photos_in_expert_report" widget="boolean_toggle"/>
+                                    </div>
+                                    <button name="action_view_attachments" type="object" string="Galerie Plein Écran" class="btn btn-outline-primary btn-sm" icon="fa-arrows-alt"/>
+                                </div>
+                            </div>
+
+                            <!-- Inventaire Détaillé des Dégâts du Sinistre (Pour l'Expert) -->
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-primary">
+                                        <i class="fa fa-car me-2" title="Dégâts"/>INVENTAIRE DÉTAILLÉ DES DÉGÂTS CARROSSERIE &amp; ACCORD EXPERT
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        <field name="damage_item_count"/> Dégât(s) Constaté(s)
+                                    </span>
+                                </div>
+                                <div class="card-body p-2">
+                                    <field name="damage_item_ids">
+                                        <list string="Dégâts" editable="bottom">
+                                            <field name="zone"/>
+                                            <field name="name" string="Élément Endommagé"/>
+                                            <field name="damage_type" widget="badge"/>
+                                            <field name="severity" widget="badge" decoration-warning="severity == 'light'" decoration-primary="severity == 'medium'" decoration-danger="severity == 'heavy'"/>
+                                            <field name="action_type" widget="badge"/>
+                                            <field name="discovery_stage" widget="badge"/>
+                                            <field name="is_hidden_damage" widget="boolean_toggle" string="Masqué"/>
+                                            <field name="expert_decision" widget="badge" decoration-warning="expert_decision == 'pending'" decoration-success="expert_decision == 'approved'" decoration-danger="expert_decision == 'rejected'"/>
+                                        </list>
+                                    </field>
+                                </div>
+                            </div>
+
+                            <group string="Observations Globales Expert" class="mb-3" invisible="not damage_notes and damage_item_count &gt; 0">
+                                <field name="damage_notes" placeholder="Descriptif détaillé ou remarques additionnelles pour l'expert..."/>
+                            </group>
+
+                            <!-- Cartes Dossier Papiers & Justificatifs -->
+                            <div class="card mb-3 border-secondary">
+                                <div class="card-header bg-light py-2 fw-bold text-uppercase small text-dark">
+                                    <i class="fa fa-folder-open text-primary me-2" title="Papiers"/>Dossier Administratif Numérisé (Auto-validation Checklist)
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-light h-100">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label for="carte_grise_ids" class="fw-bold small text-dark mb-0">Carte Grise</label>
+                                                    <field name="doc_carte_grise" widget="boolean_toggle"/>
+                                                </div>
+                                                <field name="carte_grise_ids" widget="many2many_binary" string="Carte Grise"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-light h-100">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label for="permis_ids" class="fw-bold small text-dark mb-0">Permis</label>
+                                                    <field name="doc_permis" widget="boolean_toggle"/>
+                                                </div>
+                                                <field name="permis_ids" widget="many2many_binary" string="Permis"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-light h-100">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label for="constat_ids" class="fw-bold small text-dark mb-0">Constat Amiable</label>
+                                                    <field name="doc_constat" widget="boolean_toggle"/>
+                                                </div>
+                                                <field name="constat_ids" widget="many2many_binary" string="Constat"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border rounded p-2 bg-light h-100">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label for="assurance_ids" class="fw-bold small text-dark mb-0">Attestation Assur.</label>
+                                                    <field name="doc_bon_accord" widget="boolean_toggle"/>
+                                                </div>
+                                                <field name="assurance_ids" widget="many2many_binary" string="Attestation"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Photos du Véhicule -->
+                            <div class="card border-secondary">
+                                <div class="card-header bg-light py-2 fw-bold text-uppercase small text-dark">
+                                    <i class="fa fa-car text-danger me-2" title="Chocs"/>Photos des Dégâts &amp; État du Véhicule pour l'Expert
+                                </div>
+                                <div class="card-body">
+                                    <field name="attachment_ids" widget="many2many_binary" string="Photos du Sinistre"/>
                                 </div>
                             </div>
                         </page>

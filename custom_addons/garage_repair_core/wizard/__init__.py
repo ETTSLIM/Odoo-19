@@ -5,3 +5,5 @@ from . import garage_payment_recovery_wizard
 from . import garage_stock_picker_wizard
 from . import garage_operator_pin_wizard
 from . import garage_ai_diagnostic_wizard
+from . import garage_photo_gallery_wizard
+from . import garage_tablet_pairing_wizard

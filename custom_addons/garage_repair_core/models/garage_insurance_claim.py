@@ -21,12 +21,16 @@ class GarageInsuranceClaim(models.Model):
 
     # Compagnie & Cabinet d'Expertise
     insurance_id = fields.Many2one('res.partner', string="Compagnie d'Assurance", required=True,
-                                   domain="[('is_insurance_company', '=', True)]", tracking=True)
+                                   domain="[('is_insurance_company', '=', True)]",
+                                   context={'default_partner_role': 'insurance_company', 'default_is_insurance_company': True, 'default_is_company': True},
+                                   tracking=True)
     insurance_ice = fields.Char(related='insurance_id.ice', string="ICE Assureur", readonly=True)
     insurance_agent = fields.Char(string="Agence / Courtier", tracking=True)
 
     expert_cabinet_id = fields.Many2one('res.partner', string="Cabinet d'Expertise",
-                                        domain="[('is_expert_cabinet', '=', True)]", tracking=True)
+                                        domain="[('is_expert_cabinet', '=', True)]",
+                                        context={'default_partner_role': 'expert_cabinet', 'default_is_expert_cabinet': True, 'default_is_company': True},
+                                        tracking=True)
     expert_name = fields.Char(string="Nom de l'Expert", tracking=True)
     expert_email = fields.Char(string="Email Expert", tracking=True)
     expert_phone = fields.Char(string="Tél / WhatsApp Expert", tracking=True)
@@ -76,7 +80,33 @@ class GarageInsuranceClaim(models.Model):
         'claim_id', 'attachment_id',
         string="Photos de Choc & Documents"
     )
+    carte_grise_ids = fields.Many2many(
+        'ir.attachment', 'garage_claim_carte_grise_rel',
+        'claim_id', 'attachment_id',
+        string="Carte Grise (R/V)"
+    )
+    permis_ids = fields.Many2many(
+        'ir.attachment', 'garage_claim_permis_rel',
+        'claim_id', 'attachment_id',
+        string="Numérisation Permis Assuré"
+    )
+    constat_ids = fields.Many2many(
+        'ir.attachment', 'garage_claim_constat_rel',
+        'claim_id', 'attachment_id',
+        string="Constat Amiable"
+    )
+    assurance_ids = fields.Many2many(
+        'ir.attachment', 'garage_claim_assurance_rel',
+        'claim_id', 'attachment_id',
+        string="Attestation d'Assurance"
+    )
+    include_photos_in_expert_report = fields.Boolean(
+        string="Joindre les Photos au Rapport Expert",
+        default=True
+    )
     attachment_count = fields.Integer(string="Nb. Photos & Pièces", compute='_compute_attachment_count')
+    damage_item_ids = fields.One2many('garage.damage.item', 'claim_id', string="Constats Dégâts Véhicule")
+    damage_item_count = fields.Integer(string="Nb. Dégâts", compute='_compute_damage_item_count')
 
     # Checklist Documents Justificatifs Assurances
     doc_carte_grise = fields.Boolean(string="Carte Grise / Certificat", tracking=True)
@@ -86,8 +116,8 @@ class GarageInsuranceClaim(models.Model):
 
     # Données Financières - Chiffrage Garage
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
-    initial_estimate_parts = fields.Monetary(string="Pièces Devis Initial HT", default=0.0)
-    initial_estimate_labor = fields.Monetary(string="Main-d'Œuvre Devis Initial HT", default=0.0)
+    initial_estimate_parts = fields.Monetary(string="Pièces Devis Initial HT", compute='_compute_initial_estimates', store=True, readonly=False)
+    initial_estimate_labor = fields.Monetary(string="Main-d'Œuvre Devis Initial HT", compute='_compute_initial_estimates', store=True, readonly=False)
     claim_estimate_untaxed = fields.Monetary(string="Chiffrage Initial Total HT", compute='_compute_claim_estimate', store=True, readonly=False)
 
     # Avenants
@@ -139,17 +169,65 @@ class GarageInsuranceClaim(models.Model):
     # Jeton de suivi client
     tracking_token = fields.Char(string="Lien Suivi Client", compute='_compute_tracking_token', store=True)
 
+    def _sync_doc_checklists(self, vals):
+        if vals.get('carte_grise_ids') and 'doc_carte_grise' not in vals:
+            vals['doc_carte_grise'] = True
+        if vals.get('permis_ids') and 'doc_permis' not in vals:
+            vals['doc_permis'] = True
+        if vals.get('constat_ids') and 'doc_constat' not in vals:
+            vals['doc_constat'] = True
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get('name', _('Nouveau')) == _('Nouveau'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('garage.insurance.claim') or _('Nouveau')
-        return super().create(vals_list)
+            self._sync_doc_checklists(vals)
+        records = super().create(vals_list)
+        for claim in records:
+            if claim.reception_id:
+                if claim.reception_id.damage_item_ids:
+                    claim.reception_id.damage_item_ids.filtered(lambda d: not d.claim_id).write({'claim_id': claim.id})
+                if not claim.attachment_ids and claim.reception_id.attachment_ids:
+                    claim.attachment_ids = [Command.set(claim.reception_id.attachment_ids.ids)]
+        return records
+
+    def write(self, vals):
+        self._sync_doc_checklists(vals)
+        return super().write(vals)
+
+    @api.onchange('carte_grise_ids')
+    def _onchange_carte_grise_ids(self):
+        if self.carte_grise_ids and not self.doc_carte_grise:
+            self.doc_carte_grise = True
+
+    @api.onchange('permis_ids')
+    def _onchange_permis_ids(self):
+        if self.permis_ids and not self.doc_permis:
+            self.doc_permis = True
+
+    @api.onchange('constat_ids')
+    def _onchange_constat_ids(self):
+        if self.constat_ids and not self.doc_constat:
+            self.doc_constat = True
+
+    @api.onchange('assurance_ids')
+    def _onchange_assurance_ids(self):
+        if self.assurance_ids and not self.doc_bon_accord:
+            self.doc_bon_accord = True
 
     @api.onchange('vehicle_id')
     def _onchange_vehicle_id(self):
         if self.vehicle_id and self.vehicle_id.customer_id:
             self.customer_id = self.vehicle_id.customer_id
+
+    @api.onchange('expert_cabinet_id')
+    def _onchange_expert_cabinet_id(self):
+        if self.expert_cabinet_id:
+            if not self.expert_phone:
+                self.expert_phone = self.expert_cabinet_id.phone or self.expert_cabinet_id.mobile
+            if not self.expert_email:
+                self.expert_email = self.expert_cabinet_id.email
 
     @api.depends('repair_order_id.tracking_token', 'reception_id.tracking_token')
     def _compute_tracking_token(self):
@@ -163,13 +241,25 @@ class GarageInsuranceClaim(models.Model):
                 token = claim.tracking_token or uuid.uuid4().hex[:12]
             claim.tracking_token = token
 
+    @api.depends('repair_order_id.amount_parts_untaxed', 'repair_order_id.amount_labor_untaxed')
+    def _compute_initial_estimates(self):
+        for claim in self:
+            if claim.repair_order_id:
+                claim.initial_estimate_parts = claim.repair_order_id.amount_parts_untaxed
+                claim.initial_estimate_labor = claim.repair_order_id.amount_labor_untaxed
+            elif not claim.initial_estimate_parts and not claim.initial_estimate_labor:
+                claim.initial_estimate_parts = 0.0
+                claim.initial_estimate_labor = 0.0
+
     @api.depends('initial_estimate_parts', 'initial_estimate_labor', 'repair_order_id.amount_untaxed_total')
     def _compute_claim_estimate(self):
         for claim in self:
-            if claim.repair_order_id and not (claim.initial_estimate_parts or claim.initial_estimate_labor):
+            if claim.initial_estimate_parts or claim.initial_estimate_labor:
+                claim.claim_estimate_untaxed = (claim.initial_estimate_parts or 0.0) + (claim.initial_estimate_labor or 0.0)
+            elif claim.repair_order_id:
                 claim.claim_estimate_untaxed = claim.repair_order_id.amount_untaxed_total
             else:
-                claim.claim_estimate_untaxed = claim.initial_estimate_parts + claim.initial_estimate_labor
+                claim.claim_estimate_untaxed = 0.0
 
     @api.depends('amendment_ids.total_untaxed', 'amendment_ids.state')
     def _compute_amendments(self):
@@ -216,10 +306,16 @@ class GarageInsuranceClaim(models.Model):
         for claim in self:
             claim.is_invoiced = bool(claim.insurance_invoice_id or claim.customer_invoice_id)
 
-    @api.depends('attachment_ids')
+    @api.depends('attachment_ids', 'carte_grise_ids', 'permis_ids', 'constat_ids', 'assurance_ids')
     def _compute_attachment_count(self):
         for rec in self:
-            rec.attachment_count = len(rec.attachment_ids)
+            all_atts = rec.attachment_ids | rec.carte_grise_ids | rec.permis_ids | rec.constat_ids | rec.assurance_ids
+            rec.attachment_count = len(all_atts)
+
+    @api.depends('damage_item_ids')
+    def _compute_damage_item_count(self):
+        for rec in self:
+            rec.damage_item_count = len(rec.damage_item_ids)
 
     @api.depends('insurance_invoice_id', 'customer_invoice_id')
     def _compute_invoice_count(self):
@@ -233,15 +329,19 @@ class GarageInsuranceClaim(models.Model):
 
     # Navigation Smart Buttons (1-Clic)
     def action_view_attachments(self):
-        """Affiche les photos de choc et documents du dossier sinistre."""
+        """Lance la galerie lightbox modale pour les photos et documents du sinistre."""
         self.ensure_one()
         return {
-            'name': _("Photos & Justificatifs - Sinistre %s", self.claim_number),
+            'name': _("Galerie Photos & Justificatifs - Sinistre %s", self.claim_number),
             'type': 'ir.actions.act_window',
-            'res_model': 'ir.attachment',
-            'view_mode': 'kanban,list,form',
-            'domain': [('id', 'in', self.attachment_ids.ids)],
-            'context': {'default_res_model': 'garage.insurance.claim', 'default_res_id': self.id},
+            'res_model': 'garage.photo.gallery.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_claim_id': self.id,
+                'default_reception_id': self.reception_id.id if self.reception_id else False,
+                'default_category_filter': 'all',
+            }
         }
 
     def action_view_reception(self):
@@ -392,6 +492,10 @@ class GarageInsuranceClaim(models.Model):
                 "Veuillez faire valider le client via le lien magique WhatsApp ou cliquer sur 'Valider Accord Client' au guichet."
             ))
         self.write({'state': 'in_repair'})
+        if self.reception_id:
+            stage_40 = self.env['garage.workshop.stage'].search([('sequence', '=', 40)], limit=1)
+            if stage_40:
+                self.reception_id.write({'stage_id': stage_40.id})
         if self.repair_order_id and self.repair_order_id.state in ('draft', 'confirmed'):
             try:
                 self.repair_order_id.action_validate()
@@ -403,6 +507,10 @@ class GarageInsuranceClaim(models.Model):
         """Marque les réparations terminées."""
         self.ensure_one()
         self.write({'state': 'repaired'})
+        if self.reception_id:
+            stage_60 = self.env['garage.workshop.stage'].search([('sequence', '=', 60)], limit=1)
+            if stage_60:
+                self.reception_id.write({'stage_id': stage_60.id})
         self.message_post(body=Markup(_("<b>Travaux atelier terminés.</b> Véhicule prêt pour facturation scindée et restitution.")))
         return True
 
@@ -554,6 +662,7 @@ class GarageInsuranceAmendment(models.Model):
     _order = 'sequence, id desc'
 
     claim_id = fields.Many2one('garage.insurance.claim', string="Dossier Sinistre", required=True, ondelete='cascade')
+    diagnostic_log_id = fields.Many2one('garage.diagnostic.log', string="Diagnostic Vocal à l'Origine", ondelete='set null')
     sequence = fields.Integer(string="Séquence", default=1)
     name = fields.Char(string="Titre de l'Avenant", required=True, tracking=True,
                        help="Ex: Avenant 1 - Berceau moteur plié et condenseur clim percé")

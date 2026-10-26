@@ -6,12 +6,58 @@
         <field name="model">repair.order</field>
         <field name="inherit_id" ref="repair.view_repair_order_form"/>
         <field name="arch" type="xml">
-            <!-- Boutons d'Action Header épurés -->
+            <xpath expr="//form" position="attributes">
+                <attribute name="create">false</attribute>
+            </xpath>
+
+            <!-- Boutons d'Action Header épurés avec Confirmation Obligatoire -->
             <xpath expr="//header" position="inside">
-                <button name="action_send_whatsapp_quote" string="Envoyer Devis WhatsApp" type="object" class="btn-primary" icon="fa-whatsapp" invisible="state in ('done', 'cancel')"/>
-                <button name="action_open_payment_recovery_wizard" string="Encaisser Règlement" type="object" class="btn-success" icon="fa-money" invisible="state == 'draft' or payment_status == 'paid'"/>
-                <button name="action_generate_bl" string="Imprimer Bon de Travail / BL" type="object" class="btn-secondary" icon="fa-print" invisible="state == 'draft'"/>
-                <button name="action_open_billing_wizard" string="Générer Facture Fiscale" type="object" class="btn-primary" invisible="is_invoiced_officially or state not in ('under_repair', 'done')"/>
+                <field name="reception_stock_status" invisible="1"/>
+                <button name="action_mark_devis_ready" 
+                        string="Valider Devis Prêt (Passer à l'Accord)" 
+                        type="object" class="btn-primary" icon="fa-check-circle" 
+                        invisible="not id or reception_stock_status == 'devis_pret'"
+                        confirm="Confirmer la validation du devis (pièces &amp; main-d'œuvre) ? Cela notifiera la réception que le devis est prêt pour accord."/>
+                <button name="action_mark_devis_ready" 
+                        string="Devis Prêt Validé (Revalider)" 
+                        type="object" class="btn btn-outline-secondary" icon="fa-check-circle" 
+                        invisible="not id or reception_stock_status != 'devis_pret'"
+                        confirm="Le devis a déjà été validé prêt. Confirmer la revalidation et la mise à jour des montants ?"/>
+                <button name="action_send_whatsapp_quote" 
+                        string="Envoyer Devis WhatsApp" 
+                        type="object" class="btn btn-outline-success" icon="fa-whatsapp" 
+                        invisible="not id or state in ('done', 'cancel')"
+                        confirm="Confirmer l'envoi immédiat du devis chiffré par WhatsApp au client ?"/>
+                <button name="action_open_payment_recovery_wizard" 
+                        string="Encaisser Règlement" 
+                        type="object" class="btn-success" icon="fa-money" 
+                        invisible="not id or state == 'draft' or payment_status == 'paid'"
+                        confirm="Ouvrir l'assistant d'encaissement de règlement pour cet ordre de réparation ?"/>
+                <button name="action_generate_bl" 
+                        string="Imprimer Bon de Travail / BL" 
+                        type="object" class="btn-secondary" icon="fa-print" 
+                        invisible="not id or state == 'draft'"
+                        confirm="Générer et imprimer le Bon de Travail / Bon de Livraison ?"/>
+                <button name="action_open_billing_wizard" 
+                        string="Générer Facture Fiscale" 
+                        type="object" class="btn-secondary" icon="fa-file-text-o" 
+                        invisible="not id or is_invoiced_officially or state not in ('under_repair', 'done')" 
+                        groups="garage_repair_core.group_garage_manager"
+                        confirm="Ouvrir l'assistant pour émettre la facture fiscale déclarée ?"/>
+            </xpath>
+
+            <!-- Sécurisation des Boutons Natifs Odoo avec Confirmation Obligatoire -->
+            <xpath expr="//header/button[@name='action_validate']" position="attributes">
+                <attribute name="confirm">Confirmer la validation de cet ordre de réparation ?</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_repair_start']" position="attributes">
+                <attribute name="confirm">Démarrer les travaux de réparation pour ce véhicule ?</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_repair_end'][2]" position="attributes">
+                <attribute name="confirm">Confirmer la finalisation et clôture des réparations ?</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_repair_cancel']" position="attributes">
+                <attribute name="confirm">ATTENTION : Êtes-vous certain de vouloir annuler cet ordre de réparation ?</attribute>
             </xpath>
 
             <!-- Masquer les boutons natifs Odoo inadaptés au garage automobile -->
@@ -36,6 +82,9 @@
                         <span class="o_stat_text">Réception</span>
                     </div>
                 </button>
+                <button name="action_view_inspection_photos" type="object" class="oe_stat_button" icon="fa-camera" invisible="attachment_count == 0">
+                    <field name="attachment_count" widget="statinfo" string="Photos Inspection"/>
+                </button>
                 <button name="action_view_claim" type="object" class="oe_stat_button" icon="fa-shield" invisible="billing_channel != 'insurance' and not claim_id">
                     <div class="o_field_widget o_stat_info">
                         <span class="o_stat_value"><field name="claim_id" readonly="1"/></span>
@@ -45,28 +94,22 @@
                 <button name="action_view_parts_bl" type="object" class="oe_stat_button" icon="fa-truck" invisible="parts_bl_count == 0">
                     <field name="parts_bl_count" widget="statinfo" string="Achats Pièces"/>
                 </button>
-                <button name="action_open_tracking_portal" type="object" class="oe_stat_button" icon="fa-globe" invisible="not tracking_token">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_value">Suivi Direct</span>
-                        <span class="o_stat_text">Portail Client</span>
-                    </div>
-                </button>
             </xpath>
 
             <!-- Hero Banner & Indicateurs Financiers en haut de formulaire -->
             <xpath expr="//sheet/group[1]" position="before">
                 <!-- Bandeau Alerte Traçabilité Bancaire (TPE / Chèque) -->
-                <div class="alert alert-danger d-flex justify-content-between align-items-center mb-2" role="alert" invisible="fiscal_compliance_status != 'alert_invoice_needed'">
+                <div class="alert alert-danger d-flex justify-content-between align-items-center mb-2" role="alert" invisible="not id or fiscal_compliance_status != 'alert_invoice_needed'">
                     <div>
                         <i class="fa fa-exclamation-triangle fa-lg me-2" title="Alerte Fiscale Bancaire"/>
                         <strong>Alerte Fiscale Bancaire : </strong>
                         Un montant de <strong><field name="bank_traceable_amount" readonly="1" class="ms-1"/></strong> a été encaissé par <strong>TPE / Chèque</strong> sans Facture Fiscale déclarée !
                     </div>
-                    <button name="action_open_billing_wizard" string="Émettre Facture Fiscale Immédiatement" type="object" class="btn btn-sm btn-danger ms-3"/>
+                    <button name="action_open_billing_wizard" string="Émettre Facture Fiscale Immédiatement" type="object" class="btn btn-sm btn-danger ms-3" groups="garage_repair_core.group_garage_manager" confirm="Émettre immédiatement la facture fiscale pour régulariser ce règlement bancaire ?"/>
                 </div>
 
                 <!-- Bandeau Accord Client en Ligne -->
-                <div class="alert alert-success d-flex justify-content-between align-items-center mb-2" role="alert" invisible="client_approval_status != 'approved'">
+                <div class="alert alert-success d-flex justify-content-between align-items-center mb-2" role="alert" invisible="not id or client_approval_status != 'approved'">
                     <div>
                         <i class="fa fa-check-circle fa-lg me-2" title="Accord Client"/>
                         <strong>Accord Client Validé en 1-Clic le : </strong> <field name="client_approval_date" readonly="1" class="ms-1"/>
@@ -74,7 +117,7 @@
                 </div>
 
                 <!-- Bandeau Facture Fiscale Émise -->
-                <div class="alert alert-primary d-flex justify-content-between align-items-center mb-2" role="alert" invisible="not is_invoiced_officially">
+                <div class="alert alert-primary d-flex justify-content-between align-items-center mb-2" role="alert" invisible="not id or not is_invoiced_officially">
                     <div>
                         <i class="fa fa-file-text-o me-1" title="Facturé"/> <strong>Facture Fiscale Déclarée Émise :</strong>
                         <field name="official_invoice_id" readonly="1" class="ms-2"/>
@@ -111,8 +154,17 @@
                     </div>
                 </div>
 
+                <!-- Rappel Motif de Visite / Constat Client (Liaison Réception) -->
+                <div class="alert alert-light border d-flex align-items-center mb-3 py-2 px-3 rounded shadow-sm" role="status" invisible="not reception_id or not reception_symptoms">
+                    <i class="fa fa-info-circle text-primary me-2 fa-lg" title="Motif Client"/>
+                    <div>
+                        <span class="small text-muted fw-bold text-uppercase d-block">Motif de Visite / Symptômes Signalés à l'Entrée :</span>
+                        <span class="text-dark"><field name="reception_symptoms" readonly="1"/></span>
+                    </div>
+                </div>
+
                 <!-- Bandeau KPI Financiers Clés -->
-                <div class="o_garage_kpi_strip mb-3">
+                <div class="o_garage_kpi_strip mb-3" invisible="not id or amount_total_ttc == 0">
                     <div class="o_garage_kpi_card o_garage_kpi_covered">
                         <span class="o_garage_kpi_label">Total Réparation TTC</span>
                         <span class="o_garage_kpi_value text-primary">
@@ -139,12 +191,12 @@
 
                 <group>
                     <group string="Véhicule, Client &amp; Réception">
-                        <field name="vehicle_id"/>
-                        <field name="partner_id" context="{'res_partner_search_mode': 'customer', 'show_vat': True}"/>
-                        <field name="reception_id" options="{'no_quick_create': True}"/>
+                        <field name="vehicle_id" options="{'no_create_edit': True}"/>
+                        <field name="partner_id" context="{'res_partner_search_mode': 'customer', 'show_vat': True}" options="{'no_create_edit': True}"/>
+                        <field name="reception_id" options="{'no_quick_create': True, 'no_create_edit': True}"/>
                         <field name="odometer_order"/>
                         <field name="client_approval_status" widget="badge" decoration-warning="client_approval_status == 'pending'" decoration-success="client_approval_status == 'approved'" decoration-danger="client_approval_status == 'rejected'"/>
-                        <field name="tracking_token" readonly="1" groups="base.group_no_one"/>
+                        <field name="tracking_token" invisible="1"/>
                     </group>
                     <group string="Mode de Facturation &amp; Règlement">
                         <field name="billing_channel" widget="radio"/>
@@ -169,15 +221,57 @@
                 <attribute name="string">Mouvements Stock (Odoo)</attribute>
             </xpath>
 
+            <!-- Masquer l'onglet natif vide 'Repair Notes' -->
+            <xpath expr="//notebook/page[@name='repair_notes']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
             <!-- Onglets Atelier Métier placés en tête du notebook -->
             <xpath expr="//notebook/page[@name='parts']" position="before">
-                <page string="Pièces &amp; Fournitures" name="garage_parts_page">
-                    <div class="mb-2">
-                        <button name="action_open_stock_picker_wizard" string="Piocher du Stock Magasin" type="object" class="btn btn-outline-primary" icon="fa-cubes"/>
+                <page string="Devis &amp; Chiffrage" name="garage_quote_page">
+                    <!-- Cockpit Audio & Contexte Diagnostic Atelier pour le Magasinier -->
+                    <div class="card bg-light border-primary mb-3 shadow-sm" invisible="not reception_id">
+                        <div class="card-header bg-primary text-white py-1 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold small text-uppercase">
+                                <i class="fa fa-headphones me-2" title="Contexte Audio"/>Diagnostic Atelier &amp; Notes Vocales du Mécanicien
+                            </span>
+                            <span class="badge bg-light text-primary">Aide au Chiffrage Magasinier</span>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <span class="o_form_label fw-bold small text-muted d-block mb-1">Enregistrement Audio :</span>
+                                    <field name="reception_audio_player_html" widget="html" nolabel="1"/>
+                                </div>
+                                <div class="col-md-7">
+                                    <span class="o_form_label fw-bold small text-muted d-block mb-1">Transcription &amp; Tâches Détectées :</span>
+                                    <div class="p-2 border rounded bg-white small" style="max-height: 120px; overflow-y: auto;">
+                                        <div invisible="not reception_transcription" class="mb-1 text-dark">
+                                            <strong>Synthèse Diag : </strong><field name="reception_transcription" readonly="1"/>
+                                        </div>
+                                        <div invisible="not reception_diagnostic_parts_note" class="text-primary mb-1">
+                                            <strong>Pièces Demandées : </strong><field name="reception_diagnostic_parts_note" readonly="1"/>
+                                        </div>
+                                        <div invisible="not reception_workshop_tasks_summary" class="text-muted">
+                                            <strong>Tâches Atelier : </strong><field name="reception_workshop_tasks_summary" readonly="1"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2 mt-1">
+                        <div class="fs-5 fw-bold text-primary">
+                            <i class="fa fa-cubes me-2" title="Pièces"/>PIÈCES DÉTACHÉES &amp; FOURNITURES
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button name="action_open_stock_picker_wizard" string="Piocher du Stock Magasin" type="object" class="btn btn-outline-primary btn-sm" icon="fa-cubes" confirm="Ouvrir l'assistant de sélection d'articles du stock magasin ?"/>
+                        </div>
                     </div>
                     <field name="garage_parts_lines">
                         <list editable="bottom">
-                            <field name="product_id"/>
+                            <field name="product_id" options="{'no_create_edit': True}"/>
                             <field name="name"/>
                             <field name="source_type" widget="badge" decoration-warning="source_type == 'operational'" decoration-success="source_type == 'official'"/>
                             <field name="is_officially_cleared" widget="badge" decoration-success="is_officially_cleared" decoration-muted="not is_officially_cleared" string="Sortie Fiscale"/>
@@ -189,9 +283,10 @@
                             <field name="margin" sum="Marge Nette Pièces" groups="garage_repair_core.group_garage_manager"/>
                         </list>
                     </field>
-                </page>
 
-                <page string="Main-d'Œuvre" name="garage_labor_page">
+                    <div class="fs-5 fw-bold text-primary mb-2 mt-4 pt-3 border-top">
+                        <i class="fa fa-wrench me-2" title="Main-d'œuvre"/>MAIN-D'ŒUVRE &amp; INTERVENTIONS ATELIER
+                    </div>
                     <field name="garage_labor_lines">
                         <list editable="bottom">
                             <field name="work_type"/>
@@ -207,7 +302,7 @@
                     </field>
                 </page>
 
-                <page string="Règlements Guichet" name="garage_payments_page">
+                <page string="Paiements &amp; Caisse" name="garage_payments_page">
                     <field name="payment_ids" readonly="1">
                         <list decoration-success="is_bank_traceable">
                             <field name="payment_date"/>
@@ -221,7 +316,7 @@
                     </field>
                 </page>
 
-                <page string="Marge &amp; Rentabilité" name="profitability_page" groups="garage_repair_core.group_garage_manager">
+                <page string="Rentabilité" name="profitability_page" groups="garage_repair_core.group_garage_manager">
                     <group col="4">
                         <group string="Chiffre d'Affaires Réalisé">
                             <field name="amount_parts_operational"/>
@@ -242,6 +337,14 @@
                     </group>
                 </page>
             </xpath>
+
+            <!-- Repositionnement Chatter en bas de page sous les tables pour affichage 100% pleine largeur -->
+            <xpath expr="//chatter" position="replace"/>
+            <xpath expr="//sheet" position="inside">
+                <div class="oe_chatter_bottom_wrapper mt-5 pt-4 border-top w-100">
+                    <chatter/>
+                </div>
+            </xpath>
         </field>
     </record>
 
@@ -251,6 +354,9 @@
         <field name="model">repair.order</field>
         <field name="inherit_id" ref="repair.view_repair_order_tree"/>
         <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="create">false</attribute>
+            </xpath>
             <xpath expr="//field[@name='product_id']" position="attributes">
                 <attribute name="column_invisible">True</attribute>
             </xpath>
@@ -326,7 +432,7 @@
         <field name="name">garage.repair.payment.list</field>
         <field name="model">garage.repair.payment</field>
         <field name="arch" type="xml">
-            <list string="Journal Caisse &amp; Règlements Atelier" decoration-success="payment_method == 'cash'" decoration-info="is_bank_traceable">
+            <list string="Journal Caisse &amp; Règlements Atelier" create="false" decoration-success="payment_method == 'cash'" decoration-info="is_bank_traceable">
                 <field name="payment_date"/>
                 <field name="repair_id"/>
                 <field name="partner_id"/>
@@ -346,7 +452,7 @@
         <field name="name">garage.repair.payment.kanban</field>
         <field name="model">garage.repair.payment</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_dashboard" create="true">
+            <kanban class="o_kanban_dashboard" create="false">
                 <field name="payment_date"/>
                 <field name="repair_id"/>
                 <field name="partner_id"/>
@@ -382,7 +488,7 @@
         <field name="name">garage.repair.payment.form</field>
         <field name="model">garage.repair.payment</field>
         <field name="arch" type="xml">
-            <form string="Encaissement / Règlement Réparation">
+            <form string="Encaissement / Règlement Réparation" create="false">
                 <sheet>
                     <group>
                         <group string="Détails Règlement">
@@ -434,6 +540,7 @@
         <field name="res_model">garage.repair.payment</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="search_view_id" ref="view_garage_repair_payment_search"/>
+        <field name="context">{'create': False}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Consultez le journal des encaissements de la caisse !
@@ -450,7 +557,7 @@
         <field name="res_model">account.move</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="domain">[('move_type', '=', 'out_invoice')]</field>
-        <field name="context">{'default_move_type': 'out_invoice'}</field>
+        <field name="context">{'default_move_type': 'out_invoice', 'create': False}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Gérez vos factures de vente officielles avec TVA 20% !
@@ -493,6 +600,7 @@
         <field name="res_model">repair.order</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="domain">[('state', 'in', ('under_repair', 'confirmed', 'draft'))]</field>
+        <field name="context">{'create': False}</field>
     </record>
 
     <!-- Action Fenêtre Supervision Portail Client 1-Clic & Liens Magiques -->

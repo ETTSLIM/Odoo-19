@@ -4,12 +4,13 @@
     <menuitem id="menu_garage_root"
               name="Garage Pro"
               sequence="10"
+              action="action_garage_reception"
               groups="group_garage_access_workshop"
               web_icon="garage_repair_core,static/description/icon.png"/>
 
     <!-- Action Annuaire Partenaires / Contacts (Clients, Assurances, Fournisseurs) -->
     <record id="action_garage_partners_unified" model="ir.actions.act_window">
-        <field name="name">Annuaire Contacts (Clients, Assurances, Fournisseurs)</field>
+        <field name="name">Tous les Contacts Atelier</field>
         <field name="res_model">res.partner</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="garage_repair_core.view_res_partner_filter_inherit_garage"/>
@@ -20,8 +21,65 @@
         </field>
     </record>
 
+    <!-- Actions Ciblées Assistant -->
+    <record id="action_garage_customers" model="ir.actions.act_window">
+        <field name="name">Clients Atelier (Particuliers &amp; Sociétés)</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('partner_role', 'in', ['customer_individual', 'customer_company'])]</field>
+        <field name="context">{'default_partner_role': 'customer_individual'}</field>
+        <field name="search_view_id" ref="garage_repair_core.view_res_partner_filter_inherit_garage"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Gérez vos clients particuliers et flottes d'entreprises.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_garage_suppliers" model="ir.actions.act_window">
+        <field name="name">Fournisseurs de Pièces Auto</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_parts_supplier', '=', True)]</field>
+        <field name="context">{'default_partner_role': 'parts_supplier', 'default_is_parts_supplier': True, 'default_is_company': True}</field>
+        <field name="search_view_id" ref="garage_repair_core.view_res_partner_filter_inherit_garage"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Gérez vos grossistes et comptoirs de pièces détachées automobiles.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_garage_insurances" model="ir.actions.act_window">
+        <field name="name">Compagnies d'Assurance</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_insurance_company', '=', True)]</field>
+        <field name="context">{'default_partner_role': 'insurance_company', 'default_is_insurance_company': True, 'default_is_company': True}</field>
+        <field name="search_view_id" ref="garage_repair_core.view_res_partner_filter_inherit_garage"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Consultez et créez vos compagnies d'assurance partenaires (Wafa, RMA, AXA, Sanlam...).
+            </p>
+        </field>
+    </record>
+
+    <record id="action_garage_experts" model="ir.actions.act_window">
+        <field name="name">Cabinets d'Expertise Automobile</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_expert_cabinet', '=', True)]</field>
+        <field name="context">{'default_partner_role': 'expert_cabinet', 'default_is_expert_cabinet': True, 'default_is_company': True}</field>
+        <field name="search_view_id" ref="garage_repair_core.view_res_partner_filter_inherit_garage"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Consultez et créez vos cabinets et experts automobiles assermentés.
+            </p>
+        </field>
+    </record>
+
     <!-- ==================================================================== -->
-    <!-- 6 ONGLETS PRINCIPAUX 1-CLIC (AUCUN DROPDOWN DANS LA TOP BAR)         -->
+    <!-- 6 ONGLETS PRINCIPAUX 1-CLIC (DIRECT ACCÈS, AUCUN DROPDOWN TOP BAR)   -->
     <!-- ==================================================================== -->
 
     <!-- 1. Atelier & Entrées -->

@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Extension Formulaire Véhicule -->
+    <!-- Extension Formulaire Véhicule Épuré Garage Pro -->
     <record id="view_fleet_vehicle_form_inherit_garage" model="ir.ui.view">
         <field name="name">fleet.vehicle.form.inherit.garage</field>
         <field name="model">fleet.vehicle</field>
         <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
         <field name="arch" type="xml">
-            <!-- Boutons Statistiques Atelier dans button_box -->
+            <!-- Masquer les Stat-Buttons Natifs Flotte Hors-Sujet -->
+            <xpath expr="//button[@name='open_assignation_logs']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//div[@name='button_box']/button[contains(@context, 'fleet_vehicle_log_contract_action')]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//div[@name='button_box']/button[contains(@context, 'fleet_vehicle_log_services_action')]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//div[@name='button_box']/button[contains(@context, 'fleet_vehicle_odometer_action')]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Boutons Statistiques Métier Atelier dans button_box -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_receptions" type="object" class="oe_stat_button" icon="fa-file-text-o">
                     <field name="reception_count" widget="statinfo" string="Réceptions"/>
@@ -14,14 +28,100 @@
                 <button name="action_view_repair_orders" type="object" class="oe_stat_button" icon="oi-settings-adjust">
                     <field name="repair_order_count" widget="statinfo" string="Ordres Réparation"/>
                 </button>
+                <button name="action_view_damage_items" type="object" class="oe_stat_button" icon="fa-car">
+                    <field name="damage_item_count" widget="statinfo" string="Dégâts Chocs"/>
+                </button>
                 <button name="action_view_claims" type="object" class="oe_stat_button" icon="fa-shield">
                     <field name="claim_count" widget="statinfo" string="Sinistres"/>
                 </button>
             </xpath>
 
-            <!-- Ajout du Propriétaire sous le modèle -->
+            <!-- Sécurisation du Modèle de Véhicule (Anti-Popup Géante) -->
+            <xpath expr="//field[@name='model_id']" position="attributes">
+                <attribute name="options">{'no_create_edit': True}</attribute>
+            </xpath>
+
+            <!-- Ajout du Propriétaire sous le modèle avec no_create_edit -->
             <xpath expr="//field[@name='driver_id']" position="after">
-                <field name="customer_id" options="{'no_quick_create': True}"/>
+                <field name="customer_id" options="{'no_create_edit': True}"/>
+            </xpath>
+
+            <!-- Masquer les champs superflus de flotte entreprise et RH -->
+            <xpath expr="//field[@name='future_driver_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='next_assignation_date']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='category_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_date']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='acquisition_date']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='write_off_date']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='vin_sn']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='manager_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='location']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//label[@for='plan_to_change_car']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='plan_to_change_car']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//label[@for='plan_to_change_bike']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='plan_to_change_bike']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='vehicle_properties']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Masquer les Onglets Flotte Inutiles (Leasing et Émissions CO2) -->
+            <xpath expr="//notebook/page[@name='page_tax_info']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//notebook/page[@name='page_model']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Onglet Historique des Dégâts & Chocs subis par le Véhicule -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Historique des Dégâts &amp; Chocs" name="damage_history_tab">
+                    <field name="damage_item_ids" readonly="1">
+                        <list string="Historique des Chocs">
+                            <field name="reception_id"/>
+                            <field name="create_date" string="Date Constat"/>
+                            <field name="zone"/>
+                            <field name="name" string="Élément Endommagé"/>
+                            <field name="damage_type" widget="badge"/>
+                            <field name="severity" widget="badge"
+                                   decoration-warning="severity == 'light'"
+                                   decoration-primary="severity == 'medium'"
+                                   decoration-danger="severity == 'heavy'"/>
+                            <field name="action_type" widget="badge"/>
+                            <field name="discovery_stage" widget="badge"/>
+                            <field name="is_hidden_damage" widget="boolean_toggle" string="Masqué"/>
+                            <field name="expert_decision" widget="badge"
+                                   decoration-warning="expert_decision == 'pending'"
+                                   decoration-success="expert_decision == 'approved'"
+                                   decoration-danger="expert_decision == 'rejected'"/>
+                        </list>
+                    </field>
+                </page>
             </xpath>
 
             <!-- Section Immatriculation Marocaine & Données Châssis -->

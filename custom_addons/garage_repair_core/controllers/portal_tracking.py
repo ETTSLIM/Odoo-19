@@ -72,6 +72,18 @@ class GarageTrackingController(http.Controller):
         if claim and claim.state == 'accord_approved' and claim.client_accord_status == 'pending':
             can_approve_expert = True
 
+        # Photos d'atelier client-safe (exclut les documents administratifs confidentiels)
+        portal_photos = request.env['ir.attachment']
+        if reception:
+            doc_ids = (reception.carte_grise_ids | reception.permis_ids | reception.constat_ids).ids
+            if claim:
+                doc_ids += (claim.carte_grise_ids | claim.permis_ids | claim.constat_ids | claim.assurance_ids).ids
+            portal_photos = reception.attachment_ids.filtered(
+                lambda a: a.id not in doc_ids and (
+                    not a.mimetype or a.mimetype.startswith('image/') or (a.name or '').lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))
+                )
+            )
+
         values = {
             'token': token,
             'reception': reception,
@@ -85,6 +97,7 @@ class GarageTrackingController(http.Controller):
             'customer_tasks': customer_tasks,
             'can_approve': can_approve,
             'can_approve_expert': can_approve_expert,
+            'portal_photos': portal_photos,
             'company': request.env.company,
         }
 

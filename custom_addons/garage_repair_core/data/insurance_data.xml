@@ -4,8 +4,8 @@
         <!-- Compagnies d'Assurance Marocaines Principales -->
         <record id="partner_insurance_wafa" model="res.partner">
             <field name="name">Wafa Assurance</field>
-            <field name="is_company">True</field>
-            <field name="is_insurance_company">True</field>
+            <field name="is_company" eval="True"/>
+            <field name="is_insurance_company" eval="True"/>
             <field name="customer_type">company</field>
             <field name="ice">001524389000045</field>
             <field name="identifiant_fiscal">01085240</field>
@@ -19,8 +19,8 @@
 
         <record id="partner_insurance_rma" model="res.partner">
             <field name="name">RMA (Royale Marocaine d'Assurance)</field>
-            <field name="is_company">True</field>
-            <field name="is_insurance_company">True</field>
+            <field name="is_company" eval="True"/>
+            <field name="is_insurance_company" eval="True"/>
             <field name="customer_type">company</field>
             <field name="ice">000054896000032</field>
             <field name="identifiant_fiscal">01002341</field>
@@ -34,8 +34,8 @@
 
         <record id="partner_insurance_sanlam" model="res.partner">
             <field name="name">Sanlam Maroc</field>
-            <field name="is_company">True</field>
-            <field name="is_insurance_company">True</field>
+            <field name="is_company" eval="True"/>
+            <field name="is_insurance_company" eval="True"/>
             <field name="customer_type">company</field>
             <field name="ice">001648721000018</field>
             <field name="identifiant_fiscal">01054320</field>
@@ -49,8 +49,8 @@
 
         <record id="partner_insurance_axa" model="res.partner">
             <field name="name">AXA Assurance Maroc</field>
-            <field name="is_company">True</field>
-            <field name="is_insurance_company">True</field>
+            <field name="is_company" eval="True"/>
+            <field name="is_insurance_company" eval="True"/>
             <field name="customer_type">company</field>
             <field name="ice">000049872000088</field>
             <field name="identifiant_fiscal">01011500</field>
@@ -65,8 +65,8 @@
         <!-- Cabinet d'Expertise Automobile Agréé -->
         <record id="partner_expert_salmi" model="res.partner">
             <field name="name">Cabinet Salmi d'Expertise Automobile</field>
-            <field name="is_company">True</field>
-            <field name="is_expert_cabinet">True</field>
+            <field name="is_company" eval="True"/>
+            <field name="is_expert_cabinet" eval="True"/>
             <field name="customer_type">company</field>
             <field name="ice">002145893000074</field>
             <field name="identifiant_fiscal">40215890</field>

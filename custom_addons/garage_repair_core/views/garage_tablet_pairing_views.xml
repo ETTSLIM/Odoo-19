@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_garage_tablet_pairing_wizard_form" model="ir.ui.view">
+        <field name="name">garage.tablet.pairing.wizard.form</field>
+        <field name="model">garage.tablet.pairing.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Appairage Tablette Atelier">
+                <div class="alert alert-info d-flex align-items-center mb-3" role="status">
+                    <i class="fa fa-qrcode fa-2x me-3 text-primary" title="Code QR Appairage" aria-label="Code QR Appairage"/>
+                    <div>
+                        <h5 class="mb-1 font-weight-bold">Connexion Directe Tablette Atelier (Zero-CLI)</h5>
+                        <span>Scannez simplement ce code QR depuis l'application Android pour connecter la tablette en 2 secondes sans ligne de commande.</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Colonne Gauche : Code QR -->
+                    <div class="col-md-5 text-center d-flex flex-column align-items-center justify-content-center border-end py-3">
+                        <field name="qr_code" widget="image" class="img-thumbnail shadow-sm mb-2" style="max-width: 240px;"/>
+                        <span class="badge rounded-pill bg-success px-3 py-2 text-white">
+                            <i class="fa fa-wifi me-1" title="Wi-Fi / Hotspot" aria-label="Wi-Fi / Hotspot"/> Réseau Prêt pour Connexion
+                        </span>
+                    </div>
+
+                    <!-- Colonne Droite : Adresses & Guide -->
+                    <div class="col-md-7 ps-md-4 py-2">
+                        <group string="Adresses Détectées">
+                            <field name="server_url" string="Nom Hostname (Recommandé)" widget="CopyClipboardChar"/>
+                            <field name="lan_ip_url" string="Adresse IP Locale" widget="CopyClipboardChar"/>
+                        </group>
+
+                        <div class="mt-3 p-3 bg-light rounded border">
+                            <field name="instructions"/>
+                        </div>
+                    </div>
+                </div>
+
+                <footer>
+                    <button string="Fermer" class="btn btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Modale pour Appairage Tablette -->
+    <record id="action_garage_tablet_pairing" model="ir.actions.act_window">
+        <field name="name">Appairage Tablette Atelier</field>
+        <field name="res_model">garage.tablet.pairing.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

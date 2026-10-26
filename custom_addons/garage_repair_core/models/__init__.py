@@ -10,3 +10,5 @@ from . import whatsapp_gateway
 from . import garage_insurance_claim
 from . import garage_ui_kit
 from . import res_users
+from . import garage_damage_item
+from . import garage_diagnostic_log

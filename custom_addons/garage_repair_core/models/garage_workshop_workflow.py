@@ -217,6 +217,30 @@ class GarageWorkshopStage(models.Model):
         help="Texte transmis au client par WhatsApp lors de l'entrée dans cette étape."
     )
 
+    @api.model
+    def _register_hook(self):
+        super()._register_hook()
+        try:
+            STAGE_NAMES_MAP = {
+                'reception': "Réception",
+                'devis': "Devis",
+                'pieces': "Pièces",
+                'travaux': "Travaux",
+                'controle': "Contrôle",
+                'prete': "Prêt",
+                'livree': "Livré",
+            }
+            for code, short_name in STAGE_NAMES_MAP.items():
+                stage = self.search([('code', '=', code)], limit=1)
+                if stage and stage.name != short_name:
+                    stage.name = short_name
+
+            sel = self.env['ir.model.fields.selection'].search([('field_id.model', '=', 'repair.order'), ('value', '=', 'draft')])
+            if sel:
+                sel.with_context(lang='fr_FR').name = "Brouillon"
+        except Exception:
+            pass
+
 
 class GarageWorkshopOperator(models.Model):
     _name = 'garage.workshop.operator'
@@ -293,6 +317,9 @@ class GarageReceptionTask(models.Model):
 
     specialty = fields.Selection(related='reception_id.specialty', string="Atelier / Spécialité", store=True, readonly=True)
     is_ai_dynamic = fields.Boolean(string="Tâche Dynamique IA (مخصصة)", default=False, readonly=True)
+    diagnostic_task_id = fields.Many2one('garage.diagnostic.log.task', string="Ligne Diagnostic Origine", ondelete='set null')
+    damage_item_id = fields.Many2one('garage.damage.item', string="Élément Endommagé Associé", ondelete='set null')
+    is_hidden_damage = fields.Boolean(string="Dégât Masqué (Démontage)", default=False)
 
     state = fields.Selection([
         ('04_waiting_normal', 'En attente'),
@@ -341,13 +368,19 @@ class GarageReceptionTask(models.Model):
 
         return super().write(vals)
 
-    def action_toggle_state(self, operator=False):
-        """Bascule l'état de la micro-tâche avec contrôle de rôle, progression séquentielle et avancement d'étape."""
+    def action_toggle_state(self, operator=False, target_state=None):
+        """Bascule ou applique l'état de la micro-tâche avec contrôle de rôle, progression séquentielle et avancement d'étape."""
         for task in self:
             if task.stage_sequence in (40, 50):
                 task._check_workshop_role_permission(operator=operator)
 
-            if task.state == '1_done':
+            # Si target_state est explicite ('1_done' ou '04_waiting_normal'), l'appliquer de façon idempotente
+            if target_state:
+                turn_done = (target_state in ('1_done', 'done'))
+            else:
+                turn_done = (task.state != '1_done')
+
+            if not turn_done:
                 # Revenir en attente
                 task.with_context(auto_workflow_sync=True).write({
                     'state': '04_waiting_normal',
@@ -376,9 +409,20 @@ class GarageReceptionTask(models.Model):
                 if next_task:
                     next_task.with_context(auto_workflow_sync=True).write({'state': '01_in_progress'})
 
-                # Si c'est l'Accord Expert 2C, synchroniser le statut expertise de la réception
-                if "2c" in task.name.lower() or "accord expert" in task.name.lower() or "موافقة الخبير" in task.name.lower():
+                # Si c'est l'Accord Expert 2C, synchroniser le statut expertise de la réception et du dossier sinistre
+                if any(kw in task.name.lower() for kw in ("2c", "accord expert", "موافقة الخبير")):
                     task.reception_id.with_context(auto_workflow_sync=True).write({'statut_expertise': 'accord_valide'})
+                    claim = task.reception_id.claim_id
+                    if claim and claim.state in ('draft', 'expert_assigned', 'devis_sent'):
+                        try:
+                            claim.with_context(auto_workflow_sync=True, bypass_interlock=True).action_approve_accord()
+                            if claim.client_accord_status != 'approved':
+                                claim.with_context(auto_workflow_sync=True).write({'client_accord_status': 'approved'})
+                        except Exception:
+                            claim.with_context(auto_workflow_sync=True).write({
+                                'state': 'accord_approved',
+                                'client_accord_status': 'approved',
+                            })
 
                 # Vérifier si toutes les micro-tâches de l'étape sont terminées pour avancement d'étape
                 if task.reception_id:

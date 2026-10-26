@@ -39,4 +39,17 @@ access_garage_reception_task_storekeeper,garage.reception.task.storekeeper,model
 access_garage_reception_task_manager,garage.reception.task.manager,model_garage_reception_task,group_garage_manager,1,1,1,1
 access_garage_operator_pin_wizard_user,garage.operator.pin.wizard.user,model_garage_operator_pin_wizard,base.group_user,1,1,1,1
 access_garage_ai_diagnostic_wizard_user,garage.ai.diagnostic.wizard.user,model_garage_ai_diagnostic_wizard,base.group_user,1,1,1,1
+access_garage_photo_gallery_wizard_user,garage.photo.gallery.wizard.user,model_garage_photo_gallery_wizard,base.group_user,1,1,1,1
 access_garage_ui_kit_user,garage.ui.kit.user,model_garage_ui_kit,base.group_user,1,1,1,1
+access_garage_diagnostic_log_workshop_grp,garage.diagnostic.log.workshop.grp,model_garage_diagnostic_log,group_garage_access_workshop,1,1,1,0
+access_garage_diagnostic_log_receptionist,garage.diagnostic.log.receptionist,model_garage_diagnostic_log,group_garage_receptionist,1,1,1,0
+access_garage_diagnostic_log_mechanic,garage.diagnostic.log.mechanic,model_garage_diagnostic_log,group_garage_mechanic,1,1,1,0
+access_garage_diagnostic_log_storekeeper,garage.diagnostic.log.storekeeper,model_garage_diagnostic_log,group_garage_storekeeper,1,1,1,0
+access_garage_diagnostic_log_manager,garage.diagnostic.log.manager,model_garage_diagnostic_log,group_garage_manager,1,1,1,1
+access_garage_diagnostic_log_task_user,garage.diagnostic.log.task.user,model_garage_diagnostic_log_task,base.group_user,1,1,1,1
+access_garage_damage_item_workshop_grp,garage.damage.item.workshop.grp,model_garage_damage_item,group_garage_access_workshop,1,1,1,0
+access_garage_damage_item_receptionist,garage.damage.item.receptionist,model_garage_damage_item,group_garage_receptionist,1,1,1,0
+access_garage_damage_item_mechanic,garage.damage.item.mechanic,model_garage_damage_item,group_garage_mechanic,1,1,1,0
+access_garage_damage_item_storekeeper,garage.damage.item.storekeeper,model_garage_damage_item,group_garage_storekeeper,1,1,1,0
+access_garage_damage_item_manager,garage.damage.item.manager,model_garage_damage_item,group_garage_manager,1,1,1,1
+access_garage_tablet_pairing_wizard_user,garage.tablet.pairing.wizard.user,model_garage_tablet_pairing_wizard,base.group_user,1,1,1,1

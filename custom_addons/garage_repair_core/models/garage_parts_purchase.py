@@ -10,7 +10,8 @@ class GaragePartsBL(models.Model):
     name = fields.Char(string="N° BL Fournisseur", required=True, tracking=True,
                        help="Numéro mentionné sur le bon de livraison papier du fournisseur de pièces")
     supplier_id = fields.Many2one('res.partner', string="Fournisseur de Pièces", required=True, tracking=True,
-                                  domain="['|', ('is_parts_supplier', '=', True), ('supplier_rank', '>', 0)]")
+                                  domain="['|', ('is_parts_supplier', '=', True), ('supplier_rank', '>', 0)]",
+                                  context={'default_partner_role': 'parts_supplier', 'default_is_parts_supplier': True, 'default_is_company': True})
     supplier_ice = fields.Char(related='supplier_id.ice', string="ICE Fournisseur", readonly=True)
     date_bl = fields.Date(string="Date du BL", default=fields.Date.context_today, required=True)
 

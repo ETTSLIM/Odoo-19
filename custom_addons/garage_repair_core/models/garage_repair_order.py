@@ -13,7 +13,64 @@ class RepairOrder(models.Model):
     license_plate = fields.Char(related='vehicle_id.license_plate', string="Immatriculation", store=True)
     vin_number = fields.Char(related='vehicle_id.vin_number', string="N° Châssis (VIN)", readonly=True)
     reception_id = fields.Many2one('garage.reception', string="Fiche Réception", tracking=True)
+    reception_symptoms = fields.Text(related='reception_id.symptoms', string="Motif de Visite Client", readonly=True)
     odometer_order = fields.Float(string="Kilométrage Actuel (km)")
+
+    # Contexte Diagnostic Réception & Audio pour le Magasinier
+    reception_diagnostic_parts_note = fields.Text(related='reception_id.diagnostic_parts_note', string="Note Pièces Demandées", readonly=True)
+    reception_stock_status = fields.Selection(related='reception_id.stock_status', string="Statut Stock Réception", readonly=True)
+    reception_audio_player_html = fields.Html(compute='_compute_reception_audio_context', string="Lecteur Audio Diagnostic", sanitize=False)
+    reception_transcription = fields.Text(compute='_compute_reception_audio_context', string="Transcription Diagnostic")
+    reception_workshop_tasks_summary = fields.Text(compute='_compute_reception_audio_context', string="Tâches Atelier Demandées")
+
+    @api.depends('reception_id', 'reception_id.diagnostic_log_ids', 'reception_id.diagnostic_log_ids.audio_player_html', 'reception_id.task_ids')
+    def _compute_reception_audio_context(self):
+        for order in self:
+            rec = order.reception_id
+            if rec and rec.diagnostic_log_ids:
+                latest_log = rec.diagnostic_log_ids[0]
+                order.reception_audio_player_html = latest_log.audio_player_html
+                order.reception_transcription = latest_log.transcription_summary or latest_log.transcription_raw or rec.diagnostic_notes or rec.symptoms or ''
+            elif rec:
+                order.reception_audio_player_html = False
+                order.reception_transcription = rec.diagnostic_notes or rec.symptoms or ''
+            else:
+                order.reception_audio_player_html = False
+                order.reception_transcription = False
+
+            if rec and rec.task_ids:
+                tasks = rec.task_ids.filtered(lambda t: t.stage_sequence in (10, 20, 40))
+                order.reception_workshop_tasks_summary = "\n".join([f"• {t.name}" for t in tasks]) if tasks else False
+            else:
+                order.reception_workshop_tasks_summary = False
+
+    # Photos Inspection & Documents Réception
+    attachment_ids = fields.Many2many('ir.attachment', compute='_compute_reception_attachments', string="Photos Inspection")
+    attachment_count = fields.Integer(compute='_compute_reception_attachments', string="Nb Photos")
+
+    @api.depends('reception_id', 'reception_id.attachment_ids')
+    def _compute_reception_attachments(self):
+        for record in self:
+            if record.reception_id and record.reception_id.attachment_ids:
+                record.attachment_ids = record.reception_id.attachment_ids
+                record.attachment_count = len(record.reception_id.attachment_ids)
+            else:
+                record.attachment_ids = False
+                record.attachment_count = 0
+
+    def action_view_inspection_photos(self):
+        self.ensure_one()
+        return {
+            'name': _("Photos d'Inspection : %s", self.name),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ir.attachment',
+            'view_mode': 'kanban,list,form',
+            'domain': [('id', 'in', self.attachment_ids.ids)],
+            'context': {
+                'default_res_model': 'repair.order',
+                'default_res_id': self.id,
+            }
+        }
 
     # Client & Informations Fiscales
     customer_type = fields.Selection(related='partner_id.customer_type', string="Type Client", readonly=True)
@@ -224,6 +281,22 @@ class RepairOrder(models.Model):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', 'http://localhost:8069')
         return f"{base_url.rstrip('/')}/garage/tracking/{token}"
 
+    def action_mark_devis_ready(self):
+        """Action explicite du Magasinier : valide le chiffrage, passe la réception à l'étape 2 (Devis & Accord) et active les micro-tâches d'accord."""
+        self.ensure_one()
+        if self.reception_id:
+            self.reception_id.action_mark_devis_ready()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _("Devis Chiffré Prêt"),
+                'message': _("Le devis est prêt. Le véhicule est passé à l'étape 2 (Devis & Accord). Vous pouvez maintenant envoyer le lien WhatsApp ou soumettre à l'expert."),
+                'sticky': False,
+                'type': 'success',
+            }
+        }
+
     def action_send_whatsapp_quote(self):
         """Envoie le devis chiffré par WhatsApp avec bouton de validation 1-clic."""
         self.ensure_one()
@@ -424,6 +497,100 @@ class RepairOrder(models.Model):
             'target': 'new',
             'context': {
                 'default_repair_order_id': self.id,
+            }
+        }
+
+    def action_sync_from_validated_diagnostic(self, log_id=None):
+        """Intègre les opérations et pièces issues des diagnostics vocaux validés de manière idempotente."""
+        self.ensure_one()
+        logs = self.env['garage.diagnostic.log'].browse(log_id) if log_id else self.reception_id.diagnostic_log_ids
+        imported_count = 0
+        existing_part_names = {p.name.strip().lower() for p in self.garage_parts_lines if p.name}
+        existing_labor_names = {l.name.strip().lower() for l in self.garage_labor_lines if l.name}
+
+        for log in logs:
+            tasks = log.task_line_ids.filtered(lambda t: t.is_validated)
+            for t in tasks:
+                raw_part_name = (t.name or (t.product_id.display_name if t.product_id else _("Pièce Neuve"))).strip()
+                clean_part_name = raw_part_name
+                for prefix in ['Remplacement ', 'remplacement ', 'Changement ', 'changement ', 'Pose ', 'pose ']:
+                    if clean_part_name.startswith(prefix):
+                        clean_part_name = clean_part_name[len(prefix):].strip().capitalize()
+
+                # Exclusion formelle des services et forfaits d'entretien de la table des pièces détachées
+                is_service = any(kw in raw_part_name.lower() for kw in [
+                    'vidange', 'purge', 'graissage', 'réglage', 'reglage', 'parallélisme',
+                    'parallelisme', 'contrôle', 'controle', 'diagnostic', 'géométrie',
+                    'geometrie', 'nettoyage', 'équilibrage', 'equilibrage'
+                ])
+
+                if (t.requires_new_part or t.product_id) and not t.created_part_line_id and not is_service:
+                    if clean_part_name.lower() not in existing_part_names:
+                        part = self.env['garage.repair.part.line'].create({
+                            'repair_id': self.id,
+                            'name': clean_part_name,
+                            'product_id': t.product_id.id if t.product_id else False,
+                            'qty': t.product_qty or 1.0,
+                            'cost_price': t.cost_price or (t.product_id.standard_price if t.product_id else 0.0),
+                            'sale_price': t.unit_price or (t.product_id.list_price if t.product_id else 0.0),
+                            'source_type': 'operational',
+                        })
+                        t.created_part_line_id = part.id
+                        existing_part_names.add(clean_part_name.lower())
+                        imported_count += 1
+                    else:
+                        existing_part = self.garage_parts_lines.filtered(lambda p: p.name and p.name.strip().lower() == clean_part_name.lower())
+                        if existing_part:
+                            t.created_part_line_id = existing_part[0].id
+
+                labor_name = f"{t.name} ({t.component or 'Opération'})".strip()
+                t_base_name = t.name.strip().lower() if t.name else ""
+                already_has_labor = (
+                    labor_name.lower() in existing_labor_names or
+                    t_base_name in existing_labor_names or
+                    any(t_base_name in el for el in existing_labor_names if len(t_base_name) > 3)
+                )
+
+                if (t.labor_hours > 0 or not t.requires_new_part) and not t.created_labor_line_id:
+                    if not already_has_labor:
+                        labor = self.env['garage.repair.labor.line'].create({
+                            'repair_id': self.id,
+                            'name': labor_name,
+                            'work_type': 'bodywork' if self.reception_id.specialty == 'carrosserie' else 'mechanic',
+                            'hours': t.labor_hours or 1.0,
+                            'hourly_rate': t.hourly_rate or 150.0,
+                            'hourly_cost': 50.0,
+                        })
+                        t.created_labor_line_id = labor.id
+                        existing_labor_names.add(labor_name.lower())
+                        imported_count += 1
+                    else:
+                        existing_labor = self.garage_labor_lines.filtered(
+                            lambda l: l.name and (l.name.strip().lower() == labor_name.lower() or (t_base_name and t_base_name in l.name.lower()))
+                        )
+                        if existing_labor:
+                            t.created_labor_line_id = existing_labor[0].id
+
+            if log.state != 'invoiced':
+                log.write({'state': 'invoiced'})
+
+        return imported_count
+
+    def action_import_from_diagnostic_logs(self):
+        """Action déclenchée depuis le formulaire d'ordre de réparation pour importer les diagnostics."""
+        self.ensure_one()
+        if not self.reception_id or not self.reception_id.diagnostic_log_ids:
+            raise UserError(_("Aucun enregistrement de diagnostic vocal n'a été trouvé sur la fiche de réception."))
+
+        imported = self.action_sync_from_validated_diagnostic()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _("Synchronisation Terminée"),
+                'message': _("%d éléments issus des diagnostics vocaux ont été importés dans le devis.", imported),
+                'sticky': False,
+                'type': 'success',
             }
         }
 

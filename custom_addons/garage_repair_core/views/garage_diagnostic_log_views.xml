@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================== -->
+    <!-- DIAGNOSTIC LOG (JOURNAL MULTI-AUDIO & COCKPIT MAGASINIER) -->
+    <!-- ======================================================== -->
+
+    <!-- Vue Liste des Diagnostics Vocaux -->
+    <record id="view_garage_diagnostic_log_list" model="ir.ui.view">
+        <field name="name">garage.diagnostic.log.list</field>
+        <field name="model">garage.diagnostic.log</field>
+        <field name="arch" type="xml">
+            <list string="Historique Diagnostics Vocaux &amp; Multi-Audios">
+                <field name="name"/>
+                <field name="create_date" string="Date"/>
+                <field name="reception_id"/>
+                <field name="license_plate"/>
+                <field name="vehicle_id"/>
+                <field name="stage_id" widget="badge"/>
+                <field name="operator_id"/>
+                <field name="task_count" string="Nb. Tâches"/>
+                <field name="validated_task_count" string="Validées"/>
+                <field name="is_hidden_damage" widget="boolean_toggle" string="Dégât Masqué"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'submitted_to_stock'"
+                       decoration-warning="state == 'draft'"
+                       decoration-primary="state == 'validated'"
+                       decoration-success="state == 'invoiced'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire Cockpit Magasinier Tri-Format -->
+    <record id="view_garage_diagnostic_log_form" model="ir.ui.view">
+        <field name="name">garage.diagnostic.log.form</field>
+        <field name="model">garage.diagnostic.log</field>
+        <field name="arch" type="xml">
+            <form string="Cockpit Magasinier • Diagnostic Multi-Audio">
+                <header>
+                    <button name="action_submit_to_stock" string="Transmettre au Magasinier" type="object" class="btn-secondary" icon="fa-paper-plane-o" invisible="state != 'draft'"/>
+                    <button name="action_validate_and_apply_to_ro" string="Valider le Devis &amp; Appliquer à l'OR" type="object" class="btn-primary" icon="fa-check" invisible="state == 'invoiced'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted_to_stock,validated,invoiced"/>
+                </header>
+                <sheet>
+                    <field name="id" invisible="1"/>
+                    <field name="is_hidden_damage" invisible="1"/>
+
+                    <!-- Bandeau Alerte Dégât Masqué Découvert au Démontage -->
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3" role="alert" invisible="not is_hidden_damage">
+                        <div>
+                            <i class="fa fa-exclamation-triangle me-2" title="Dégât Masqué"/>
+                            <strong>Dégât Masqué Découvert au Démontage : </strong>
+                            Ce diagnostic concerne des organes cachés. Il déclenche automatiquement la notification d'assurance et un avenant de chiffrage (Étape 2D).
+                        </div>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name" string="Diagnostic N°"/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Véhicule &amp; Dossier">
+                            <field name="reception_id" options="{'no_create': True}"/>
+                            <field name="vehicle_id" readonly="1"/>
+                            <field name="license_plate" readonly="1"/>
+                            <field name="repair_order_id" readonly="1" invisible="not repair_order_id"/>
+                            <field name="claim_id" readonly="1" invisible="not claim_id"/>
+                        </group>
+                        <group string="Contexte Atelier &amp; Intervenant">
+                            <field name="stage_id"/>
+                            <field name="operator_id"/>
+                            <field name="create_date" string="Enregistré le" readonly="1"/>
+                            <field name="audio_filename" invisible="1"/>
+                            <field name="audio_file" filename="audio_filename" widget="binary" string="Fichier Audio"/>
+                        </group>
+                    </group>
+
+                    <!-- SECTION COCKPIT TRI-FORMAT (AUDIO, TEXTE, VALIDATION) -->
+                    <div class="mt-4 mb-2">
+                        <div class="row g-3">
+                            <!-- FORMAT 1 : LECTEUR AUDIO HTML5 -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border shadow-sm">
+                                    <div class="card-header bg-light py-2">
+                                        <div class="fw-bold text-dark">
+                                            <i class="fa fa-headphones text-primary me-2" title="Audio"/>
+                                            <span>Format 1 : Enregistrement Audio</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <field name="audio_player_html" readonly="1"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- FORMAT 2 : TRANSCRIPTION & SYNTHÈSE DARIJA / FRANÇAIS -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border shadow-sm">
+                                    <div class="card-header bg-light py-2">
+                                        <div class="fw-bold text-dark">
+                                            <i class="fa fa-file-text-o text-primary me-2" title="Transcription"/>
+                                            <span>Format 2 : Transcription &amp; Résolution Contextuelle</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <label for="transcription_raw" string="Transcription Verbatim (Darija / Français)" class="small text-muted fw-bold d-block mb-1"/>
+                                        <field name="transcription_raw" placeholder="Verbatim Darija / Français..." class="mb-2"/>
+                                        <label for="transcription_summary" string="Synthèse / Notes Contextuelles Chef d'Atelier" class="small text-muted fw-bold d-block mb-1"/>
+                                        <field name="transcription_summary" placeholder="Synthèse des décisions..."/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FORMAT 3 : TABLEAU DES MICRO-TÂCHES & FOURNITURES MAGASINIER -->
+                    <div class="card border shadow-sm mt-3">
+                        <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                            <div class="fw-bold text-dark">
+                                <i class="fa fa-check-square-o text-primary me-2" title="Requisition"/>
+                                <span>Format 3 : Requisition Magasinier, Pièces de Rechange &amp; Main-d'Œuvre</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-secondary">
+                                    <field name="validated_task_count"/> / <field name="task_count"/> Validées
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <field name="task_line_ids">
+                                <list editable="bottom" decoration-muted="not is_validated">
+                                    <field name="is_validated" widget="boolean_toggle" string="Retenir"/>
+                                    <field name="action" widget="badge"
+                                           decoration-danger="action == 'replace'"
+                                           decoration-warning="action == 'repair'"
+                                           decoration-info="action == 'inspect'"
+                                           decoration-success="action == 'service'"/>
+                                    <field name="component"/>
+                                    <field name="name" string="Intitulé Travaux"/>
+                                    <field name="requires_new_part" widget="boolean_toggle" string="Pièce Requise"/>
+                                    <field name="product_id" options="{'no_create_edit': True}" placeholder="Sélectionner pièce stock..."/>
+                                    <field name="product_qty" string="Qté"/>
+                                    <field name="unit_price" string="Prix Vente HT"/>
+                                    <field name="labor_hours" string="MO (h)"/>
+                                    <field name="hourly_rate" string="Taux MO"/>
+                                    <field name="rectification_note" string="Auto-Correction Résolue"/>
+                                </list>
+                            </field>
+                        </div>
+                    </div>
+
+                    <chatter/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Diagnostics Vocaux -->
+    <record id="action_garage_diagnostic_log" model="ir.actions.act_window">
+        <field name="name">Diagnostics Vocaux &amp; Multi-Audios</field>
+        <field name="res_model">garage.diagnostic.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aucun journal de diagnostic vocal enregistré.
+            </p>
+            <p>
+                Utilisez le bouton "Diagnostic IA" depuis la fiche de réception pour enregistrer la voix du mécanicien en Darija ou Français.
+            </p>
+        </field>
+    </record>
+
+
+    <!-- ======================================================== -->
+    <!-- DAMAGE ITEMS (INVENTAIRE DÉGÂTS CARROSSERIE & CHOCS)     -->
+    <!-- ======================================================== -->
+
+    <!-- Vue Liste des Éléments Endommagés -->
+    <record id="view_garage_damage_item_list" model="ir.ui.view">
+        <field name="name">garage.damage.item.list</field>
+        <field name="model">garage.damage.item</field>
+        <field name="arch" type="xml">
+            <list string="Inventaire Dégâts &amp; Chocs Carrosserie" editable="bottom">
+                <field name="reception_id"/>
+                <field name="vehicle_id" optional="show"/>
+                <field name="zone"/>
+                <field name="name" string="Désignation"/>
+                <field name="damage_type" widget="badge"/>
+                <field name="severity" widget="badge"
+                       decoration-warning="severity == 'light'"
+                       decoration-primary="severity == 'medium'"
+                       decoration-danger="severity == 'heavy'"/>
+                <field name="action_type" widget="badge"/>
+                <field name="discovery_stage" widget="badge"/>
+                <field name="is_hidden_damage" widget="boolean_toggle" string="Masqué"/>
+                <field name="photo_count" string="Photos"/>
+                <field name="expert_decision" widget="badge"
+                       decoration-warning="expert_decision == 'pending'"
+                       decoration-success="expert_decision == 'approved'"
+                       decoration-danger="expert_decision == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire Élément Endommagé -->
+    <record id="view_garage_damage_item_form" model="ir.ui.view">
+        <field name="name">garage.damage.item.form</field>
+        <field name="model">garage.damage.item</field>
+        <field name="arch" type="xml">
+            <form string="Constat Dégât Carrosserie">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Élément Endommagé"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: Pare-chocs avant fissuré"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Localisation &amp; Dossier">
+                            <field name="reception_id"/>
+                            <field name="vehicle_id" readonly="1"/>
+                            <field name="claim_id" readonly="1" invisible="not claim_id"/>
+                            <field name="repair_order_id" readonly="1" invisible="not repair_order_id"/>
+                            <field name="zone"/>
+                        </group>
+                        <group string="Caractérisation &amp; Expertise">
+                            <field name="damage_type"/>
+                            <field name="severity"/>
+                            <field name="action_type"/>
+                            <field name="discovery_stage"/>
+                            <field name="is_hidden_damage" readonly="1"/>
+                            <field name="expert_decision"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Photos du Dégât" name="photos_page">
+                            <field name="photo_ids" widget="many2many_binary"/>
+                        </page>
+                        <page string="Notes Techniques" name="notes_page">
+                            <field name="notes" placeholder="Remarques additionnelles pour l'expert ou le tôlier..."/>
+                        </page>
+                    </notebook>
+                    <chatter/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action Fenêtre Éléments Endommagés -->
+    <record id="action_garage_damage_item" model="ir.actions.act_window">
+        <field name="name">Éléments Endommagés &amp; Carrosserie</field>
+        <field name="res_model">garage.damage.item</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aucun constat de dégât physique inventorié.
+            </p>
+        </field>
+    </record>
+</odoo>

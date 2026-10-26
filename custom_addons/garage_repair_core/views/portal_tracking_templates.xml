@@ -202,7 +202,7 @@
                             <ul class="list-group list-group-flush small">
                                 <li t-foreach="customer_tasks" t-as="task" class="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <span t-att-class="'text-decoration-line-through text-muted' if task['is_done'] else 'text-dark'">
-                                        <i t-attf-class="fa #{'fa-check-circle text-success' if task['is_done'] else 'fa-circle-notch text-muted'} me-2" title="Statut"/>
+                                        <i t-attf-class="fa #{'fa-check-circle text-success' if task['is_done'] else 'fa-circle-o text-muted'} me-2" title="Statut"/>
                                         <t t-esc="task['name']"/>
                                     </span>
                                     <span t-attf-class="badge #{'bg-success' if task['is_done'] else 'bg-light text-muted'}">
@@ -211,6 +211,54 @@
                                     </span>
                                 </li>
                             </ul>
+                        </div>
+                    </div>
+
+                    <!-- Inventaire des Éléments Constatés (Customer-Safe) -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3" t-if="reception and reception.damage_item_ids">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="fa fa-car text-primary me-2" title="Carrosserie"/>État des Lieux &amp; Organes Contrôlés
+                            </h6>
+                        </div>
+                        <div class="card-body pt-0 pb-3">
+                            <ul class="list-group list-group-flush small">
+                                <li t-foreach="reception.damage_item_ids" t-as="dmg" class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span>
+                                        <i class="fa fa-wrench text-muted me-2" title="Organe"/>
+                                        <strong t-esc="dmg.name"/>
+                                    </span>
+                                    <span class="badge bg-light text-dark">
+                                        <t t-esc="dict(dmg._fields['action_type'].selection).get(dmg.action_type, dmg.action_type)"/>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Galerie Photos Atelier (Customer-Safe) -->
+                    <div class="card shadow-sm border-0 mb-3 rounded-3" t-if="portal_photos">
+                        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                <i class="fa fa-camera text-primary me-2" title="Photos"/>Photos &amp; Suivi Visuel Atelier
+                            </h6>
+                            <span class="badge bg-light text-primary">
+                                <t t-esc="len(portal_photos)"/> photos
+                            </span>
+                        </div>
+                        <div class="card-body pt-0 pb-3">
+                            <div class="row g-2">
+                                <t t-foreach="portal_photos" t-as="p_att">
+                                    <div class="col-6 col-sm-4">
+                                        <div class="border rounded overflow-hidden shadow-sm bg-light text-center h-100">
+                                            <a t-attf-href="/web/image/#{p_att.id}" target="_blank">
+                                                <img t-attf-src="/web/image/#{p_att.id}" class="img-fluid" style="height: 110px; width: 100%; object-fit: cover;" t-att-alt="p_att.name"/>
+                                            </a>
+                                            <div class="p-1 small text-truncate text-muted" style="font-size: 11px;" t-esc="p_att.name"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
                         </div>
                     </div>
 

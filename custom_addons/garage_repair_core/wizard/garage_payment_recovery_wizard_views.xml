@@ -11,32 +11,22 @@
                 <field name="requires_official_invoice" invisible="1"/>
                 <field name="is_missing_tax_id" invisible="1"/>
 
-                <!-- Bandeau Alerte 1 : Règlement Caisse Espèces (BL Interne) -->
-                <div class="alert alert-success d-flex align-items-center mb-3" role="alert" invisible="requires_official_invoice">
-                    <i class="fa fa-money fa-2x me-3" title="Caisse Espèces"/>
-                    <div>
-                        <strong>Encaissement Caisse Espèces (BL Atelier Interne)</strong><br/>
-                        Ce paiement en espèces peut être soldé directement sur le Bon de Travail sans obligation de déclaration bancaire immédiate.
-                    </div>
+                <!-- Pastille Alerte 1 : Règlement Caisse Espèces (BL Interne) -->
+                <div class="alert alert-success d-flex align-items-center py-2 mb-3" role="status" invisible="requires_official_invoice">
+                    <i class="fa fa-money me-2" title="Caisse Espèces"/>
+                    <span><strong>Encaissement Espèces (BL) :</strong> Règlement direct au comptoir sans déclaration bancaire.</span>
                 </div>
 
-                <!-- Bandeau Alerte 2 : Règlement Bancaire Traçable (TPE / Chèque / Virement) -->
-                <div class="alert alert-warning d-flex align-items-center mb-3" role="alert" invisible="not requires_official_invoice">
-                    <i class="fa fa-university fa-2x me-3" title="Banque"/>
-                    <div>
-                        <strong>Obligation Fiscale Détectée : Règlement Bancaire Traçable</strong><br/>
-                        Ces fonds apparaîtront sur le <strong>relevé bancaire du garage</strong> (TPE / Chèque / Virement). 
-                        Une <strong>Facture Fiscale Officielle</strong> avec TVA 20% sera automatiquement préparée avec déstockage fiscal légal.
-                    </div>
+                <!-- Pastille Alerte 2 : Règlement Bancaire Traçable (TPE / Chèque / Virement) -->
+                <div class="alert alert-warning d-flex align-items-center py-2 mb-3" role="status" invisible="not requires_official_invoice">
+                    <i class="fa fa-university me-2" title="Banque"/>
+                    <span><strong>Paiement Bancaire Traçable (TPE / Chèque) :</strong> Une Facture Fiscale TVA 20% sera générée.</span>
                 </div>
 
-                <!-- Bandeau Alerte 3 : Identifiant fiscal manquant -->
-                <div class="alert alert-danger d-flex align-items-center mb-3" role="alert" invisible="not is_missing_tax_id">
-                    <i class="fa fa-exclamation-triangle fa-2x me-3" title="Attention"/>
-                    <div>
-                        <strong>Identifiant Fiscal Requis pour la Facture Officielle !</strong><br/>
-                        Veuillez renseigner le <strong>CIN</strong> (Particulier) ou l'<strong>ICE à 15 chiffres</strong> (Société) ci-dessous avant d'émettre la facture.
-                    </div>
+                <!-- Pastille Alerte 3 : Identifiant fiscal manquant -->
+                <div class="alert alert-danger d-flex align-items-center py-2 mb-3" role="alert" invisible="not is_missing_tax_id">
+                    <i class="fa fa-exclamation-triangle me-2" title="Attention"/>
+                    <span><strong>Identifiant Requis :</strong> Renseignez le CIN (Particulier) ou l'ICE (Société) ci-dessous.</span>
                 </div>
 
                 <!-- Synthèse KPI Dossier & Solde -->
