@@ -2,7 +2,6 @@ services:
   web:
     build: .
     image: odoo19_garage_app:latest
-    container_name: odoo19_garage
     depends_on:
       db:
         condition: service_healthy
@@ -18,12 +17,13 @@ services:
     command: odoo -c /etc/odoo/odoo.conf
     restart: unless-stopped
     networks:
-      - default
-      - garage-ai_default
+      default:
+      garage-ai_default:
+        aliases:
+          - odoo19_garage
 
   db:
     image: postgres:16-alpine
-    container_name: odoo19_garage_db
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=odoo
