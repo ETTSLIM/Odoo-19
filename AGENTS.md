@@ -21,20 +21,20 @@
 
 > [!CAUTION]
 > ## 🚨 MANDATORY P0 INVARIANT: COCKPIT SUBMODULE SYNCHRONIZATION (ZERO STRAY SUBMODULES) 🚨
-> For ANY modification, addition, or refactoring of the Workshop Cockpit (`garage.reception`, `view_garage_reception_form`):
+> For ANY modification, addition, or refactoring of the Workshop Cockpit (`garage.reception`, `view_garage_reception_form` in `custom_addons/garage_repair_core/views/garage_reception_views.xml`):
 > 1. **MANDATORY SKILL ACTIVATION**: The AI assistant MUST activate and adhere strictly to the **`cockpit-submodule-sync`** skill (`~/.gemini/config/skills/cockpit-submodule-sync/SKILL.md`).
-> 2. **LIFECYCLE GROUND TRUTH**:
->    - The data coming from the Android mobile/tablet client (`workshop_tablet_api.py`, `happy-faraday`) builds and drives **90% of the vehicle lifecycle**.
->    - The Cockpit (accessible from *Véhicule Atelier*, side-by-side 2-panel split view) is the **eagle-eye command deck** that controls and monitors all submodules.
+> 2. **LIFECYCLE & DUAL-SURFACE GROUND TRUTH**:
+>    - **Mobile Origin (90% of Build)**: Data coming from the Android mobile/tablet client (`workshop_tablet_api.py`, `happy-faraday`) drives **90% of the vehicle lifecycle**.
+>    - **Surface A (Cockpit Command Deck)**: The 2-panel split view (`view_garage_reception_form` + `garage_cockpit_tabs.js`) is the eagle-eye control tower (`col-lg-4` Left Sidebar + `col-lg-8` Right Lifecycle Notebook Tabs: `tab_intake`, `tab_devis_active`, `tab_pieces_active`, `tab_travaux_active`, `tab_sinistre`, `tab_facturation_active`).
+>    - **Surface B (Standalone Submodule Screens)**: Accessed via `navbar_subnav.js` (*Ordres de Travaux Actifs*, *Dossiers Sinistres*, *État du Stock Magasin*, *BL Fournisseurs*, *Journal Caisse Guichet*, *Factures Fiscales*, *Parc Véhicules*).
 > 3. **PROHIBITION ON STRAY OR UX-ONLY MODIFICATIONS**:
->    - Modifying Cockpit fields, tabs, or buttons without verifying and synchronizing the underlying submodules (`repair.order`, `garage.insurance.claim`, `garage.reception.task`, `garage.parts.purchase`, `garage.repair.payment`, `whatsapp.gateway`) is **STRICTLY FORBIDDEN**.
->    - Every Cockpit field must have an explicit data contract: ownership (`related=` vs stored), mutability (`inverse=` vs `readonly`), mobile ingestion parity, and stage interlock consistency.
-> 4. **MANDATORY 5-TEST SUBMODULE AUDIT**: Before applying any change to the Cockpit, the assistant must verify:
->    - [1] Ownership & Delegation Test
->    - [2] Bidirectional Mutability Test
->    - [3] Mobile Ingestion Parity Test
->    - [4] Lifecycle Interlock Test
->    - [5] Downstream Rollup & Computed Trigger Test
+>    - Modifying **Surface A (Cockpit)** without verifying and synchronizing **Surface B (Standalone Submodule Form/List/Kanban views + Wizards + Bidirectional ORM `write()` hooks)** is **STRICTLY FORBIDDEN**.
+> 4. **MANDATORY 5-LAYER SUBMODULE RIPPLE MATRIX**: Before applying any change to the Cockpit, the assistant must trace and synchronize all 5 layers:
+>    - **[L1] Android Tablet API**: `workshop_tablet_api.py` (`_reception_to_vehicle_card`, `_reception_to_vehicle_detail`, `api_checkin`, `api_voice_update`, `api_diagnostic`, `api_assurance`) & `happy-faraday`.
+>    - **[L2] Cockpit Surface A**: `garage_reception.py`, `garage_reception_views.xml`, `garage_cockpit_tabs.js` (`_locked` / `_active` tabs & `stage_sequence` gates 10–70).
+>    - **[L3] Submodule ORM & Bidirectional Sync**: Forward (Cockpit ➔ Submodule) & Reverse (Submodule ➔ Cockpit) across `repair.order`, `garage.insurance.claim`, `garage.parts.bl`, `garage.diagnostic.log`, `garage.damage.item`, `garage.reception.task`, `garage.repair.payment`, preserving anti-recursion context flags (`skip_ro_sync`, `skip_devis_sync`, `skip_subtask_sync`, `auto_workflow_sync`, `skip_stock_note_sync`, `skip_specialty_sync`).
+>    - **[L4] Standalone Submodule Surface B**: `garage_repair_order_views.xml`, `garage_insurance_claim_views.xml`, `garage_parts_purchase_views.xml`, `garage_diagnostic_log_views.xml`, and `wizard/*.xml`.
+>    - **[L5] External Outputs**: `portal_tracking.py`, `portal_tracking_templates.xml`, `whatsapp_gateway.py`, and QWeb PDF reports (`report_*.xml`).
 
 > [!CAUTION]
 > ## 🚨 MANDATORY P0 INVARIANT: ATOMIC GIT COMMIT & REMOTE PUSH PROTOCOL (HOSTINGER SYNC) 🚨
