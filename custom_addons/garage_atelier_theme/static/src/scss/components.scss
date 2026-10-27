@@ -340,10 +340,9 @@
 
             .o_garage_grid_status {
                 font-size: 0.52rem;
-                font-weight: 700;
-                color: #dc2626;
-                text-transform: uppercase;
-                letter-spacing: 0.02em;
+                font-weight: 600;
+                color: var(--g-text-muted, #64748b);
+                letter-spacing: 0.01em;
             }
         }
     }

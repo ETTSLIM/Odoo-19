@@ -595,76 +595,14 @@ class GarageReception(models.Model):
             else:
                 rec.odometer_display = _("Non relevé")
 
-    @api.depends('attachment_ids', 'carte_grise_ids', 'permis_ids', 'constat_ids', 'assurance_ids')
+    @api.depends('attachment_ids', 'carte_grise_ids', 'permis_ids', 'constat_ids', 'assurance_ids', 'is_assurance')
     def _compute_photos_grid_sidebar_html(self):
-        """Génère une matrice 4x4 compacte des photos et documents d'accueil pour la barre latérale du cockpit.
-        Chaque slot manquant est explicité avec une bordure en pointillés et un statut 'Manquant' pour une
-        clarté d'audit absolue."""
-        canonical_slots = [
-            {
-                'key': 'choc_avant',
-                'title': "Face Avant / Choc",
-                'short_label': "Face Av.",
-                'icon': "fa-car",
-                'keywords': ['face avant', 'choc_avant', 'avant', 'front'],
-            },
-            {
-                'key': 'choc_arriere',
-                'title': "Choc Arrière",
-                'short_label': "Choc Arr.",
-                'icon': "fa-car",
-                'keywords': ['choc_arriere', 'arriere', 'arrière', 'rear'],
-            },
-            {
-                'key': 'choc_cote',
-                'title': "Chocs Latéraux",
-                'short_label': "Flancs",
-                'icon': "fa-car",
-                'keywords': ['choc_cote', 'cote', 'côté', 'flanc', 'lateral'],
-            },
-            {
-                'key': 'compteur',
-                'title': "Compteur Kilométrique",
-                'short_label': "Compteur",
-                'icon': "fa-dashboard",
-                'keywords': ['compteur', 'odometer', 'km'],
-            },
-            {
-                'key': 'carte_grise_recto',
-                'title': "Carte Grise (Face Avant)",
-                'short_label': "CG Recto",
-                'icon': "fa-id-card",
-                'keywords': ['carte grise (face avant)', 'carte_grise_recto', 'recto'],
-                'field': 'carte_grise_ids',
-                'index': 0,
-            },
-            {
-                'key': 'carte_grise_verso',
-                'title': "Carte Grise (Face Arrière)",
-                'short_label': "CG Verso",
-                'icon': "fa-id-card",
-                'keywords': ['carte grise (face arriere)', 'carte grise (face arrière)', 'carte_grise_verso', 'verso'],
-                'field': 'carte_grise_ids',
-                'index': 1,
-            },
-            {
-                'key': 'permis',
-                'title': "Permis de Conduire",
-                'short_label': "Permis",
-                'icon': "fa-address-card",
-                'keywords': ['permis', 'conduire'],
-                'field': 'permis_ids',
-            },
-            {
-                'key': 'constat',
-                'title': "Constat Amiable / Assurance",
-                'short_label': "Constat",
-                'icon': "fa-file-text-o",
-                'keywords': ['constat', 'assurance', 'attestation'],
-                'field': 'constat_ids',
-            },
-        ]
-
+        """Génère la grille photos & documents de la barre latérale du cockpit.
+        - Libellés clairs et naturels (sans abréviations cryptiques comme CG Recto, Flancs, etc.)
+        - Zéro sur-numérotation artificielle (pas de 'Extra #1', 'Extra #2' arbitraires)
+        - Adaptation dynamique selon le type de dossier (assurance vs standard)
+        - Lightbox modal haute résolution et accès direct galerie
+        """
         for rec in self:
             pool = list(rec.attachment_ids | rec.carte_grise_ids | rec.permis_ids | rec.constat_ids | rec.assurance_ids)
             consumed_ids = set()
@@ -672,19 +610,71 @@ class GarageReception(models.Model):
             modals = []
             captured_count = 0
 
-            # 1. Traitement ordonné des 8 slots canoniques (2 lignes x 4 colonnes)
+            # 1. Définition des slots clés adaptés au type de dossier
+            # Dossier standard : Face Avant, Dégâts, Compteur, Carte Grise
+            # Dossier assurance : ajoute Permis et Constat Amiable
+            canonical_slots = [
+                {
+                    'key': 'choc_avant',
+                    'title': "Face Avant du Véhicule",
+                    'short_label': "Face Avant",
+                    'icon': "fa-car",
+                    'keywords': ['face avant', 'choc_avant', 'avant', 'front'],
+                },
+                {
+                    'key': 'chocs',
+                    'title': "Dégâts & Chocs Carrosserie",
+                    'short_label': "Dégâts",
+                    'icon': "fa-exclamation-triangle",
+                    'keywords': ['choc', 'arriere', 'arrière', 'cote', 'côté', 'flanc', 'lateral', 'degat', 'dégât', 'damage'],
+                },
+                {
+                    'key': 'compteur',
+                    'title': "Compteur Kilométrique",
+                    'short_label': "Compteur",
+                    'icon': "fa-dashboard",
+                    'keywords': ['compteur', 'odometer', 'km'],
+                },
+                {
+                    'key': 'carte_grise',
+                    'title': "Carte Grise Véhicule",
+                    'short_label': "Carte Grise",
+                    'icon': "fa-id-card",
+                    'keywords': ['carte grise', 'carte_grise', 'recto', 'verso'],
+                    'field': 'carte_grise_ids',
+                },
+            ]
+
+            if rec.is_assurance:
+                canonical_slots.extend([
+                    {
+                        'key': 'permis',
+                        'title': "Permis de Conduire",
+                        'short_label': "Permis",
+                        'icon': "fa-address-card",
+                        'keywords': ['permis', 'conduire'],
+                        'field': 'permis_ids',
+                    },
+                    {
+                        'key': 'constat',
+                        'title': "Constat Amiable / Assurance",
+                        'short_label': "Constat",
+                        'icon': "fa-file-text-o",
+                        'keywords': ['constat', 'assurance', 'attestation'],
+                        'field': 'constat_ids',
+                    },
+                ])
+
+            # Traitement des slots canoniques
             for slot in canonical_slots:
                 matched_att = None
                 field_name = slot.get('field')
                 if field_name:
                     field_val = getattr(rec, field_name, False)
                     if field_val:
-                        atts = [a for a in field_val if a.id not in consumed_ids]
-                        idx = slot.get('index')
-                        if idx is not None and len(atts) > idx:
-                            matched_att = atts[idx]
-                        elif atts:
-                            matched_att = atts[0]
+                        available = [a for a in field_val if a.id not in consumed_ids]
+                        if available:
+                            matched_att = available[0]
 
                 if not matched_att:
                     for att in pool:
@@ -721,7 +711,7 @@ class GarageReception(models.Model):
                         f'  <div class="modal-dialog modal-dialog-centered modal-lg">'
                         f'    <div class="modal-content shadow-lg">'
                         f'      <div class="modal-header py-2">'
-                        f'        <h6 class="modal-title fw-bold text-dark"><i class="fa fa-picture-o text-primary me-2"/>{aname} ({short_lbl})</h6>'
+                        f'        <h6 class="modal-title fw-bold text-dark"><i class="fa fa-picture-o text-primary me-2"/>{short_lbl} — {aname}</h6>'
                         f'        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>'
                         f'      </div>'
                         f'      <div class="modal-body text-center p-2 bg-dark">'
@@ -740,23 +730,34 @@ class GarageReception(models.Model):
                         f'<div class="o_garage_grid_cell o_garage_grid_missing" title="{stitle} (Non encore fourni)">'
                         f'  <i class="fa {icon_cls} mb-1" title="{stitle}"/>'
                         f'  <span class="o_garage_grid_label">{short_lbl}</span>'
-                        f'  <span class="o_garage_grid_status">Manquant</span>'
+                        f'  <span class="o_garage_grid_status" style="color: #64748b;">À fournir</span>'
                         f'</div>'
                     )
 
-            # 2. Photos additionnelles éventuelles (pour compléter la grille 4x4 jusqu\'à 16 slots)
-            extra_idx = 1
+            # 2. Photos additionnelles réelles (sans inventer d'indices "Extra #1" sur-numérotés)
             for att in pool:
                 if att.id in consumed_ids:
                     continue
-                if len(cells) >= 16:
-                    break
                 consumed_ids.add(att.id)
                 captured_count += 1
                 aid = att.id
-                aname = att.name or f"Photo Extra #{extra_idx}"
-                short_lbl = f"Extra #{extra_idx}"
-                extra_idx += 1
+                aname = att.name or _("Photo Atelier")
+                
+                # Déduction intelligente du badge à partir du nom
+                name_l = (att.name or '').lower()
+                if any(k in name_l for k in ['carte', 'grise', 'verso']):
+                    short_lbl = "CG Verso" if 'verso' in name_l else "Carte Grise"
+                elif any(k in name_l for k in ['permis']):
+                    short_lbl = "Permis"
+                elif any(k in name_l for k in ['choc', 'degat', 'dégât', 'carrosserie']):
+                    short_lbl = "Dégât"
+                elif any(k in name_l for k in ['moteur', 'pont', 'frein', 'vidange', 'atelier', 'travaux']):
+                    short_lbl = "Atelier"
+                elif any(k in name_l for k in ['constat', 'assurance']):
+                    short_lbl = "Assurance"
+                else:
+                    short_lbl = "Photo"
+
                 aurl = f"/web/image/{aid}"
                 mid = f"recSidePhoto_{rec.id}_{aid}"
 
@@ -796,7 +797,7 @@ class GarageReception(models.Model):
                 f'    <i class="fa fa-camera text-primary me-1" title="Photos"/>Documents &amp; État des lieux'
                 f'  </span>'
                 f'  <span class="badge text-bg-light border small" style="font-size: 0.68rem;">'
-                f'    {captured_count} / {len(cells)} document(s)'
+                f'    {captured_count} photo(s) au dossier'
                 f'  </span>'
                 f'</div>'
             )

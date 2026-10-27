@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/controllers/workshop_tablet_api.py": {
-    "mtime": 1793103849.9559917,
-    "ast_hash": "cf8e6d13652da18bb33babe69527e166",
+    "mtime": 1793117411.6074023,
+    "ast_hash": "317fadf48b7f65b0b14071c342b7c1b5",
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/__init__.py": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/garage_reception.py": {
-    "mtime": 1793111784.9675276,
-    "ast_hash": "28df904b13bf15afd4e95571429f4d07",
+    "mtime": 1793117465.6230297,
+    "ast_hash": "0674137cb4a383fedd3a5987c56366aa",
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/garage_repair_order.py": {

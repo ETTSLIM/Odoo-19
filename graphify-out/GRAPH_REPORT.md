@@ -1,13 +1,18 @@
 # Graph Report - Odoo 19  (2026-10-27)
 
 ## Corpus Check
-- 49 files · ~45,247 words
+- 49 files · ~45,306 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
 - 575 nodes · 764 edges · 78 communities (30 shown, 48 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `524c9e5f`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - .write
@@ -134,7 +139,7 @@ Nodes (8): 1. COMPREHENSIVE COMPONENT WATCHLIST & BANNED PATTERNS, 2. GROUND TRU
 
 ### Community 9 - "GarageReception"
 Cohesion: 0.10
-Nodes (5): GarageReception, depends, Génère une grille 4 sous 4 des photos du véhicule, avec slots canoniques…, Génère une matrice 4x4 compacte des photos et documents d'accueil pour la barre…, Génère la liste en lecture seule des micro-tâches issues du diagnostic…
+Nodes (5): GarageReception, depends, Génère une grille 4 sous 4 des photos du véhicule, avec slots canoniques…, Génère la grille photos & documents de la barre latérale du cockpit. - Libellés…, Génère la liste en lecture seule des micro-tâches issues du diagnostic…
 
 ### Community 10 - "GarageReceptionTask"
 Cohesion: 0.18

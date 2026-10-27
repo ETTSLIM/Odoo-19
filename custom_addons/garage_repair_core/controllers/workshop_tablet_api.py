@@ -726,16 +726,16 @@ class GarageWorkshopTabletApiController(http.Controller):
             if categorized_images:
                 name_map = {
                     'carte_grise_recto': "Carte Grise (Face Avant)",
-                    'carte_grise_verso': "Carte Grise (Face Arrière)",
-                    'carte_grise': "Carte Grise (Checkin)",
-                    'permis': "Permis de Conduire (Checkin)",
-                    'constat': "Constat Amiable (Checkin)",
-                    'assurance': "Attestation Assurance (Checkin)",
-                    'choc_avant': "Photo Véhicule (Face Avant / Choc)",
-                    'choc_arriere': "Dégât / Choc Arrière (Checkin)",
-                    'choc_cote': "Dégât / Choc Côtés (Checkin)",
-                    'compteur': "Compteur Kilométrique (Checkin)",
-                    'choc': "Photo Dégât Atelier (Checkin)",
+                    'carte_grise_verso': "Carte Grise (Verso)",
+                    'carte_grise': "Carte Grise",
+                    'permis': "Permis de Conduire",
+                    'constat': "Constat Amiable",
+                    'assurance': "Attestation Assurance",
+                    'choc_avant': "Photo Véhicule (Face Avant)",
+                    'choc_arriere': "Dégât / Choc Arrière",
+                    'choc_cote': "Dégât / Choc Latéral",
+                    'compteur': "Compteur Kilométrique",
+                    'choc': "Photo Dégât Atelier",
                 }
                 for item in categorized_images:
                     try:
@@ -743,7 +743,7 @@ class GarageWorkshopTabletApiController(http.Controller):
                         c_type = (item.get('doc_type') or item.get('category') or 'choc').lower()
                         if c_b64:
                             clean_b64 = c_b64.split(',')[-1].strip()
-                            att_name = name_map.get(c_type, f"Photo Checkin ({c_type})")
+                            att_name = name_map.get(c_type, f"Photo {c_type.replace('_', ' ').title()}")
 
                             att = env['ir.attachment'].create({
                                 'name': att_name,

@@ -252,13 +252,17 @@
                                     </div>
                                 </div>
 
-                                <!-- 4. Dossier & Conformité Papiers (Grille 4x4 Photos & Documents) -->
+                                <!-- 4. Dossier & Conformité Papiers (Grille Photos & Documents) -->
                                 <div class="pb-3 border-bottom mb-3">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <span class="text-muted small fw-bold text-uppercase">
                                             <i class="fa fa-folder-open me-1 text-primary" title="Dossier"/>Dossier &amp; Papiers
                                         </span>
                                         <div class="d-flex align-items-center gap-2">
+                                            <button name="action_view_attachments" type="object" class="btn btn-sm btn-outline-primary py-0 px-2 d-inline-flex align-items-center gap-1 shadow-sm" title="Ouvrir la visionneuse et galerie photos" aria-label="Galerie">
+                                                <i class="fa fa-picture-o" title="Galerie"/>
+                                                <span style="font-size: 0.72rem;">Galerie</span>
+                                            </button>
                                             <span class="small text-muted" style="font-size: 0.72rem;">Sinistre :</span>
                                             <field name="is_assurance" widget="boolean_toggle"/>
                                         </div>
