@@ -234,7 +234,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_init",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_repair_core/__init__.py"
     },
     {
@@ -256,7 +256,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_controllers_init",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "controllers/__init__.py"
     },
     {
@@ -2836,7 +2836,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_models_garage_reception_garagereception_sync_subtasks_with_parent_stage",
       "community": 50,
-      "community_name": ".action_open_pin_wizard",
+      "community_name": ".action_create_or_view_claim",
       "norm_label": "._sync_subtasks_with_parent_stage()"
     },
     {
@@ -2955,7 +2955,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_models_garage_reception_garagereception_action_create_or_view_claim",
-      "community": 28,
+      "community": 50,
       "community_name": ".action_create_or_view_claim",
       "norm_label": ".action_create_or_view_claim()"
     },
@@ -3028,7 +3028,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_models_garage_reception_garagereception_action_open_pin_wizard",
       "community": 50,
-      "community_name": ".action_open_pin_wizard",
+      "community_name": ".action_create_or_view_claim",
       "norm_label": ".action_open_pin_wizard()"
     },
     {
@@ -3298,7 +3298,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_models_garage_reception_rationale_1203",
       "community": 50,
-      "community_name": ".action_open_pin_wizard",
+      "community_name": ".action_create_or_view_claim",
       "norm_label": "synchronise l'etat des sous-taches lors d'un deplacement de grande etape."
     },
     {
@@ -3407,7 +3407,7 @@
       "source_location": "L1731",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_models_garage_reception_rationale_1731",
-      "community": 28,
+      "community": 50,
       "community_name": ".action_create_or_view_claim",
       "norm_label": "ouvre ou cree le dossier sinistre lie a cette reception avec matching fiable de..."
     },
@@ -3474,7 +3474,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_models_garage_reception_rationale_1830",
       "community": 50,
-      "community_name": ".action_open_pin_wizard",
+      "community_name": ".action_create_or_view_claim",
       "norm_label": "ouvre l'assistant de validation par code pin pour la tablette partagee de..."
     },
     {
@@ -5058,7 +5058,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_init",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "wizard/__init__.py"
     },
     {
@@ -5068,8 +5068,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_ai_diagnostic_wizard.py"
     },
     {
@@ -5081,8 +5081,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard_garageaidiagnosticwizard",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "garageaidiagnosticwizard"
     },
     {
@@ -5093,8 +5093,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard_garageaidiagnosticwizard_default_stage_id",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "._default_stage_id()"
     },
     {
@@ -5104,8 +5104,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard_py_onchange",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "onchange"
     },
     {
@@ -5116,8 +5116,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard_garageaidiagnosticwizard_onchange_raw_note",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "._onchange_raw_note()"
     },
     {
@@ -5128,8 +5128,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard_garageaidiagnosticwizard_action_process",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": ".action_process()"
     },
     {
@@ -5139,8 +5139,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard_rationale_53",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "pre-remplit les taches extraites si des lignes sont saisies."
     },
     {
@@ -5150,8 +5150,8 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_ai_diagnostic_wizard_rationale_60",
-      "community": 78,
-      "community_name": "GarageAiDiagnosticWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "lance l'interpretation ia et la creation des micro-taches dynamiques..."
     },
     {
@@ -5363,7 +5363,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_insurance_invoice_wizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_insurance_invoice_wizard.py"
     },
     {
@@ -5376,7 +5376,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_insurance_invoice_wizard_garageinsuranceinvoicewizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garageinsuranceinvoicewizard"
     },
     {
@@ -5387,7 +5387,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_insurance_invoice_wizard_py_depends",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "depends"
     },
     {
@@ -5399,7 +5399,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_insurance_invoice_wizard_garageinsuranceinvoicewizard_compute_default_amounts",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "._compute_default_amounts()"
     },
     {
@@ -5411,7 +5411,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_insurance_invoice_wizard_garageinsuranceinvoicewizard_compute_ht_amounts",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "._compute_ht_amounts()"
     },
     {
@@ -5423,7 +5423,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_insurance_invoice_wizard_garageinsuranceinvoicewizard_action_generate_split_invoices",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": ".action_generate_split_invoices()"
     },
     {
@@ -5434,7 +5434,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_insurance_invoice_wizard_rationale_63",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "cree simultanement la facture d'assurance et la facture/recu de franchise..."
     },
     {
@@ -5445,7 +5445,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_operator_pin_wizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_operator_pin_wizard.py"
     },
     {
@@ -5458,7 +5458,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_operator_pin_wizard_garageoperatorpinwizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garageoperatorpinwizard"
     },
     {
@@ -5469,7 +5469,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_operator_pin_wizard_py_model",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "model"
     },
     {
@@ -5481,7 +5481,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_operator_pin_wizard_garageoperatorpinwizard_default_get",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": ".default_get()"
     },
     {
@@ -5493,7 +5493,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_operator_pin_wizard_garageoperatorpinwizard_action_confirm_pin",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": ".action_confirm_pin()"
     },
     {
@@ -5504,7 +5504,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_payment_recovery_wizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_payment_recovery_wizard.py"
     },
     {
@@ -5678,7 +5678,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_photo_gallery_wizard.py"
     },
     {
@@ -5690,7 +5690,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "garagephotogallerywizard"
     },
@@ -5701,7 +5701,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_py_depends",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "depends"
     },
@@ -5713,7 +5713,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_compute_header_info",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "._compute_header_info()"
     },
@@ -5725,7 +5725,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_get_all_source_attachments",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "._get_all_source_attachments()"
     },
@@ -5737,7 +5737,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_get_filtered_attachments",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "._get_filtered_attachments()"
     },
@@ -5749,7 +5749,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_classify_attachment",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "._classify_attachment()"
     },
@@ -5761,7 +5761,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_compute_gallery_data",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "._compute_gallery_data()"
     },
@@ -5773,7 +5773,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_compute_category_counts",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "._compute_category_counts()"
     },
@@ -5785,7 +5785,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_action_next",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": ".action_next()"
     },
@@ -5797,7 +5797,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_action_prev",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": ".action_prev()"
     },
@@ -5809,7 +5809,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_action_filter_all",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": ".action_filter_all()"
     },
@@ -5821,7 +5821,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_action_filter_papiers",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": ".action_filter_papiers()"
     },
@@ -5833,7 +5833,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_action_filter_chocs",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": ".action_filter_chocs()"
     },
@@ -5845,7 +5845,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_action_filter_atelier",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": ".action_filter_atelier()"
     },
@@ -5857,7 +5857,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_photo_gallery_wizard_garagephotogallerywizard_reopen_self",
-      "community": 20,
+      "community": 28,
       "community_name": "GaragePhotoGalleryWizard",
       "norm_label": "._reopen_self()"
     },
@@ -5868,8 +5868,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_stock_picker_wizard.py"
     },
     {
@@ -5881,8 +5881,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_garagestockpickerwizard",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "garagestockpickerwizard"
     },
     {
@@ -5892,8 +5892,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_py_model",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "model"
     },
     {
@@ -5904,8 +5904,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_garagestockpickerwizard_default_get",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": ".default_get()"
     },
     {
@@ -5916,8 +5916,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_garagestockpickerwizard_get_available_stock_lines",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "._get_available_stock_lines()"
     },
     {
@@ -5927,8 +5927,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_py_onchange",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "onchange"
     },
     {
@@ -5939,8 +5939,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_garagestockpickerwizard_onchange_stock_filter",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "._onchange_stock_filter()"
     },
     {
@@ -5951,8 +5951,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_garagestockpickerwizard_action_apply_pick",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": ".action_apply_pick()"
     },
     {
@@ -5964,8 +5964,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_stock_picker_wizard_garagestockpickerwizardline",
-      "community": 75,
-      "community_name": "GarageStockPickerWizard",
+      "community": 20,
+      "community_name": "wizard/__init__.py",
       "norm_label": "garagestockpickerwizardline"
     },
     {
@@ -5976,7 +5976,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_tablet_pairing_wizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garage_tablet_pairing_wizard.py"
     },
     {
@@ -5989,7 +5989,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_tablet_pairing_wizard_garagetabletpairingwizard",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "garagetabletpairingwizard"
     },
     {
@@ -6000,7 +6000,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_tablet_pairing_wizard_py_model",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": "model"
     },
     {
@@ -6012,7 +6012,7 @@
       "_origin": "ast",
       "id": "custom_addons_garage_repair_core_wizard_garage_tablet_pairing_wizard_garagetabletpairingwizard_default_get",
       "community": 20,
-      "community_name": "GaragePhotoGalleryWizard",
+      "community_name": "wizard/__init__.py",
       "norm_label": ".default_get()"
     },
     {
@@ -6570,105 +6570,6 @@
       "_origin": "ast",
       "id": "agent_4_mandatory_git_push_protocol_hostinger_staging_sync",
       "community": 8,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "4. mandatory git push protocol (hostinger staging sync)"
-    },
-    {
-      "label": "GEMINI.md",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "gemini",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "gemini.md"
-    },
-    {
-      "label": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_odoo_19_architectural_lock_agent_invariants",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "odoo 19 architectural lock & agent invariants"
-    },
-    {
-      "label": "1. COMPREHENSIVE COMPONENT WATCHLIST & BANNED PATTERNS",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L53",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_1_comprehensive_component_watchlist_banned_patterns",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "1. comprehensive component watchlist & banned patterns"
-    },
-    {
-      "label": "2. GROUND TRUTH ENGINE: THE LIVE ODOO 19 CONTAINER",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L77",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_2_ground_truth_engine_the_live_odoo_19_container",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "2. ground truth engine: the live odoo 19 container"
-    },
-    {
-      "label": "3. MANDATORY 3-STEP PRE-FLIGHT VERIFICATION PROTOCOL",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L99",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_3_mandatory_3_step_pre_flight_verification_protocol",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "3. mandatory 3-step pre-flight verification protocol"
-    },
-    {
-      "label": "Step 1: Automated Module Upgrade & Schema Validation",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L103",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_step_1_automated_module_upgrade_schema_validation",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "step 1: automated module upgrade & schema validation"
-    },
-    {
-      "label": "Step 2: Python ORM View Compilation Test",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L110",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_step_2_python_orm_view_compilation_test",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "step 2: python orm view compilation test"
-    },
-    {
-      "label": "Step 3: Deprecated Pattern Grep Audit",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L131",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_step_3_deprecated_pattern_grep_audit",
-      "community": 77,
-      "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
-      "norm_label": "step 3: deprecated pattern grep audit"
-    },
-    {
-      "label": "4. MANDATORY GIT PUSH PROTOCOL (HOSTINGER STAGING SYNC)",
-      "file_type": "document",
-      "source_file": "GEMINI.md",
-      "source_location": "L140",
-      "_origin": "ast",
-      "id": "users_dadworkingaccount_desktop_odoo_19_gemini_4_mandatory_git_push_protocol_hostinger_staging_sync",
-      "community": 77,
       "community_name": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
       "norm_label": "4. mandatory git push protocol (hostinger staging sync)"
     },
@@ -15381,94 +15282,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "gemini",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_odoo_19_architectural_lock_agent_invariants",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L53",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "users_dadworkingaccount_desktop_odoo_19_gemini_odoo_19_architectural_lock_agent_invariants",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_1_comprehensive_component_watchlist_banned_patterns",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L77",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "users_dadworkingaccount_desktop_odoo_19_gemini_odoo_19_architectural_lock_agent_invariants",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_2_ground_truth_engine_the_live_odoo_19_container",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L99",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "users_dadworkingaccount_desktop_odoo_19_gemini_odoo_19_architectural_lock_agent_invariants",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_3_mandatory_3_step_pre_flight_verification_protocol",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L140",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "users_dadworkingaccount_desktop_odoo_19_gemini_odoo_19_architectural_lock_agent_invariants",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_4_mandatory_git_push_protocol_hostinger_staging_sync",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L103",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "users_dadworkingaccount_desktop_odoo_19_gemini_3_mandatory_3_step_pre_flight_verification_protocol",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_step_1_automated_module_upgrade_schema_validation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L110",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "users_dadworkingaccount_desktop_odoo_19_gemini_3_mandatory_3_step_pre_flight_verification_protocol",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_step_2_python_orm_view_compilation_test",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "GEMINI.md",
-      "source_location": "L131",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "users_dadworkingaccount_desktop_odoo_19_gemini_3_mandatory_3_step_pre_flight_verification_protocol",
-      "target": "users_dadworkingaccount_desktop_odoo_19_gemini_step_3_deprecated_pattern_grep_audit",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "docs/README_MCP.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -15577,6 +15390,5 @@
       "confidence_score": 1.0
     }
   ],
-  "hyperedges": [],
-  "built_at_commit": "1f80ced66ee7ec3c67ea3932737de1768414fa86"
+  "hyperedges": []
 }

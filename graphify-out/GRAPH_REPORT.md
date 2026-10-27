@@ -5,14 +5,9 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 584 nodes · 772 edges · 80 communities (33 shown, 47 thin omitted)
+- 575 nodes · 764 edges · 77 communities (31 shown, 46 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
-
-## Graph Freshness
-- Built from commit: `1f80ced6`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - .write
@@ -35,7 +30,7 @@
 - ResUsers
 - .action_reception_open_payment_wizard
 - 3. MANDATORY 3-STEP PRE-FLIGHT VERIFICATION PROTOCOL
-- GaragePhotoGalleryWizard
+- wizard/__init__.py
 - .action_smart_whatsapp
 - GarageTrackingController
 - .action_create_or_view_repair_order
@@ -43,7 +38,7 @@
 - graphify — Universal P0 Invariant
 - workflows/graphify.md
 - .action_reception_open_billing_wizard
-- .action_create_or_view_claim
+- GaragePhotoGalleryWizard
 - .create
 - GarageInsuranceClaim
 - .action_reception_print_bl
@@ -60,7 +55,7 @@
 - .action_import_from_diagnostic_logs
 - .action_mark_parts_available
 - .action_client_approve
-- .action_open_pin_wizard
+- .action_create_or_view_claim
 - GarageRepairLaborLine
 - GarageRepairPayment
 - .action_repair_end
@@ -85,10 +80,7 @@
 - ._onchange_vehicle_id
 - deploy_to_hetzner.sh
 - Git Push & Remote Hostinger Staging Invariant
-- GarageStockPickerWizard
 - .submit_supplementary_diagnostic
-- ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS
-- GarageAiDiagnosticWizard
 - cockpit_submodule_sync.md
 
 ## God Nodes (most connected - your core abstractions)
@@ -109,7 +101,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (80 total, 47 thin omitted)
+## Communities (77 total, 46 thin omitted)
 
 ### Community 0 - ".write"
 Cohesion: 0.14
@@ -179,9 +171,9 @@ Nodes (3): depends, onchange, ResUsers
 Cohesion: 0.25
 Nodes (7): 1. COMPREHENSIVE COMPONENT WATCHLIST & BANNED PATTERNS, 2. GROUND TRUTH ENGINE: THE LIVE ODOO 19 CONTAINER, 3. MANDATORY 3-STEP PRE-FLIGHT VERIFICATION PROTOCOL, ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS, Step 1: Automated Module Upgrade & Schema Validation, Step 2: Python ORM View Compilation Test, Step 3: Deprecated Pattern Grep Audit
 
-### Community 20 - "GaragePhotoGalleryWizard"
-Cohesion: 0.08
-Nodes (9): GarageInsuranceInvoiceWizard, depends, Crée simultanément la facture d'assurance et la facture/reçu de franchise…, GarageOperatorPinWizard, model, GaragePhotoGalleryWizard, depends, GarageTabletPairingWizard (+1 more)
+### Community 20 - "wizard/__init__.py"
+Cohesion: 0.06
+Nodes (15): GarageAiDiagnosticWizard, onchange, Pré-remplit les tâches extraites si des lignes sont saisies., Lance l'interprétation IA et la création des micro-tâches dynamiques…, GarageInsuranceInvoiceWizard, depends, Crée simultanément la facture d'assurance et la facture/reçu de franchise…, GarageOperatorPinWizard (+7 more)
 
 ### Community 21 - ".action_smart_whatsapp"
 Cohesion: 0.20
@@ -211,34 +203,26 @@ Nodes (4): GarageRepairPartLine, model_create_multi, Génère le mouvement réel
 Cohesion: 0.29
 Nodes (3): Action explicite du Magasinier : valide le chiffrage, passe la réception à…, Envoie le devis chiffré par WhatsApp avec bouton de validation 1-clic., Ouvre le portail client dans un nouvel onglet.
 
-### Community 75 - "GarageStockPickerWizard"
-Cohesion: 0.28
-Nodes (4): GarageStockPickerWizard, GarageStockPickerWizardLine, model, onchange
-
-### Community 77 - "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS"
-Cohesion: 0.22
-Nodes (8): 1. COMPREHENSIVE COMPONENT WATCHLIST & BANNED PATTERNS, 2. GROUND TRUTH ENGINE: THE LIVE ODOO 19 CONTAINER, 3. MANDATORY 3-STEP PRE-FLIGHT VERIFICATION PROTOCOL, 4. MANDATORY GIT PUSH PROTOCOL (HOSTINGER STAGING SYNC), ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS, Step 1: Automated Module Upgrade & Schema Validation, Step 2: Python ORM View Compilation Test, Step 3: Deprecated Pattern Grep Audit
-
-### Community 78 - "GarageAiDiagnosticWizard"
-Cohesion: 0.25
-Nodes (4): GarageAiDiagnosticWizard, onchange, Pré-remplit les tâches extraites si des lignes sont saisies., Lance l'interprétation IA et la création des micro-tâches dynamiques…
+### Community 50 - ".action_create_or_view_claim"
+Cohesion: 0.20
+Nodes (3): Synchronise l'état des sous-tâches lors d'un déplacement de Grande Étape., Ouvre ou crée le dossier sinistre lié à cette réception avec matching fiable de…, Ouvre l'assistant de validation par code PIN pour la tablette partagée de…
 
 ## Knowledge Gaps
-- **44 isolated node(s):** `GARAGE_MODULE_SUBNAVS`, `ResConfigSettings`, `GarageStockPickerWizardLine`, `deploy_to_hetzner.sh script`, `CANONICAL ANDROID WORKSHOP TABLET CLIENT RULE & GRAPHIFY INVARIANT` (+39 more)
+- **38 isolated node(s):** `GARAGE_MODULE_SUBNAVS`, `ResConfigSettings`, `GarageStockPickerWizardLine`, `deploy_to_hetzner.sh script`, `CANONICAL ANDROID WORKSHOP TABLET CLIENT RULE & GRAPHIFY INVARIANT` (+33 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **47 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **46 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `GarageReception` connect `GarageReception` to `.action_reception_print_bl`, `models/__init__.py`, `.action_generate_specialty_checklist`, `._compute_can_toggle_workshop_tasks`, `.action_open_ai_diagnostic_wizard`, `._onchange_vehicle_id`, `.submit_supplementary_diagnostic`, `.write`, `.action_open_pin_wizard`, `.action_reception_open_payment_wizard`, `.action_smart_whatsapp`, `.action_create_or_view_repair_order`, `._read_group_stage_ids`, `.action_reception_open_billing_wizard`, `.action_create_or_view_claim`, `.create`?**
-  _High betweenness centrality (0.247) - this node is a cross-community bridge._
+- **Why does `GarageReception` connect `GarageReception` to `.action_reception_print_bl`, `models/__init__.py`, `.action_generate_specialty_checklist`, `._compute_can_toggle_workshop_tasks`, `.action_open_ai_diagnostic_wizard`, `._onchange_vehicle_id`, `.submit_supplementary_diagnostic`, `.write`, `.action_create_or_view_claim`, `.action_reception_open_payment_wizard`, `.action_smart_whatsapp`, `.action_create_or_view_repair_order`, `._read_group_stage_ids`, `.action_reception_open_billing_wizard`, `.create`?**
+  _High betweenness centrality (0.255) - this node is a cross-community bridge._
 - **Why does `GarageInsuranceClaim` connect `GarageInsuranceClaim` to `.write`, `.action_open_split_invoicing_wizard`, `models/__init__.py`, `.action_print_expert_report`, `.action_print_franchise_receipt`, `.action_view_amendments`, `.action_view_attachments`, `.action_view_invoices`, `.action_view_reception`, `.action_view_repair_order`, `onchange`, `.action_client_approve_expert`, `.create`?**
-  _High betweenness centrality (0.145) - this node is a cross-community bridge._
+  _High betweenness centrality (0.150) - this node is a cross-community bridge._
 - **Why does `RepairOrder` connect `RepairOrder` to `models/__init__.py`, `.action_mark_parts_partial`, `GarageRepairPartLine`, `.action_send_whatsapp_quote`, `.action_import_from_diagnostic_logs`, `.action_mark_parts_available`, `.action_client_approve`, `GarageRepairLaborLine`, `.action_repair_end`, `.action_view_parts_bl`, `.action_view_reception`, `.action_generate_bl`, `.action_open_billing_wizard`, `.action_view_claim`, `.action_open_payment_recovery_wizard`, `.action_open_stock_picker_wizard`?**
-  _High betweenness centrality (0.120) - this node is a cross-community bridge._
+  _High betweenness centrality (0.123) - this node is a cross-community bridge._
 - **What connects `GARAGE_MODULE_SUBNAVS`, `ResConfigSettings`, `GarageStockPickerWizardLine` to the rest of the system?**
-  _44 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _38 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `.write` be split into smaller, more focused modules?**
   _Cohesion score 0.14166666666666666 - nodes in this community are weakly interconnected._
 - **Should `models/__init__.py` be split into smaller, more focused modules?**
