@@ -1,0 +1,11 @@
+.git
+.gitignore
+db_data
+odoo_data
+*.dump
+*.sql
+*.pyc
+__pycache__
+.DS_Store
+graphify-out/cache
+scratch

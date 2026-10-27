@@ -1,6 +1,7 @@
 services:
   web:
-    image: odoo:19.0
+    build: .
+    image: odoo19_garage_app:latest
     container_name: odoo19_garage
     depends_on:
       db:
@@ -13,10 +14,8 @@ services:
       - USER=odoo
       - PASSWORD=odoo
     volumes:
-      - ./config:/etc/odoo
-      - ./custom_addons:/mnt/extra-addons
       - odoo_data:/var/lib/odoo
-    command: odoo -c /etc/odoo/odoo.conf --dev=reload,xml,qweb
+    command: odoo -c /etc/odoo/odoo.conf
     restart: unless-stopped
     networks:
       - default
