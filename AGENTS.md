@@ -21,8 +21,8 @@
 
 > [!CAUTION]
 > ## 🚨 MANDATORY P0 INVARIANT: COCKPIT SUBMODULE SYNCHRONIZATION (ZERO STRAY SUBMODULES) 🚨
-> For ANY modification, addition, or refactoring of the Workshop Cockpit (`garage.reception`, `view_garage_reception_form` in `custom_addons/garage_repair_core/views/garage_reception_views.xml`):
-> 1. **MANDATORY SKILL ACTIVATION**: The AI assistant MUST activate and adhere strictly to the **`cockpit-submodule-sync`** skill (`~/.gemini/config/skills/cockpit-submodule-sync/SKILL.md`).
+> For ANY modification, addition, or refactoring of the Workshop Cockpit (`garage.reception`, `view_garage_reception_form` in `custom_addons/garage_repair_core/views/garage_reception_views.xml`), OR whenever the user simply says "cockpit", "atelier", "split view", or "fiche réception":
+> 1. **MANDATORY AUTOMATIC SKILL ACTIVATION**: The AI assistant MUST unconditionally activate and adhere strictly to the **`cockpit-submodule-sync`** skill (`~/.gemini/config/skills/cockpit-submodule-sync/SKILL.md`). Saying "cockpit" immediately locks the assistant into this full protocol without requiring any manual invocation.
 > 2. **LIFECYCLE & DUAL-SURFACE GROUND TRUTH**:
 >    - **Mobile Origin (90% of Build)**: Data coming from the Android mobile/tablet client (`workshop_tablet_api.py`, `happy-faraday`) drives **90% of the vehicle lifecycle**.
 >    - **Surface A (Cockpit Command Deck)**: The 2-panel split view (`view_garage_reception_form` + `garage_cockpit_tabs.js`) is the eagle-eye control tower (`col-lg-4` Left Sidebar + `col-lg-8` Right Lifecycle Notebook Tabs: `tab_intake`, `tab_devis_active`, `tab_pieces_active`, `tab_travaux_active`, `tab_sinistre`, `tab_facturation_active`).

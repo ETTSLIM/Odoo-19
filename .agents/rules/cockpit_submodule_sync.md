@@ -2,10 +2,10 @@
 
 > [!CAUTION]
 > ## 🚨 MANDATORY P0 INVARIANT: COCKPIT SUBMODULE SYNCHRONIZATION (ZERO STRAY SUBMODULES) 🚨
-> For ANY modification, addition, or refactoring of the Workshop Cockpit (`garage.reception`, `view_garage_reception_form` in `custom_addons/garage_repair_core/views/garage_reception_views.xml`):
+> For ANY modification, addition, or refactoring of the Workshop Cockpit (`garage.reception`, `view_garage_reception_form` in `custom_addons/garage_repair_core/views/garage_reception_views.xml`), OR whenever the user simply says "cockpit", "atelier", "split view", or "fiche réception":
 > 
-> 1. **MANDATORY SKILL ACTIVATION**:
->    The AI assistant MUST activate and execute the **`cockpit-submodule-sync`** skill (`~/.gemini/config/skills/cockpit-submodule-sync/SKILL.md`).
+> 1. **MANDATORY AUTOMATIC SKILL ACTIVATION**:
+>    The AI assistant MUST unconditionally activate and execute the **`cockpit-submodule-sync`** skill (`~/.gemini/config/skills/cockpit-submodule-sync/SKILL.md`). Saying "cockpit" immediately locks the assistant into this full protocol without requiring any manual invocation.
 > 
 > 2. **LIFECYCLE & DUAL-SURFACE GROUND TRUTH**:
 >    - **Mobile Origin (90% of Build)**: Data coming from the Android mobile/tablet client (`workshop_tablet_api.py`, `happy-faraday`) drives 90% of the vehicle lifecycle (Check-in, OCR, 4x4 Photos, Darija Voice Diagnostic, Subtasks, Mechanic PIN sign-offs).
