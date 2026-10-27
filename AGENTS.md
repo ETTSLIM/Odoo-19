@@ -9,6 +9,16 @@
 > 4. **FALLBACK & WIKI**: When `graphify-out/graph.json` exists, always prioritize `graphify query` / `explain` / `path`. If the CLI is ever missing, fall back to `graphify-out/GRAPH_REPORT.md` or `graphify-out/wiki/index.md`.
 > 5. **MANDATORY POST-MODIFICATION AST SYNC & AUDIT**: After modifying or adding any Python model, XML view, or controller, immediately run `graphify update .` to synchronize the knowledge graph. Verify downstream dependencies with `graphify explain "<ModifiedSymbol>"` before running container verification.
 
+> [!CAUTION]
+> ## 🚨 MANDATORY P0 INVARIANT: ZERO-COMPROMISE PLAN FIDELITY & ATOMIC EXECUTION 🚨
+> Whenever preparing a plan (`/plan`), reviewing an audit, or executing plan tasks:
+> 1. **MANDATORY SKILL ACTIVATION**: The AI assistant MUST activate and adhere strictly to the **`plan-fidelity-auditor`** skill (`~/.gemini/config/skills/plan-fidelity-auditor/SKILL.md`).
+> 2. **ZERO SCOPE DILUTION / COMPROMISE**:
+>    - If an audit states `[COMBINE]`, substituting a cosmetic rename (e.g. adding numbers `1.` and `2.` to separate tabs) is **STRICTLY PROHIBITED**. `[COMBINE]` strictly means merging the elements into the same parent container (`<page>`, `<group>`, etc.).
+>    - If an audit states `[ELIMINATE]`, the element must be completely removed or hidden with `invisible="1"`.
+> 3. **MANDATORY VISUAL WIREFRAME**: Every plan modifying UI forms, tabs, or menus must provide an explicit ASCII wireframe mockup showing the human user experience before and after the change.
+> 4. **PROGRAMMATIC ARCHITECTURAL ASSERTIONS**: Before declaring an execution complete, the assistant must run an active XPath/AST assertion script verifying exact element counts and parent-child container relationships.
+
 > **CRITICAL DIRECTIVE FOR ALL AGENTS WORKING IN THIS REPOSITORY:**
 > You are developing for **Odoo 19.0** running on **Python 3.12** and **PostgreSQL 16**.
 > Older Odoo paradigms (Odoo 11–17) are **strictly forbidden**. Under no circumstances should you generate legacy syntax.

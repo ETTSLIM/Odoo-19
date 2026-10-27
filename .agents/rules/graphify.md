@@ -1,14 +1,15 @@
 ---
 trigger: always_on
-description: Consult the graphify knowledge graph at graphify-out/ for codebase and architecture questions.
+description: Mandatory Graphify-First Protocol — Every turn must query the graphify knowledge graph before any action.
 ---
 
-## graphify
+## graphify — Universal P0 Invariant
 
-This project has a graphify knowledge graph at graphify-out/.
+This project has an authoritative AST knowledge graph at `graphify-out/graph.json`.
 
-Rules:
-- For codebase or architecture questions, when `graphify-out/graph.json` exists, first run `graphify query "<question>"` (CLI) or `query_graph` (MCP). Use `graphify path "<A>" "<B>"` / `shortest_path` for relationships and `graphify explain "<concept>"` / `get_node` for focused concepts. These return a scoped subgraph, usually much smaller than `GRAPH_REPORT.md` or raw grep output.
-- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context
-- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
+### Non-Negotiable Turn-Level Invariants:
+1. **TOOL CALL #1 MUST BE GRAPHIFY**: For EVERY single turn — including planning, clarifying, follow-ups, container testing, bug diagnosing, and code modifications — the AI assistant MUST execute `graphify query "<topic>"` or `graphify explain "<Symbol>"` via `run_command` BEFORE executing any other tool call (`docker exec`, `read_file`, `write_file`, or answering).
+2. **ZERO ASSUMPTIONS & ZERO SKIP**: Never assume "Graphify was already run in a previous turn". Every turn must explicitly re-anchor its scope via Graphify.
+3. **RELATIONSHIP & PATH LOOKUPS**: Use `graphify path "<A>" "<B>"` for inter-model relations and `graphify explain "<concept>"` for focused AST definitions.
+4. **FALLBACK & WIKI**: If graphify CLI is missing, navigate `graphify-out/wiki/index.md` or `graphify-out/GRAPH_REPORT.md`.
+5. **MANDATORY POST-MODIFICATION AST SYNC**: Immediately after editing or creating any Python, XML, SCSS, or JS file, run `graphify update .` to synchronize the AST graph, and verify downstream impacts before running tests.

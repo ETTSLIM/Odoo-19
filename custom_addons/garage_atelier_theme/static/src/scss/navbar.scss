@@ -58,7 +58,7 @@
 
     // Top Navigation Links (Fixes the Purple Pill and Ugly Blue Block issues)
     .o_menu_sections {
-        .o_nav_entry, .dropdown-toggle {
+        .o_nav_entry, .dropdown-toggle, button[data-menu-xmlid] {
             background: transparent !important;
             color: #cbd5e1 !important;
             font-size: 0.9rem !important;
@@ -75,11 +75,12 @@
             }
 
             &.active, &.o_garage_tab_active {
-                background: rgba(37, 99, 235, 0.28) !important;
-                color: #ffffff !important;
+                background: #1e293b !important;
+                color: #38bdf8 !important;
                 font-weight: 700 !important;
-                border-bottom: 2px solid #38bdf8 !important;
-                box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
+                border: 1px solid #38bdf8 !important;
+                border-bottom: 3px solid #38bdf8 !important;
+                box-shadow: 0 0 12px rgba(56, 189, 248, 0.3) !important;
             }
 
             // Harmonious dropdown open state (smooth integration with dark navbar)
@@ -146,21 +147,43 @@
 }
 
 // ============================================================================
-// Garage Pro Option 1 - Barre Horizontale de Sous-Navigation Contextuelle
+// Garage Pro - Barre Horizontale de Sous-Navigation Contextuelle
+// Alignée dynamiquement sous le module actif dans la top navbar (jamais à l'extrême gauche)
 // ============================================================================
 .o_garage_subnav_bar {
     display: flex;
     align-items: center;
-    gap: 8px;
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
-    padding: 0 16px;
+    padding: 0;
     height: 42px;
+    width: 100%;
     overflow-x: auto;
     scrollbar-width: thin;
     white-space: nowrap;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
     z-index: 10;
+
+    .o_garage_subnav_wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 0 12px;
+    }
+
+    .o_garage_subnav_context_label {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: #1e293b;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+
+        i.fa-angle-right {
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+    }
 
     .o_garage_subnav_pill {
         display: inline-flex;
@@ -171,12 +194,13 @@
         color: #475569;
         padding: 5px 12px;
         border-radius: 6px;
-        border: 1px solid transparent;
+        border: 1px solid #cbd5e1;
         text-decoration: none;
         cursor: pointer;
         transition: all 0.15s ease;
         user-select: none;
-        background: transparent;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 
         i {
             font-size: 0.875rem;
@@ -185,9 +209,9 @@
         }
 
         &:hover {
-            background: #edf2f7;
+            background: #f1f5f9;
             color: #0f172a;
-            border-color: #cbd5e1;
+            border-color: #94a3b8;
 
             i {
                 color: #2563eb;
@@ -198,11 +222,48 @@
             background: #2563eb !important;
             color: #ffffff !important;
             border-color: #1d4ed8 !important;
-            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3) !important;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3) !important;
 
             i {
                 color: #ffffff !important;
             }
         }
+    }
+}
+
+// ============================================================================
+// Breadcrumbs & Navigation Trail - Crisp & Readable on All Pages
+// ============================================================================
+.o_control_panel {
+    .breadcrumb, ol.breadcrumb {
+        margin-bottom: 0 !important;
+        align-items: center;
+
+        .breadcrumb-item {
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            color: #64748b !important;
+
+            a {
+                color: #2563eb !important;
+                font-weight: 600 !important;
+                text-decoration: none !important;
+
+                &:hover {
+                    text-decoration: underline !important;
+                    color: #1d4ed8 !important;
+                }
+            }
+
+            &.active, & > span {
+                color: #0f172a !important;
+                font-weight: 700 !important;
+            }
+        }
+    }
+
+    .o_last_breadcrumb_item {
+        font-weight: 700 !important;
+        color: #0f172a !important;
     }
 }

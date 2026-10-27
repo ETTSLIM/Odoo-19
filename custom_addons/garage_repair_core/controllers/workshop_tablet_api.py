@@ -451,26 +451,33 @@ class GarageWorkshopTabletApiController(http.Controller):
 
         prompt = (
             "CRITICAL AUTOMOTIVE DOCUMENT OCR & VEHICLE REGISTRATION PROTOCOL (MOROCCO):\n"
-            "You are an expert AI OCR specialist for Moroccan vehicle documents (Carte Grise - Certificat d'Immatriculation) "
+            "You are an expert AI OCR specialist for Moroccan vehicle documents (Carte Grise - Certificat d'Immatriculation), "
+            "insurance certificates (Attestation d'Assurance Automobile / Carte Verte), "
             "and vehicle odometer dashboards (Compteur Kilométrique).\n"
-            "Examine this image carefully and extract all relevant vehicle data.\n\n"
+            "Examine this image carefully and extract all relevant vehicle and insurance data.\n\n"
             "RULES FOR MOROCCAN CARTE GRISE (RECTO OU VERSO):\n"
             "1. 'matricule': Registration plate number in standard Moroccan format (e.g. '12345 | أ | 6' or '12345-A-6' or 'WW 123456'). Keep the Arabic character (e.g. أ, ب, د, هـ, etc.) if visible, or its letter code.\n"
             "2. 'brand_model': Combined Make and Model (e.g. 'DACIA DUSTER', 'RENAULT CLIO 4', 'PEUGEOT 208', 'VOLKSWAGEN GOLF 7'). Look at D.1 (Marque) and D.3 (Dénomination commerciale / Modèle).\n"
             "3. 'vin': Exact 17-character Vehicle Identification Number (NIV / Numéro de châssis / E). Example: 'VF1HSD...'.\n"
             "4. 'customer_name': Full Name of the owner / titulaire (Nom et prénom du propriétaire / C.1 / C.4.1).\n"
             "5. 'odometer': Total mileage if indicated on the document, otherwise null.\n\n"
+            "RULES FOR MOROCCAN ATTESTATION D'ASSURANCE (CARTE VERTE / POLICE):\n"
+            "1. 'compagnie_assurance': Exact company name (e.g. 'Wafa Assurance', 'RMA', 'AtlantaSanad', 'AXA Assurance Maroc', 'Sanlam', 'MAMDA', 'MCMA', 'Allianz Maroc').\n"
+            "2. 'num_police': Policy or certificate reference number (Numéro de Police / Attestation).\n"
+            "3. 'matricule', 'brand_model', 'customer_name': Extract if clearly present on the insurance certificate.\n\n"
             "RULES FOR ODOMETER DASHBOARD (COMPTEUR KILOMÉTRIQUE):\n"
             "1. 'odometer': Integer value of total accumulated kilometers (e.g. 142500). Ignore trip meters (Trip A / Trip B) unless it is the only displayed mileage.\n"
             "2. 'matricule', 'brand_model', 'vin', 'customer_name': null unless clearly visible.\n\n"
             "Return STRICTLY a JSON object matching this schema:\n"
             "{\n"
             "  'status': 'ok',\n"
-            "  'doc_type': 'carte_grise' | 'compteur' | 'other',\n"
+            "  'doc_type': 'carte_grise' | 'assurance' | 'compteur' | 'other',\n"
             "  'matricule': 'string or empty',\n"
             "  'brand_model': 'string or empty',\n"
             "  'vin': 'string or empty',\n"
             "  'customer_name': 'string or empty',\n"
+            "  'compagnie_assurance': 'string or empty',\n"
+            "  'num_police': 'string or empty',\n"
             "  'odometer': integer or null,\n"
             "  'confidence': float between 0.0 and 1.0\n"
             "}"
@@ -509,6 +516,8 @@ class GarageWorkshopTabletApiController(http.Controller):
                         'brand_model': p_data.get('brand_model') or '',
                         'vin': p_data.get('vin') or '',
                         'customer_name': p_data.get('customer_name') or '',
+                        'compagnie_assurance': p_data.get('compagnie_assurance') or '',
+                        'num_police': p_data.get('num_police') or '',
                         'odometer': odo_val,
                         'confidence': p_data.get('confidence', 0.95),
                         'message': 'Extraction OCR réussie',
@@ -703,6 +712,7 @@ class GarageWorkshopTabletApiController(http.Controller):
                 'symptoms': audio_note or ("En attente de diagnostic mécanicien" if is_mode_a_receptionist else "Check-in Atelier"),
                 'is_assurance': is_assurance,
                 'stock_status': 'attente_diag' if is_mode_a_receptionist else 'envoye_stock',
+                'insurance_company_custom': (body.get('compagnie_assurance') or body.get('insurance_company') or '').strip(),
             }
             if odometer_val is not None:
                 try:
@@ -747,8 +757,10 @@ class GarageWorkshopTabletApiController(http.Controller):
                                 rec.write({'carte_grise_ids': [Command.link(att.id)]})
                             elif c_type == 'permis':
                                 rec.write({'permis_ids': [Command.link(att.id)]})
-                            elif c_type in ('constat', 'assurance'):
+                            elif c_type == 'constat':
                                 rec.write({'constat_ids': [Command.link(att.id)]})
+                            elif c_type == 'assurance':
+                                rec.write({'assurance_ids': [Command.link(att.id)]})
                     except Exception as ie:
                         _logger.warning("Error saving categorized checkin image: %s", ie)
 
@@ -976,8 +988,10 @@ class GarageWorkshopTabletApiController(http.Controller):
                 rec.write({'constat_ids': [Command.link(att.id)]})
                 if rec.claim_id:
                     rec.claim_id.write({'constat_ids': [Command.link(att.id)]})
-            elif doc_type == 'assurance' and rec.claim_id:
-                rec.claim_id.write({'assurance_ids': [Command.link(att.id)]})
+            elif doc_type == 'assurance':
+                rec.write({'assurance_ids': [Command.link(att.id)]})
+                if rec.claim_id:
+                    rec.claim_id.write({'assurance_ids': [Command.link(att.id)]})
 
         return _json_response({
             'status': 'ok',

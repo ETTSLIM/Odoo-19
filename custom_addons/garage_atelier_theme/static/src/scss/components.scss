@@ -199,3 +199,48 @@
         }
     }
 }
+
+// --- 6. Front Door Create Button Affordance ([ ＋ Nouveau ]) ---
+.o_control_panel_main_buttons .o_form_button_create,
+.o_control_panel_main_buttons .o_list_button_add {
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    border-radius: var(--g-control-radius, 10px) !important;
+    padding: 5px 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    border: 1px solid var(--g-border-default, #cbd5e1) !important;
+    color: var(--g-text-primary, #1e293b) !important;
+    background-color: #ffffff !important;
+    transition: all 0.15s ease !important;
+
+    &::before {
+        content: "\f067"; // FontAwesome fa-plus
+        font-family: FontAwesome;
+        font-size: 0.8rem;
+        color: var(--g-color-accent, #2563eb);
+    }
+
+    &:hover {
+        border-color: var(--g-color-accent, #2563eb) !important;
+        color: var(--g-color-accent, #2563eb) !important;
+        background-color: #f8fafc !important;
+    }
+}
+
+// --- 7. Garage Cockpit 2-Panel Layout & Locked Tabs Affordance ---
+.o_garage_cockpit_sidebar {
+    background-color: var(--g-surface-muted, #f8fafc);
+    border: 1px solid var(--g-border-subtle, #e2e8f0);
+    border-radius: var(--g-card-radius, 14px);
+    padding: 16px;
+    height: fit-content;
+}
+
+.o_notebook .nav-tabs .nav-link:has(.fa-lock) {
+    color: var(--g-text-muted, #64748b) !important;
+    opacity: 0.85;
+    cursor: pointer;
+}
+

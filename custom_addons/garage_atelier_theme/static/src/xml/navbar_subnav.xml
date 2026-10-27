@@ -3,17 +3,24 @@
     <t t-inherit="web.NavBar" t-inherit-mode="extension">
         <xpath expr="//header[hasclass('o_navbar')]" position="inside">
             <div t-if="isGarageActive and currentGarageSubnavItems.length" class="o_garage_subnav_bar">
-                <t t-foreach="currentGarageSubnavItems" t-as="pill" t-key="pill.id">
-                    <button
-                        type="button"
-                        t-attf-class="o_garage_subnav_pill {{ garageState.activePillId === pill.id ? 'active o_garage_subnav_active' : '' }}"
-                        t-on-click="() => this.onGarageSubnavPillClick(pill)"
-                        t-att-title="pill.name"
-                    >
-                        <i t-attf-class="fa {{ pill.icon }}" t-att-title="pill.name" aria-hidden="true"/>
-                        <span t-esc="pill.name"/>
-                    </button>
-                </t>
+                <div class="o_garage_subnav_wrapper">
+                    <div class="o_garage_subnav_context_label d-inline-flex align-items-center me-2 pe-2 border-end">
+                        <i t-attf-class="fa {{ activeModuleIcon }} me-1 text-primary"/>
+                        <span t-esc="activeModuleName" class="fw-bold text-dark"/>
+                        <i class="fa fa-angle-right ms-2 text-muted"/>
+                    </div>
+                    <t t-foreach="currentGarageSubnavItems" t-as="pill" t-key="pill.id">
+                        <button
+                            type="button"
+                            t-attf-class="o_garage_subnav_pill {{ garageState.activePillId === pill.id ? 'active o_garage_subnav_active' : '' }}"
+                            t-on-click="() => this.onGarageSubnavPillClick(pill)"
+                            t-att-title="pill.name"
+                        >
+                            <i t-attf-class="fa {{ pill.icon }}" t-att-title="pill.name" aria-hidden="true"/>
+                            <span t-esc="pill.name"/>
+                        </button>
+                    </t>
+                </div>
             </div>
         </xpath>
     </t>

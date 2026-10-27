@@ -146,6 +146,29 @@ class GarageReception(models.Model):
     ro_client_approval_status = fields.Selection(related='repair_order_id.client_approval_status', string="Accord Devis", readonly=True)
     ro_is_invoiced_officially = fields.Boolean(related='repair_order_id.is_invoiced_officially', string="Facturé Officiellement", readonly=True)
 
+    # Duplication UX Submodule repair.order (Pièces, MO, Paiements & Totaux pour ce dossier)
+    parts_line_ids = fields.One2many(related='repair_order_id.garage_parts_lines', readonly=False, string="Pièces Détachées Chiffrées")
+    labor_line_ids = fields.One2many(related='repair_order_id.garage_labor_lines', readonly=False, string="Main-d'Œuvre & Travaux")
+    payment_ids = fields.One2many(related='repair_order_id.payment_ids', readonly=True, string="Historique Règlements")
+    amount_parts_total = fields.Monetary(related='repair_order_id.amount_parts_untaxed', string="Total Pièces HT", readonly=True)
+    amount_labor_total = fields.Monetary(related='repair_order_id.amount_labor_untaxed', string="Total MO HT", readonly=True)
+    amount_untaxed_total = fields.Monetary(related='repair_order_id.amount_untaxed_total', string="Total Général HT", readonly=True)
+    amount_tax_total = fields.Monetary(related='repair_order_id.amount_tax_total', string="TVA (20%)", readonly=True)
+
+    # Duplication UX Submodule garage.insurance.claim (Expert, Bon d'Accord, Décompte Scindé pour ce sinistre)
+    claim_number = fields.Char(related='claim_id.claim_number', string="N° Dossier Sinistre", readonly=True)
+    claim_police_number = fields.Char(related='claim_id.police_number', string="N° Police Assuré", readonly=True)
+    claim_expert_cabinet_id = fields.Many2one(related='claim_id.expert_cabinet_id', string="Cabinet d'Expertise", readonly=True)
+    claim_expert_name = fields.Char(related='claim_id.expert_name', string="Nom Expert", readonly=True)
+    claim_expert_phone = fields.Char(related='claim_id.expert_phone', string="Tél Expert", readonly=True)
+    claim_expert_visit_date = fields.Date(related='claim_id.expert_visit_date', string="Date Visite Expert", readonly=True)
+    claim_accord_date = fields.Date(related='claim_id.accord_date', string="Date Bon d'Accord", readonly=True)
+    claim_accord_amount_ttc = fields.Monetary(related='claim_id.expert_accord_amount_ttc', string="Total Agréé Expert", readonly=True)
+    claim_insurance_net_payable = fields.Monetary(related='claim_id.insurance_net_payable', string="Prise en Charge Compagnie", readonly=True)
+    claim_customer_payable = fields.Monetary(related='claim_id.customer_payable', string="Part Franchise Client", readonly=True)
+    claim_client_accord_status = fields.Selection(related='claim_id.client_accord_status', string="Accord Client Sinistre", readonly=True)
+    claim_amendment_ids = fields.One2many(related='claim_id.amendment_ids', string="Avenants Dégâts Masqués", readonly=True)
+
     @api.depends('repair_order_id.currency_id')
     def _compute_currency_id(self):
         default_curr = self.env.company.currency_id
@@ -267,6 +290,12 @@ class GarageReception(models.Model):
         'reception_id', 'attachment_id',
         string="Constat Amiable"
     )
+    assurance_ids = fields.Many2many(
+        'ir.attachment', 'garage_reception_assurance_rel',
+        'reception_id', 'attachment_id',
+        string="Attestation d'Assurance"
+    )
+    insurance_company_custom = fields.Char(string="Compagnie d'Assurance Détectée")
     attachment_count = fields.Integer(string="Photos", compute='_compute_attachment_count')
     photos_grid_html = fields.Html(
         string="Galerie Photos & Documents",
@@ -306,62 +335,203 @@ class GarageReception(models.Model):
             all_atts = rec.attachment_ids | rec.carte_grise_ids | rec.permis_ids | rec.constat_ids
             rec.attachment_count = len(all_atts)
 
-    @api.depends('attachment_ids', 'carte_grise_ids', 'permis_ids', 'constat_ids')
+    @api.depends('attachment_ids', 'carte_grise_ids', 'permis_ids', 'constat_ids', 'assurance_ids')
     def _compute_photos_grid_html(self):
-        """Génère une grille compacte et fluide de toutes les photos avec prévisualisation modale plein écran sans téléchargement."""
+        """Génère une grille 4 sous 4 des photos du véhicule, avec slots canoniques Android,
+        tri des photos existantes en premier, et placeholders génériques pour les photos manquantes."""
+        canonical_slots = [
+            {
+                'key': 'choc_avant',
+                'title': "Photo Véhicule (Face Avant / Choc)",
+                'badge': "Face Avant",
+                'badge_class': "bg-primary text-white",
+                'icon': "fa-car",
+                'keywords': ['face avant', 'choc_avant', 'avant', 'front'],
+            },
+            {
+                'key': 'choc_arriere',
+                'title': "Dégât / Choc Arrière",
+                'badge': "Choc Arrière",
+                'badge_class': "bg-primary text-white",
+                'icon': "fa-car",
+                'keywords': ['choc_arriere', 'arriere', 'arrière', 'rear'],
+            },
+            {
+                'key': 'choc_cote',
+                'title': "Dégât / Choc Côtés",
+                'badge': "Choc Côtés",
+                'badge_class': "bg-primary text-white",
+                'icon': "fa-car",
+                'keywords': ['choc_cote', 'cote', 'côté', 'flanc', 'lateral'],
+            },
+            {
+                'key': 'compteur',
+                'title': "Compteur Kilométrique",
+                'badge': "Compteur",
+                'badge_class': "bg-info text-dark",
+                'icon': "fa-dashboard",
+                'keywords': ['compteur', 'odometer', 'km'],
+            },
+            {
+                'key': 'carte_grise_recto',
+                'title': "Carte Grise (Face Avant)",
+                'badge': "Carte Grise (Recto)",
+                'badge_class': "bg-dark text-white",
+                'icon': "fa-id-card",
+                'keywords': ['carte grise (face avant)', 'carte_grise_recto', 'recto'],
+                'field': 'carte_grise_ids',
+                'index': 0,
+            },
+            {
+                'key': 'carte_grise_verso',
+                'title': "Carte Grise (Face Arrière)",
+                'badge': "Carte Grise (Verso)",
+                'badge_class': "bg-dark text-white",
+                'icon': "fa-id-card",
+                'keywords': ['carte grise (face arriere)', 'carte grise (face arrière)', 'carte_grise_verso', 'verso'],
+                'field': 'carte_grise_ids',
+                'index': 1,
+            },
+            {
+                'key': 'permis',
+                'title': "Permis de Conduire",
+                'badge': "Permis",
+                'badge_class': "bg-success text-white",
+                'icon': "fa-address-card",
+                'keywords': ['permis', 'conduire'],
+                'field': 'permis_ids',
+            },
+            {
+                'key': 'constat',
+                'title': "Constat Amiable / Assurance",
+                'badge': "Constat / Assurance",
+                'badge_class': "bg-warning text-dark",
+                'icon': "fa-file-text-o",
+                'keywords': ['constat', 'assurance', 'attestation'],
+                'field': 'constat_ids',
+            },
+        ]
+
         for rec in self:
-            all_items = []
-            seen_ids = set()
-
-            def _append(att, label, badge_style):
-                if att.id and att.id not in seen_ids:
-                    seen_ids.add(att.id)
-                    all_items.append({
-                        'id': att.id,
-                        'name': att.name or _("Photo"),
-                        'label': label,
-                        'badge_style': badge_style,
-                        'url': f"/web/image/{att.id}",
-                    })
-
-            for a in rec.carte_grise_ids:
-                _append(a, "Carte Grise", "bg-primary text-white")
-            for a in rec.permis_ids:
-                _append(a, "Permis", "bg-info text-dark")
-            for a in rec.constat_ids:
-                _append(a, "Constat", "bg-warning text-dark")
-            for a in rec.attachment_ids:
-                _append(a, "Inspection", "bg-secondary text-white")
-
-            if not all_items:
-                rec.photos_grid_html = Markup(
-                    '<div class="text-center p-3 text-muted border rounded bg-light">'
-                    '<i class="fa fa-camera fa-2x mb-2 d-block opacity-50" title="Aucune photo"/>'
-                    '<span>Aucune photo ou document numérisé pour cette réception.</span>'
-                    '</div>'
-                )
-                continue
-
-            cards = []
+            pool = list(rec.attachment_ids | rec.carte_grise_ids | rec.permis_ids | rec.constat_ids | rec.assurance_ids)
+            consumed_ids = set()
+            existing_cards = []
+            missing_cards = []
             modals = []
-            for item in all_items:
-                aid = item['id']
-                aname = item['name']
-                lbl = item['label']
-                bst = item['badge_style']
-                aurl = item['url']
+
+            # 1. Traitement des 8 slots canoniques Android
+            for slot in canonical_slots:
+                matched_att = None
+
+                # Priorité au champ Many2many dédié s'il est spécifié
+                field_name = slot.get('field')
+                if field_name:
+                    field_val = getattr(rec, field_name, False)
+                    if field_val:
+                        atts = [a for a in field_val if a.id not in consumed_ids]
+                        idx = slot.get('index')
+                        if idx is not None and len(atts) > idx:
+                            matched_att = atts[idx]
+                        elif atts:
+                            matched_att = atts[0]
+
+                # Recherche par mots-clés dans les pièces jointes restantes
+                if not matched_att:
+                    for att in pool:
+                        if att.id in consumed_ids:
+                            continue
+                        name_lower = (att.name or '').lower()
+                        if any(kw in name_lower for kw in slot['keywords']):
+                            matched_att = att
+                            break
+
+                if matched_att:
+                    consumed_ids.add(matched_att.id)
+                    aid = matched_att.id
+                    aname = matched_att.name or slot['title']
+                    lbl = slot['badge']
+                    bst = slot['badge_class']
+                    aurl = f"/web/image/{aid}"
+                    mid = f"recPhotoModal_{rec.id}_{aid}"
+
+                    existing_cards.append(
+                        f'<div class="col">'
+                        f'  <div class="card h-100 shadow-sm border text-center p-2" style="cursor: pointer; background: #ffffff;"'
+                        f'       data-bs-toggle="modal" data-bs-target="#{mid}">'
+                        f'    <div style="height: 110px; overflow: hidden; background: #1e293b; display: flex; align-items: center; justify-content: center;" class="rounded mb-2 position-relative">'
+                        f'      <img src="{aurl}" alt="{aname}" style="max-height: 100%; max-width: 100%; object-fit: cover;" class="rounded"/>'
+                        f'      <span class="position-absolute top-0 end-0 m-1 badge bg-dark bg-opacity-75" style="font-size: 0.65rem;"><i class="fa fa-search-plus" title="Agrandir"/></span>'
+                        f'    </div>'
+                        f'    <div>'
+                        f'      <span class="badge {bst} text-truncate d-inline-block mb-1 px-2 py-1" style="font-size: 0.72rem;">{lbl}</span>'
+                        f'      <span class="text-dark fw-semibold text-truncate d-block small" title="{aname}">{aname}</span>'
+                        f'    </div>'
+                        f'  </div>'
+                        f'</div>'
+                    )
+
+                    modals.append(
+                        f'<div class="modal fade" id="{mid}" tabindex="-1" aria-hidden="true">'
+                        f'  <div class="modal-dialog modal-dialog-centered modal-lg">'
+                        f'    <div class="modal-content shadow-lg">'
+                        f'      <div class="modal-header py-2">'
+                        f'        <h6 class="modal-title fw-bold text-dark"><i class="fa fa-picture-o text-primary me-2"/>{aname} ({lbl})</h6>'
+                        f'        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
+                        f'      </div>'
+                        f'      <div class="modal-body text-center p-2 bg-dark">'
+                        f'        <img src="{aurl}" alt="{aname}" style="max-height: 80vh; max-width: 100%; object-fit: contain; border-radius: 4px;"/>'
+                        f'      </div>'
+                        f'      <div class="modal-footer py-1 d-flex justify-content-between">'
+                        f'        <a href="{aurl}?download=true" class="btn btn-sm btn-outline-secondary"><i class="fa fa-download me-1"/>Télécharger original</a>'
+                        f'        <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Fermer</button>'
+                        f'      </div>'
+                        f'    </div>'
+                        f'  </div>'
+                        f'</div>'
+                    )
+                else:
+                    # Slot canonique non capturé -> Placeholder générique
+                    icon_cls = slot['icon']
+                    stitle = slot['title']
+                    sbadge = slot['badge']
+                    missing_cards.append(
+                        f'<div class="col">'
+                        f'  <div class="card h-100 text-center p-2" style="border: 2px dashed #cbd5e1; background: #f8fafc;">'
+                        f'    <div style="height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f5f9;" class="rounded mb-2 text-muted">'
+                        f'      <i class="fa {icon_cls} fa-2x mb-1 opacity-50" title="{stitle}"/>'
+                        f'      <span class="small text-muted" style="font-size: 0.70rem;">Non capturée</span>'
+                        f'    </div>'
+                        f'    <div>'
+                        f'      <span class="badge bg-secondary-subtle text-secondary border text-truncate d-inline-block mb-1 px-2 py-1" style="font-size: 0.70rem;">{sbadge}</span>'
+                        f'      <span class="text-muted text-truncate d-block small" title="{stitle}">{stitle}</span>'
+                        f'    </div>'
+                        f'  </div>'
+                        f'</div>'
+                    )
+
+            # 2. Ajout des photos supplémentaires éventuelles (hors 8 slots)
+            for att in pool:
+                if att.id in consumed_ids:
+                    continue
+                consumed_ids.add(att.id)
+                aid = att.id
+                aname = att.name or _("Photo Atelier")
+                lbl = _("Inspection / Atelier")
+                bst = "bg-secondary text-white"
+                aurl = f"/web/image/{aid}"
                 mid = f"recPhotoModal_{rec.id}_{aid}"
 
-                cards.append(
+                existing_cards.append(
                     f'<div class="col">'
-                    f'  <div class="card h-100 shadow-sm border text-center p-1" style="cursor: pointer;"'
+                    f'  <div class="card h-100 shadow-sm border text-center p-2" style="cursor: pointer; background: #ffffff;"'
                     f'       data-bs-toggle="modal" data-bs-target="#{mid}">'
-                    f'    <div style="height: 95px; overflow: hidden; background: #212529; display: flex; align-items: center; justify-content: center;" class="rounded mb-1">'
+                    f'    <div style="height: 110px; overflow: hidden; background: #1e293b; display: flex; align-items: center; justify-content: center;" class="rounded mb-2 position-relative">'
                     f'      <img src="{aurl}" alt="{aname}" style="max-height: 100%; max-width: 100%; object-fit: cover;" class="rounded"/>'
+                    f'      <span class="position-absolute top-0 end-0 m-1 badge bg-dark bg-opacity-75" style="font-size: 0.65rem;"><i class="fa fa-search-plus" title="Agrandir"/></span>'
                     f'    </div>'
                     f'    <div>'
-                    f'      <span class="badge {bst} text-truncate d-block" style="font-size: 0.70rem;" title="{aname}">{lbl}</span>'
-                    f'      <span class="text-muted text-truncate d-block" style="font-size: 0.68rem;" title="{aname}">{aname}</span>'
+                    f'      <span class="badge {bst} text-truncate d-inline-block mb-1 px-2 py-1" style="font-size: 0.72rem;">{lbl}</span>'
+                    f'      <span class="text-dark fw-semibold text-truncate d-block small" title="{aname}">{aname}</span>'
                     f'    </div>'
                     f'  </div>'
                     f'</div>'
@@ -387,9 +557,11 @@ class GarageReception(models.Model):
                     f'</div>'
                 )
 
+            # 3. Assemblage final : Photos existantes triées en PREMIER, puis placeholders manquants
+            all_cards = existing_cards + missing_cards
             html_output = (
-                f'<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2">'
-                f'{"".join(cards)}'
+                f'<div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">'
+                f'{"".join(all_cards)}'
                 f'</div>'
                 f'{"".join(modals)}'
             )
@@ -524,6 +696,11 @@ class GarageReception(models.Model):
         # 4. Synchronisation de l'état du Repair Order Odoo standard
         if 'stage_id' in vals and not self.env.context.get('skip_ro_sync'):
             for rec in self:
+                if rec.stage_sequence >= 20 and not rec.repair_order_id:
+                    try:
+                        rec.action_create_or_view_repair_order()
+                    except Exception as ro_err:
+                        _logger.warning("Auto-création de l'ordre de réparation : %s", ro_err)
                 ro = rec.repair_order_id
                 if ro and ro.exists():
                     target_seq = rec.stage_sequence
@@ -811,6 +988,13 @@ class GarageReception(models.Model):
             "<b>Chiffrage Devis Prêt :</b> Le magasinier a complété le chiffrage des pièces.<br/>"
             "<i>Micro-tâche 2A validée. Micro-tâches 2B (Accord Client) et 2C (Accord Expert) en attente de signature.</i>"
         )))
+        return True
+
+    def action_mark_parts_partial(self):
+        """Action Magasinier : indique que les premières pièces nécessaires sont arrivées (autorise début travaux)."""
+        self.ensure_one()
+        self.write({'stock_status': 'pieces_partielles'})
+        self.message_post(body=Markup(_("📦 <b>Réception Partielle des Pièces :</b> Les premières pièces nécessaires sont disponibles à l'atelier. Démarrage des travaux préliminaires autorisé.")))
         return True
 
     def action_mark_parts_available(self):
@@ -1186,31 +1370,9 @@ class GarageReception(models.Model):
         }
 
     def action_create_or_view_repair_order(self):
-        """Ouvre ou crée l'ordre de réparation associé en transférant les opérations d'atelier."""
+        """Ouvre ou crée l'ordre de réparation associé sans forcer de lignes arbitraires."""
         self.ensure_one()
         if not self.repair_order_id:
-            labor_commands = []
-            # Ne transférer que les vraies interventions mécaniques/carrosserie (Étape 4 personnalisée ou Diag IA)
-            # Exclure strictement les tâches administratives (Devis 2A, Accord 2B, Commande 3, Contrôle 5, Livraison 6)
-            real_tasks = self.task_ids.filtered(
-                lambda t: t.stage_sequence == 40 and (t.is_ai_dynamic or t.diagnostic_task_id)
-            )
-            # Récupérer les identifiants de tâches déjà gérées dans les logs diagnostiques
-            diag_task_ids = set()
-            for log in self.diagnostic_log_ids:
-                diag_task_ids.update(log.task_line_ids.ids)
-
-            for t in real_tasks:
-                if t.diagnostic_task_id and t.diagnostic_task_id.id in diag_task_ids:
-                    # Sera synchronisé proprement par action_sync_from_validated_diagnostic()
-                    continue
-                labor_commands.append(Command.create({
-                    'name': t.name,
-                    'hours': t.planned_hours or 1.0,
-                    'hourly_rate': 0.0,  # Non chiffré tant que le magasinier / chef n'a pas validé le devis
-                    'work_type': 'mechanic' if self.specialty != 'carrosserie' else 'bodywork',
-                }))
-
             ro = self.env['repair.order'].create({
                 'vehicle_id': self.vehicle_id.id,
                 'partner_id': self.customer_id.id,
@@ -1218,16 +1380,12 @@ class GarageReception(models.Model):
                 'tracking_token': self.tracking_token,
                 'odometer_order': self.odometer_in,
                 'claim_id': self.claim_id.id if self.claim_id else False,
-                'billing_channel': 'insurance' if self.is_assurance or self.claim_id else 'direct',
-                'garage_labor_lines': labor_commands,
+                'billing_channel': 'insurance' if self.is_assurance or self.claim_id else 'bl_internal',
             })
             self.repair_order_id = ro.id
 
             if self.claim_id and not self.claim_id.repair_order_id:
                 self.claim_id.repair_order_id = ro.id
-
-            # Synchronisation automatique des pièces et opérations du diagnostic validé si présent
-            ro.action_sync_from_validated_diagnostic()
 
         return {
             'name': _("Ordre de Réparation %s", self.repair_order_id.name),
@@ -1255,10 +1413,37 @@ class GarageReception(models.Model):
         }
 
     def action_create_or_view_claim(self):
-        """Ouvre ou crée le dossier sinistre lié à cette réception."""
+        """Ouvre ou crée le dossier sinistre lié à cette réception avec matching fiable de l'assurance."""
         self.ensure_one()
         if not self.claim_id:
-            default_insurance = self.env['res.partner'].search([('is_insurance_company', '=', True)], limit=1)
+            ins_name = self.insurance_company_custom or self.env.context.get('default_insurance_name')
+            default_insurance = False
+            if ins_name:
+                clean_name = ins_name.strip()
+                default_insurance = self.env['res.partner'].search([
+                    ('is_insurance_company', '=', True),
+                    ('name', 'ilike', clean_name)
+                ], limit=1)
+                if not default_insurance:
+                    for word in clean_name.split():
+                        if len(word) >= 3:
+                            found = self.env['res.partner'].search([
+                                ('is_insurance_company', '=', True),
+                                ('name', 'ilike', word)
+                            ], limit=1)
+                            if found:
+                                default_insurance = found
+                                break
+                if not default_insurance:
+                    default_insurance = self.env['res.partner'].create({
+                        'name': clean_name,
+                        'is_insurance_company': True,
+                        'is_company': True,
+                        'partner_role': 'insurance_company',
+                    })
+            if not default_insurance:
+                default_insurance = self.env['res.partner'].search([('is_insurance_company', '=', True)], limit=1)
+
             claim = self.env['garage.insurance.claim'].create({
                 'claim_number': _("SIN-%s") % (self.name or "NOUVEAU"),
                 'vehicle_id': self.vehicle_id.id,
@@ -1271,6 +1456,7 @@ class GarageReception(models.Model):
                 'carte_grise_ids': [Command.set(self.carte_grise_ids.ids)],
                 'permis_ids': [Command.set(self.permis_ids.ids)],
                 'constat_ids': [Command.set(self.constat_ids.ids)],
+                'assurance_ids': [Command.set(self.assurance_ids.ids)],
             })
             self.claim_id = claim.id
             self.is_assurance = True
@@ -1360,7 +1546,7 @@ class GarageReception(models.Model):
                 'completed_date': fields.Datetime.now()
             })
         self.message_post(body=Markup(_("<b>Accueil terminé :</b> Le véhicule est transmis au Magasinier pour chiffrage du devis.")))
-        return True
+        return self.action_open_magasinier_devis_cockpit()
 
     def action_advance_to_accord(self):
         """Étape 20 -> Étape 30 : Le devis est prêt, passe à l'étape d'accord client / assurance."""
@@ -1522,6 +1708,48 @@ class GarageReception(models.Model):
             'url': self._get_tracking_url(),
             'target': 'new',
         }
+
+    def action_smart_whatsapp(self):
+        """Action WhatsApp contextuelle intelligente selon l'étape actuelle du véhicule (ce dossier)."""
+        self.ensure_one()
+        phone = self.customer_phone or (self.customer_id and self.customer_id.phone)
+        if not phone:
+            raise UserError(_("Le client n'a aucun numéro de téléphone renseigné."))
+
+        # Étape 20/30 : Envoi du devis chiffré si disponible et non encore validé
+        if self.stage_sequence in (20, 30) and self.repair_order_id and self.ro_client_approval_status != 'approved':
+            return self.action_reception_send_whatsapp_quote()
+
+        # Étape 60 : Véhicule Prêt pour Restitution
+        if self.stage_sequence == 60:
+            tracking_url = self._get_tracking_url()
+            client_name = self.customer_id.name or "Client"
+            plate = self.license_plate or "votre véhicule"
+            msg = (
+                f"🚗 *Garage Pro - Véhicule Prêt pour Restitution*\n\n"
+                f"Bonjour {client_name},\n"
+                f"Excellente nouvelle ! Les réparations sur votre véhicule *{plate}* sont terminées et validées par notre contrôle qualité.\n\n"
+                f"Votre véhicule est nettoyé et prêt à être récupéré à l'atelier.\n\n"
+                f"Consultez les détails sur votre espace de suivi sécurisé :\n{tracking_url}\n\n"
+                f"À très bientôt chez Garage Pro !"
+            )
+            success, info, wa_link = send_garage_whatsapp(self.env, phone, msg)
+            self.message_post(body=Markup(_("<b>Notification WhatsApp (Véhicule Prêt) :</b> %s") % info))
+            if wa_link and ("wa.me" in wa_link or "whatsapp.com" in wa_link):
+                return {'type': 'ir.actions.act_url', 'url': wa_link, 'target': 'new'}
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _("WhatsApp Envoyé"),
+                    'message': _("Notification véhicule prêt transmise à %s", phone),
+                    'sticky': False,
+                    'type': 'success',
+                }
+            }
+
+        # Autre étape : Suivi en direct standard
+        return self.action_send_whatsapp_tracking()
 
     def action_cancel(self):
         for rec in self:

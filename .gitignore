@@ -8,3 +8,7 @@ odoo_data/
 cookies.txt
 scratch/
 .system_generated/
+*.sql
+*.dump
+graphify-out/cache/
+graphify-out/2026-*/

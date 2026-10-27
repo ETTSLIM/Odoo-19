@@ -14,6 +14,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Véhicules à l'Atelier",
                 icon: "fa-car",
                 action: "garage_repair_core.action_garage_reception",
+                actionId: 483,
+                actionName: "Véhicules à l'Atelier",
                 models: ["garage.reception"],
             },
             {
@@ -21,7 +23,18 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Ordres de Travaux Actifs",
                 icon: "fa-wrench",
                 action: "garage_repair_core.action_garage_active_repair_orders",
+                actionId: 527,
+                actionName: "Ordres de Travaux Actifs",
                 models: ["repair.order"],
+            },
+            {
+                id: "tablet_pairing",
+                name: "Appairage Tablette (QR)",
+                icon: "fa-qrcode",
+                action: "garage_repair_core.action_garage_tablet_pairing",
+                actionId: 541,
+                actionName: "Appairage Tablette Atelier",
+                models: ["garage.tablet.pairing.wizard"],
             },
         ],
     },
@@ -33,6 +46,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Dossiers Sinistres",
                 icon: "fa-shield",
                 action: "garage_repair_core.action_garage_insurance_claim",
+                actionId: 494,
+                actionName: "Dossiers Sinistres & Assurances",
                 models: ["garage.insurance.claim"],
             },
             {
@@ -40,6 +55,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Devis Sinistres & Assurances",
                 icon: "fa-file-text-o",
                 action: "garage_repair_core.action_garage_insurance_repair_orders",
+                actionId: 526,
+                actionName: "Devis Sinistres & Assurances",
                 models: [],
             },
         ],
@@ -52,6 +69,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "État du Stock Magasin",
                 icon: "fa-cubes",
                 action: "garage_repair_core.action_garage_stock_shelf",
+                actionId: 529,
+                actionName: "État du Stock Magasin (Rayon)",
                 models: ["garage.parts.bl.line"],
             },
             {
@@ -59,6 +78,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Catalogue Pièces",
                 icon: "fa-book",
                 action: "garage_repair_core.action_garage_parts_catalog",
+                actionId: 530,
+                actionName: "Catalogue Pièces Détachées",
                 models: ["product.template", "product.product"],
             },
             {
@@ -66,14 +87,9 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "BL Fournisseurs",
                 icon: "fa-truck",
                 action: "garage_repair_core.action_garage_parts_bl",
+                actionId: 490,
+                actionName: "Bons de Réception Pièces (BL Fournisseurs)",
                 models: ["garage.parts.bl"],
-            },
-            {
-                id: "repair_orders",
-                name: "Ordres & Devis (BL)",
-                icon: "fa-cogs",
-                action: "repair.action_repair_order_tree",
-                models: [],
             },
         ],
     },
@@ -85,6 +101,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Journal Caisse Guichet",
                 icon: "fa-money",
                 action: "garage_repair_core.action_garage_repair_payment",
+                actionId: 523,
+                actionName: "Journal Caisse Guichet & Règlements",
                 models: ["garage.repair.payment"],
             },
             {
@@ -92,14 +110,9 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Factures Fiscales (TVA 20%)",
                 icon: "fa-file-text",
                 action: "garage_repair_core.action_garage_official_invoices",
+                actionId: 524,
+                actionName: "Factures Fiscales Clients (TVA 20%)",
                 models: ["account.move"],
-            },
-            {
-                id: "bank_compliance",
-                name: "Contrôle Conformité Bancaire",
-                icon: "fa-bank",
-                action: "garage_repair_core.action_garage_bank_traceability_compliance",
-                models: [],
             },
         ],
     },
@@ -111,28 +124,54 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Parc Véhicules",
                 icon: "fa-car",
                 action: "fleet.fleet_vehicle_action",
+                actionId: 168,
+                actionName: "Vehicles",
                 models: ["fleet.vehicle"],
             },
             {
-                id: "partners",
-                name: "Annuaire Contacts",
-                icon: "fa-address-book-o",
-                action: "garage_repair_core.action_garage_partners_unified",
+                id: "customers",
+                name: "Clients Atelier",
+                icon: "fa-users",
+                action: "garage_repair_core.action_garage_customers",
+                actionId: 533,
+                actionName: "Clients Atelier (Particuliers & Sociétés)",
                 models: ["res.partner"],
             },
             {
-                id: "vehicle_brands",
-                name: "Marques Véhicules",
-                icon: "fa-tags",
-                action: "fleet.fleet_vehicle_model_brand_action",
-                models: ["fleet.vehicle.model.brand"],
+                id: "suppliers",
+                name: "Fournisseurs Pièces",
+                icon: "fa-truck",
+                action: "garage_repair_core.action_garage_suppliers",
+                actionId: 534,
+                actionName: "Fournisseurs de Pièces Auto",
+                models: ["res.partner"],
             },
             {
-                id: "vehicle_models",
-                name: "Modèles Véhicules",
-                icon: "fa-car",
-                action: "fleet.fleet_vehicle_model_action",
-                models: ["fleet.vehicle.model"],
+                id: "insurances",
+                name: "Assurances",
+                icon: "fa-shield",
+                action: "garage_repair_core.action_garage_insurances",
+                actionId: 536,
+                actionName: "Compagnies d'Assurance",
+                models: ["res.partner"],
+            },
+            {
+                id: "experts",
+                name: "Cabinets d'Expertise",
+                icon: "fa-briefcase",
+                action: "garage_repair_core.action_garage_experts",
+                actionId: 537,
+                actionName: "Cabinets d'Expertise Automobile",
+                models: ["res.partner"],
+            },
+            {
+                id: "partners",
+                name: "Tous les Contacts",
+                icon: "fa-address-book-o",
+                action: "garage_repair_core.action_garage_partners_unified",
+                actionId: 507,
+                actionName: "Tous les Contacts Atelier",
+                models: ["res.partner"],
             },
         ],
     },
@@ -144,6 +183,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Utilisateurs & Droits",
                 icon: "fa-users",
                 action: "garage_repair_core.action_res_users_garage",
+                actionId: 531,
+                actionName: "Équipe Atelier & Permissions Modules",
                 models: ["res.users"],
             },
             {
@@ -151,6 +192,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Opérateurs PIN",
                 icon: "fa-id-badge",
                 action: "garage_repair_core.action_garage_workshop_operator",
+                actionId: 501,
+                actionName: "Opérateurs Atelier (Codes PIN)",
                 models: ["garage.workshop.operator"],
             },
             {
@@ -158,6 +201,8 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "7 Étapes Atelier",
                 icon: "fa-tasks",
                 action: "garage_repair_core.action_garage_workshop_stage",
+                actionId: 500,
+                actionName: "Étapes Atelier (7 Étapes)",
                 models: ["garage.workshop.stage"],
             },
             {
@@ -165,21 +210,18 @@ export const GARAGE_MODULE_SUBNAVS = {
                 name: "Paramètres WhatsApp",
                 icon: "fa-whatsapp",
                 action: "garage_repair_core.action_garage_whatsapp_settings",
+                actionId: 532,
+                actionName: "Configuration WhatsApp & Canaux",
                 models: ["res.config.settings"],
             },
             {
-                id: "portal_monitor",
-                name: "Supervision Canaux",
-                icon: "fa-globe",
-                action: "garage_repair_core.action_garage_external_portal_monitor",
-                models: [],
-            },
-            {
-                id: "ui_kit",
-                name: "UI Kit (Debug)",
-                icon: "fa-paint-brush",
-                action: "garage_repair_core.action_garage_ui_kit",
-                models: ["garage.ui.kit"],
+                id: "tablet_pairing_config",
+                name: "Appairage Tablette (QR)",
+                icon: "fa-qrcode",
+                action: "garage_repair_core.action_garage_tablet_pairing",
+                actionId: 541,
+                actionName: "Appairage Tablette Atelier",
+                models: ["garage.tablet.pairing.wizard"],
             },
         ],
     },
@@ -198,7 +240,6 @@ patch(NavBar.prototype, {
         });
 
         useBus(this.env.bus, "ACTION_MANAGER:UPDATE", (ev) => {
-            // Ignorer la transition intermédiaire BlankComponent
             if (ev && ev.detail && ev.detail.Component && ev.detail.Component.name === "BlankComponent") {
                 return;
             }
@@ -210,8 +251,14 @@ patch(NavBar.prototype, {
             this._syncGarageSubnav();
         });
 
+        const onResize = () => {
+            this._alignSubnavUnderActiveModule();
+        };
+        window.addEventListener("resize", onResize);
+
         useEffect(() => {
             this._updateTopNavActiveDom();
+            this._alignSubnavUnderActiveModule();
         });
 
         // Synchro initiale au montage
@@ -220,12 +267,50 @@ patch(NavBar.prototype, {
 
     get isGarageActive() {
         const app = this.menuService.getCurrentApp();
-        return Boolean(
-            app && (app.xmlid === "garage_repair_core.menu_garage_root" || app.name === "Garage Pro")
-        );
+        if (app && (app.xmlid === "garage_repair_core.menu_garage_root" || app.name === "Garage Pro")) {
+            return true;
+        }
+        const action = this.actionService.currentController?.action;
+        const resModel = action?.res_model || "";
+        const xmlId = action?.xml_id || "";
+        if (
+            resModel.startsWith("garage.") ||
+            resModel === "repair.order" ||
+            resModel === "fleet.vehicle" ||
+            resModel === "fleet.vehicle.model" ||
+            resModel === "fleet.vehicle.model.brand" ||
+            xmlId.startsWith("garage_repair_core.")
+        ) {
+            return true;
+        }
+        return false;
     },
 
     set isGarageActive(_) {},
+
+    get activeModuleName() {
+        const names = {
+            workshop: "Atelier & Entrées",
+            insurance: "Sinistres & Assurances",
+            stock: "Pièces, Stock & BL",
+            finance: "Caisse & Factures",
+            directory: "Parc & Annuaire",
+            config: "Configuration",
+        };
+        return names[this.garageState.activeModuleKey] || "Atelier & Entrées";
+    },
+
+    get activeModuleIcon() {
+        const icons = {
+            workshop: "fa-car",
+            insurance: "fa-shield",
+            stock: "fa-cubes",
+            finance: "fa-money",
+            directory: "fa-book",
+            config: "fa-cogs",
+        };
+        return icons[this.garageState.activeModuleKey] || "fa-car";
+    },
 
     get currentGarageSubnavItems() {
         if (!this.isGarageActive || !this.garageState.activeModuleKey) {
@@ -258,6 +343,7 @@ patch(NavBar.prototype, {
                     this.garageState.activeModuleKey = key;
                     this.garageState.activePillId = conf.pills[0]?.id || null;
                     this._updateTopNavActiveDom();
+                    this._alignSubnavUnderActiveModule();
                     break;
                 }
             }
@@ -267,10 +353,69 @@ patch(NavBar.prototype, {
 
     async onGarageSubnavPillClick(pill) {
         if (!pill || !pill.action) return;
+        // 1-Click Instant Activation: update active state immediately
+        let pillModuleKey = this.garageState.activeModuleKey;
+        for (const [key, conf] of Object.entries(GARAGE_MODULE_SUBNAVS)) {
+            if (conf.pills.some((p) => p.id === pill.id)) {
+                pillModuleKey = key;
+                break;
+            }
+        }
+        this._userLockKey = pillModuleKey;
         this._userLockPillId = pill.id;
         this._userLockTime = Date.now();
+        this.garageState.activeModuleKey = pillModuleKey;
         this.garageState.activePillId = pill.id;
+        this._updateTopNavActiveDom();
+        this._alignSubnavUnderActiveModule();
         await this.actionService.doAction(pill.action, { clearBreadcrumbs: true });
+    },
+
+    _alignSubnavUnderActiveModule() {
+        if (!this.root || !this.root.el || !this.isGarageActive) return;
+        const subnavBar = this.root.el.querySelector(".o_garage_subnav_bar");
+        const wrapper = this.root.el.querySelector(".o_garage_subnav_wrapper");
+        if (!subnavBar || !wrapper) return;
+
+        const targetXmlId = this.garageState.activeModuleKey
+            ? GARAGE_MODULE_SUBNAVS[this.garageState.activeModuleKey]?.parentXmlId
+            : null;
+        if (!targetXmlId) {
+            wrapper.style.marginLeft = "16px";
+            return;
+        }
+
+        const activeNavEl = this.root.el.querySelector(
+            `.o_menu_sections [data-menu-xmlid="${targetXmlId}"]`
+        );
+        if (!activeNavEl) {
+            wrapper.style.marginLeft = "16px";
+            return;
+        }
+
+        const navRect = activeNavEl.getBoundingClientRect();
+        const barRect = subnavBar.getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const wrapperWidth = wrapperRect.width || wrapper.offsetWidth || wrapper.scrollWidth;
+
+        // Horizontally center the subnav wrapper directly on the active module tab
+        const navCenterX = (navRect.left - barRect.left) + (navRect.width / 2);
+        let targetLeft = Math.round(navCenterX - (wrapperWidth / 2));
+
+        // Keep inside screen bounds with 16px safety margin
+        const maxWidth = barRect.width;
+        if (wrapperWidth + 32 <= maxWidth) {
+            if (targetLeft + wrapperWidth > maxWidth - 16) {
+                targetLeft = Math.round(maxWidth - wrapperWidth - 16);
+            }
+            if (targetLeft < 16) {
+                targetLeft = 16;
+            }
+        } else {
+            targetLeft = 16;
+        }
+
+        wrapper.style.marginLeft = `${targetLeft}px`;
     },
 
     _syncGarageSubnav() {
@@ -282,8 +427,8 @@ patch(NavBar.prototype, {
             return;
         }
 
-        // Si l'utilisateur vient de cliquer dans les dernières 2 secondes, verrouiller son choix
-        if (this._userLockTime && (Date.now() - this._userLockTime < 2500)) {
+        // Si l'utilisateur a cliqué récemment, respecter son choix sans écrasement
+        if (this._userLockTime && Date.now() - this._userLockTime < 3500) {
             if (this._userLockKey) {
                 this.garageState.activeModuleKey = this._userLockKey;
             }
@@ -291,6 +436,7 @@ patch(NavBar.prototype, {
                 this.garageState.activePillId = this._userLockPillId;
             }
             this._updateTopNavActiveDom();
+            this._alignSubnavUnderActiveModule();
             return;
         }
 
@@ -301,19 +447,26 @@ patch(NavBar.prototype, {
                 this.garageState.activePillId = "receptions";
             }
             this._updateTopNavActiveDom();
+            this._alignSubnavUnderActiveModule();
             return;
         }
 
         const xmlId = action.xml_id || "";
+        const actionId = action.id || null;
+        const actionName = action.name || action.display_name || "";
         const resModel = action.res_model || "";
 
-        // 1. Recherche par XML ID direct de l'action
+        // 1. Recherche par XML ID, ID numérique ou Nom direct de l'action
         let matchedKey = null;
         let matchedPillId = null;
 
         for (const [key, conf] of Object.entries(GARAGE_MODULE_SUBNAVS)) {
             for (const pill of conf.pills) {
-                if (pill.action === xmlId) {
+                if (
+                    (xmlId && pill.action === xmlId) ||
+                    (actionId && pill.actionId && pill.actionId === actionId) ||
+                    (actionName && pill.actionName && pill.actionName === actionName)
+                ) {
                     matchedKey = key;
                     matchedPillId = pill.id;
                     break;
@@ -324,12 +477,15 @@ patch(NavBar.prototype, {
 
         // 2. Déduction intelligente par modèle res_model et contexte
         if (!matchedKey) {
-            if (resModel === "garage.reception") {
+            if (resModel === "garage.reception" || resModel === "garage.damage.item" || resModel === "garage.diagnostic.log") {
                 matchedKey = "workshop";
                 matchedPillId = "receptions";
             } else if (resModel === "garage.insurance.claim") {
                 matchedKey = "insurance";
                 matchedPillId = "claims";
+            } else if (resModel === "garage.tablet.pairing.wizard") {
+                matchedKey = "workshop";
+                matchedPillId = "tablet_pairing";
             } else if (resModel === "garage.parts.bl.line") {
                 matchedKey = "stock";
                 matchedPillId = "shelf_stock";
@@ -350,13 +506,10 @@ patch(NavBar.prototype, {
                 matchedPillId = "fleet_vehicles";
             } else if (resModel === "res.partner") {
                 matchedKey = "directory";
-                matchedPillId = "partners";
-            } else if (resModel === "fleet.vehicle.model.brand") {
+                matchedPillId = this.garageState.activePillId || "partners";
+            } else if (resModel === "fleet.vehicle.model.brand" || resModel === "fleet.vehicle.model") {
                 matchedKey = "directory";
-                matchedPillId = "vehicle_brands";
-            } else if (resModel === "fleet.vehicle.model") {
-                matchedKey = "directory";
-                matchedPillId = "vehicle_models";
+                matchedPillId = "fleet_vehicles";
             } else if (resModel === "res.users") {
                 matchedKey = "config";
                 matchedPillId = "users_rights";
@@ -378,12 +531,6 @@ patch(NavBar.prototype, {
                 if (domainStr.includes("insurance") || ctxStr.includes("insurance")) {
                     matchedKey = "insurance";
                     matchedPillId = "claim_orders";
-                } else if (domainStr.includes("bank_traceable") || domainStr.includes("alert_compliance")) {
-                    matchedKey = "finance";
-                    matchedPillId = "bank_compliance";
-                } else if (domainStr.includes("tracking_token")) {
-                    matchedKey = "config";
-                    matchedPillId = "portal_monitor";
                 } else {
                     matchedKey = "workshop";
                     matchedPillId = "active_orders";
@@ -393,26 +540,31 @@ patch(NavBar.prototype, {
 
         if (matchedKey) {
             this.garageState.activeModuleKey = matchedKey;
-            this.garageState.activePillId = matchedPillId;
+            if (matchedPillId) {
+                this.garageState.activePillId = matchedPillId;
+            }
         }
 
         this._updateTopNavActiveDom();
+        this._alignSubnavUnderActiveModule();
     },
 
     _updateTopNavActiveDom() {
         if (!this.root || !this.root.el) return;
-        const navEntries = this.root.el.querySelectorAll(".o_menu_sections .o_nav_entry");
+        const navEntries = this.root.el.querySelectorAll(".o_menu_sections .o_nav_entry, .o_menu_sections [data-menu-xmlid], .o_menu_sections .dropdown-item, .o_menu_sections button");
         if (!navEntries.length) return;
 
-        const targetXmlId = this.isGarageActive && this.garageState.activeModuleKey
-            ? GARAGE_MODULE_SUBNAVS[this.garageState.activeModuleKey]?.parentXmlId
-            : null;
+        const targetXmlId =
+            this.isGarageActive && this.garageState.activeModuleKey
+                ? GARAGE_MODULE_SUBNAVS[this.garageState.activeModuleKey]?.parentXmlId
+                : null;
 
         navEntries.forEach((el) => {
-            const isTarget = targetXmlId && el.getAttribute("data-menu-xmlid") === targetXmlId;
+            const xmlid = el.getAttribute("data-menu-xmlid");
+            const isTarget = Boolean(targetXmlId && xmlid === targetXmlId);
             if (isTarget) {
                 el.classList.add("o_garage_tab_active", "active");
-            } else {
+            } else if (xmlid) {
                 el.classList.remove("o_garage_tab_active", "active");
             }
         });

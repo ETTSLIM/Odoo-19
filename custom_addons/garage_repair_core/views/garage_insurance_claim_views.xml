@@ -203,8 +203,12 @@
 
                         <!-- Strip KPI Financiers Haute Visibilité -->
                         <div class="o_garage_kpi_strip">
+                            <div class="o_garage_kpi_card o_garage_kpi_covered">
+                                <span class="o_garage_kpi_label">Devis Atelier Initial (HT)</span>
+                                <span class="o_garage_kpi_value text-primary"><field name="claim_estimate_untaxed" widget="monetary"/></span>
+                            </div>
                             <div class="o_garage_kpi_card o_garage_kpi_approved">
-                                <span class="o_garage_kpi_label">Total Agréé TTC</span>
+                                <span class="o_garage_kpi_label">Total Agréé Expert TTC</span>
                                 <span class="o_garage_kpi_value"><field name="expert_accord_amount_ttc" widget="monetary"/></span>
                             </div>
                             <div class="o_garage_kpi_card o_garage_kpi_covered">

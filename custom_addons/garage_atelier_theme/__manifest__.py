@@ -35,6 +35,7 @@ Design System basé sur des tokens sémantiques réutilisables:
             'garage_atelier_theme/static/src/scss/components.scss',
             'garage_atelier_theme/static/src/scss/views.scss',
             'garage_atelier_theme/static/src/js/navbar_subnav.js',
+            'garage_atelier_theme/static/src/js/garage_cockpit_tabs.js',
             'garage_atelier_theme/static/src/xml/navbar_subnav.xml',
         ],
         'web.assets_frontend': [

@@ -21,6 +21,7 @@ class RepairOrder(models.Model):
     reception_stock_status = fields.Selection(related='reception_id.stock_status', string="Statut Stock Réception", readonly=True)
     reception_audio_player_html = fields.Html(compute='_compute_reception_audio_context', string="Lecteur Audio Diagnostic", sanitize=False)
     reception_transcription = fields.Text(compute='_compute_reception_audio_context', string="Transcription Diagnostic")
+    reception_transcription_raw = fields.Text(compute='_compute_reception_audio_context', string="Transcription Darija Verbatim")
     reception_workshop_tasks_summary = fields.Text(compute='_compute_reception_audio_context', string="Tâches Atelier Demandées")
 
     @api.depends('reception_id', 'reception_id.diagnostic_log_ids', 'reception_id.diagnostic_log_ids.audio_player_html', 'reception_id.task_ids')
@@ -30,12 +31,15 @@ class RepairOrder(models.Model):
             if rec and rec.diagnostic_log_ids:
                 latest_log = rec.diagnostic_log_ids[0]
                 order.reception_audio_player_html = latest_log.audio_player_html
+                order.reception_transcription_raw = latest_log.transcription_raw or ''
                 order.reception_transcription = latest_log.transcription_summary or latest_log.transcription_raw or rec.diagnostic_notes or rec.symptoms or ''
             elif rec:
                 order.reception_audio_player_html = False
+                order.reception_transcription_raw = rec.diagnostic_notes or ''
                 order.reception_transcription = rec.diagnostic_notes or rec.symptoms or ''
             else:
                 order.reception_audio_player_html = False
+                order.reception_transcription_raw = False
                 order.reception_transcription = False
 
             if rec and rec.task_ids:
@@ -228,6 +232,12 @@ class RepairOrder(models.Model):
 
             order.amount_residual = max(0.0, target_amount - order.amount_paid)
 
+            # Synchronisation automatique du chiffrage vers le dossier sinistre lié
+            if order.claim_id:
+                order.claim_id.initial_estimate_parts = parts_total
+                order.claim_id.initial_estimate_labor = labor_total
+                order.claim_id.claim_estimate_untaxed = untaxed
+
             if order.amount_paid <= 0:
                 order.payment_status = 'unpaid'
             elif order.amount_residual <= 0.01:
@@ -282,20 +292,52 @@ class RepairOrder(models.Model):
         return f"{base_url.rstrip('/')}/garage/tracking/{token}"
 
     def action_mark_devis_ready(self):
-        """Action explicite du Magasinier : valide le chiffrage, passe la réception à l'étape 2 (Devis & Accord) et active les micro-tâches d'accord."""
+        """Action explicite du Magasinier : valide le chiffrage, passe la réception à l'étape 30 (Accord) et notifie."""
         self.ensure_one()
         if self.reception_id:
             self.reception_id.action_mark_devis_ready()
+            stage_30 = self.env['garage.workshop.stage'].search([('sequence', '=', 30)], limit=1)
+            if stage_30:
+                self.reception_id.write({'stage_id': stage_30.id})
+            if self.claim_id:
+                self.claim_id.write({
+                    'initial_estimate_parts': self.amount_parts_untaxed,
+                    'initial_estimate_labor': self.amount_labor_untaxed,
+                    'claim_estimate_untaxed': self.amount_untaxed_total,
+                })
+
+        # Pour les clients directs (non-assurance) : envoi automatique immédiat du devis WhatsApp
+        if self.billing_channel != 'insurance' and not (self.reception_id and self.reception_id.is_assurance):
+            if self.partner_id.phone:
+                try:
+                    return self.action_send_whatsapp_quote()
+                except Exception:
+                    pass
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _("Devis Chiffré Prêt"),
-                'message': _("Le devis est prêt. Le véhicule est passé à l'étape 2 (Devis & Accord). Vous pouvez maintenant envoyer le lien WhatsApp ou soumettre à l'expert."),
+                'message': _("Le devis est validé. Le véhicule est passé à l'étape Accord (WhatsApp / Expert)."),
                 'sticky': False,
                 'type': 'success',
             }
         }
+
+    def action_mark_parts_partial(self):
+        """Action Magasinier : réception partielle des pièces autorisant le début des travaux."""
+        self.ensure_one()
+        if self.reception_id:
+            self.reception_id.action_mark_parts_partial()
+        return True
+
+    def action_mark_parts_available(self):
+        """Action Magasinier : 100% des pièces disponibles à l'atelier."""
+        self.ensure_one()
+        if self.reception_id:
+            self.reception_id.action_mark_parts_available()
+        return True
 
     def action_send_whatsapp_quote(self):
         """Envoie le devis chiffré par WhatsApp avec bouton de validation 1-clic."""
@@ -721,6 +763,7 @@ class GarageRepairLaborLine(models.Model):
     _description = "Ligne de Main-d'Œuvre et Opérations"
 
     repair_id = fields.Many2one('repair.order', string="Ordre de Réparation", ondelete='cascade', required=True)
+    product_id = fields.Many2one('product.product', string="Prestation / Forfait Catalogue", domain="[('type', '=', 'service')]")
     name = fields.Char(string="Description Travaux", required=True)
     work_type = fields.Selection([
         ('mechanic', 'Mécanique Générale'),
@@ -736,6 +779,15 @@ class GarageRepairLaborLine(models.Model):
 
     hourly_cost = fields.Monetary(string="Coût Horaire Interne", default=50.0)
     hourly_rate = fields.Monetary(string="Taux Horaire Vente", default=150.0)
+
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+        if self.product_id:
+            self.name = self.product_id.display_name
+            if self.product_id.standard_price:
+                self.hourly_cost = self.product_id.standard_price
+            if self.product_id.list_price:
+                self.hourly_rate = self.product_id.list_price
 
     subtotal = fields.Monetary(string="Sous-total Vente", compute='_compute_labor_totals', store=True)
     total_cost = fields.Monetary(string="Coût Revient", compute='_compute_labor_totals', store=True)

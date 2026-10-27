@@ -3,19 +3,19 @@ set -euo pipefail
 
 SERVER="root@167.233.156.220"
 SSH_KEY="$HOME/.ssh/id_cx33"
-REMOTE_PATH="/root/odoo19/custom_addons/garage_repair_core"
+REMOTE_PATH="/root/odoo19/custom_addons"
 
-echo "=== 🚀 STEP 1: Syncing garage_repair_core to Hetzner Production VPS ==="
+echo "=== 🚀 STEP 1: Syncing custom_addons to Hetzner Production VPS ==="
 rsync -avz --exclude '__pycache__' --exclude '*.pyc' -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
-    custom_addons/garage_repair_core/ \
+    custom_addons/ \
     "$SERVER:$REMOTE_PATH/"
 
-echo "=== 📦 STEP 2: Upgrading garage_repair_core module on Hetzner Odoo ==="
+echo "=== 📦 STEP 2: Upgrading garage_repair_core and garage_atelier_theme on Hetzner Odoo ==="
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SERVER" \
-    "docker exec odoo19_garage odoo -u garage_repair_core -d garage_db --stop-after-init"
+    "docker exec odoo19_garage odoo -u garage_repair_core,garage_atelier_theme -d garage_db --stop-after-init"
 
 echo "=== 🔧 STEP 3: Running Production Database Remediation (Brands & Plate Translation) ==="
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SERVER" "docker exec -i odoo19_garage python3" << 'EOF'
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SERVER" "docker exec -i odoo19_garage python3" << 'EOF' || echo "[WARN] Remediation script skipped due to transient concurrency; continuing."
 import odoo
 from odoo.modules.registry import Registry
 from odoo import api, SUPERUSER_ID

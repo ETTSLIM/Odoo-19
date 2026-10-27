@@ -17,12 +17,22 @@
                         string="Valider Devis Prêt (Passer à l'Accord)" 
                         type="object" class="btn-primary" icon="fa-check-circle" 
                         invisible="not id or reception_stock_status == 'devis_pret'"
-                        confirm="Confirmer la validation du devis (pièces &amp; main-d'œuvre) ? Cela notifiera la réception que le devis est prêt pour accord."/>
+                        confirm="Confirmer la validation du devis (pièces &amp; main-d'œuvre) ? Cela transmettra le dossier à l'étape Accord (WhatsApp / Expert)."/>
                 <button name="action_mark_devis_ready" 
                         string="Devis Prêt Validé (Revalider)" 
                         type="object" class="btn btn-outline-secondary" icon="fa-check-circle" 
                         invisible="not id or reception_stock_status != 'devis_pret'"
                         confirm="Le devis a déjà été validé prêt. Confirmer la revalidation et la mise à jour des montants ?"/>
+                <button name="action_mark_parts_partial" 
+                        string="Pièces Partiellement Reçues" 
+                        type="object" class="btn btn-outline-primary" icon="fa-cubes" 
+                        invisible="not id or reception_stock_status in ('pieces_partielles', 'pieces_dispo') or state in ('done', 'cancel')"
+                        confirm="Confirmer la réception partielle des pièces pour autoriser le démarrage préliminaire des travaux ?"/>
+                <button name="action_mark_parts_available" 
+                        string="Toutes Pièces Reçues" 
+                        type="object" class="btn btn-outline-success" icon="fa-check" 
+                        invisible="not id or reception_stock_status == 'pieces_dispo' or state in ('done', 'cancel')"
+                        confirm="Confirmer que 100% des pièces sont physiquement disponibles à l'atelier ?"/>
                 <button name="action_send_whatsapp_quote" 
                         string="Envoyer Devis WhatsApp" 
                         type="object" class="btn btn-outline-success" icon="fa-whatsapp" 
@@ -46,18 +56,20 @@
                         confirm="Ouvrir l'assistant pour émettre la facture fiscale déclarée ?"/>
             </xpath>
 
-            <!-- Sécurisation des Boutons Natifs Odoo avec Confirmation Obligatoire -->
+            <!-- Sécurisation et Masquage des Boutons Natifs Odoo en Phase Devis -->
             <xpath expr="//header/button[@name='action_validate']" position="attributes">
+                <attribute name="invisible">state in ('draft', 'cancel') or client_approval_status != 'approved'</attribute>
                 <attribute name="confirm">Confirmer la validation de cet ordre de réparation ?</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='action_repair_cancel']" position="attributes">
+                <attribute name="invisible">state in ('draft', 'done', 'cancel')</attribute>
+                <attribute name="confirm">ATTENTION : Êtes-vous certain de vouloir annuler cet ordre de réparation ?</attribute>
             </xpath>
             <xpath expr="//header/button[@name='action_repair_start']" position="attributes">
                 <attribute name="confirm">Démarrer les travaux de réparation pour ce véhicule ?</attribute>
             </xpath>
             <xpath expr="//header/button[@name='action_repair_end'][2]" position="attributes">
                 <attribute name="confirm">Confirmer la finalisation et clôture des réparations ?</attribute>
-            </xpath>
-            <xpath expr="//header/button[@name='action_repair_cancel']" position="attributes">
-                <attribute name="confirm">ATTENTION : Êtes-vous certain de vouloir annuler cet ordre de réparation ?</attribute>
             </xpath>
 
             <!-- Masquer les boutons natifs Odoo inadaptés au garage automobile -->
@@ -154,15 +166,6 @@
                     </div>
                 </div>
 
-                <!-- Rappel Motif de Visite / Constat Client (Liaison Réception) -->
-                <div class="alert alert-light border d-flex align-items-center mb-3 py-2 px-3 rounded shadow-sm" role="status" invisible="not reception_id or not reception_symptoms">
-                    <i class="fa fa-info-circle text-primary me-2 fa-lg" title="Motif Client"/>
-                    <div>
-                        <span class="small text-muted fw-bold text-uppercase d-block">Motif de Visite / Symptômes Signalés à l'Entrée :</span>
-                        <span class="text-dark"><field name="reception_symptoms" readonly="1"/></span>
-                    </div>
-                </div>
-
                 <!-- Bandeau KPI Financiers Clés -->
                 <div class="o_garage_kpi_strip mb-3" invisible="not id or amount_total_ttc == 0">
                     <div class="o_garage_kpi_card o_garage_kpi_covered">
@@ -229,32 +232,39 @@
             <!-- Onglets Atelier Métier placés en tête du notebook -->
             <xpath expr="//notebook/page[@name='parts']" position="before">
                 <page string="Devis &amp; Chiffrage" name="garage_quote_page">
-                    <!-- Cockpit Audio & Contexte Diagnostic Atelier pour le Magasinier -->
+                    <!-- Cockpit Audio & Contexte Diagnostic Atelier pour le Magasinier (3-en-1 Visible sans scroll) -->
                     <div class="card bg-light border-primary mb-3 shadow-sm" invisible="not reception_id">
                         <div class="card-header bg-primary text-white py-1 d-flex justify-content-between align-items-center">
                             <span class="fw-bold small text-uppercase">
-                                <i class="fa fa-headphones me-2" title="Contexte Audio"/>Diagnostic Atelier &amp; Notes Vocales du Mécanicien
+                                <i class="fa fa-headphones me-2" title="Contexte Audio"/>Cockpit Technique Mécanicien • 3 Formats Visibles
                             </span>
                             <span class="badge bg-light text-primary">Aide au Chiffrage Magasinier</span>
                         </div>
                         <div class="card-body p-2">
                             <div class="row g-2">
-                                <div class="col-md-5">
-                                    <span class="o_form_label fw-bold small text-muted d-block mb-1">Enregistrement Audio :</span>
+                                <!-- 1. Lecteur Audio -->
+                                <div class="col-md-4 border-end">
+                                    <span class="o_form_label fw-bold small text-muted d-block mb-1">
+                                        <i class="fa fa-play-circle text-primary me-1" title="Audio"/>1. Enregistrement Audio :
+                                    </span>
                                     <field name="reception_audio_player_html" widget="html" nolabel="1"/>
                                 </div>
-                                <div class="col-md-7">
-                                    <span class="o_form_label fw-bold small text-muted d-block mb-1">Transcription &amp; Tâches Détectées :</span>
-                                    <div class="p-2 border rounded bg-white small" style="max-height: 120px; overflow-y: auto;">
-                                        <div invisible="not reception_transcription" class="mb-1 text-dark">
-                                            <strong>Synthèse Diag : </strong><field name="reception_transcription" readonly="1"/>
-                                        </div>
-                                        <div invisible="not reception_diagnostic_parts_note" class="text-primary mb-1">
-                                            <strong>Pièces Demandées : </strong><field name="reception_diagnostic_parts_note" readonly="1"/>
-                                        </div>
-                                        <div invisible="not reception_workshop_tasks_summary" class="text-muted">
-                                            <strong>Tâches Atelier : </strong><field name="reception_workshop_tasks_summary" readonly="1"/>
-                                        </div>
+                                <!-- 2. Darija Verbatim -->
+                                <div class="col-md-4 border-end">
+                                    <span class="o_form_label fw-bold small text-muted d-block mb-1">
+                                        <i class="fa fa-commenting-o text-success me-1" title="Darija"/>2. Darija Verbatim (Mécanicien) :
+                                    </span>
+                                    <div class="p-2 border rounded bg-white small text-dark" style="min-height: 55px; max-height: 180px; overflow-y: auto;">
+                                        <field name="reception_transcription_raw" readonly="1" placeholder="Aucune transcription brute enregistrée."/>
+                                    </div>
+                                </div>
+                                <!-- 3. Tâches Détectées (Guide) -->
+                                <div class="col-md-4">
+                                    <span class="o_form_label fw-bold small text-muted d-block mb-1">
+                                        <i class="fa fa-tasks text-warning me-1" title="Tâches"/>3. Tâches Détectées (Guide) :
+                                    </span>
+                                    <div class="p-2 border rounded bg-white small text-muted" style="min-height: 55px; max-height: 180px; overflow-y: auto;">
+                                        <field name="reception_workshop_tasks_summary" readonly="1" placeholder="Aucune micro-tâche spécifique."/>
                                     </div>
                                 </div>
                             </div>
@@ -289,6 +299,7 @@
                     </div>
                     <field name="garage_labor_lines">
                         <list editable="bottom">
+                            <field name="product_id" options="{'no_create_edit': True}" optional="show"/>
                             <field name="work_type"/>
                             <field name="name"/>
                             <field name="mechanic_id"/>
