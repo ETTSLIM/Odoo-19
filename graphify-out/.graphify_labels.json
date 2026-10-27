@@ -3,7 +3,7 @@
   "1": "RepairOrder",
   "2": "models/__init__.py",
   "3": "ProductTemplate",
-  "4": "GarageTrackingController",
+  "4": "GaragePaymentRecoveryWizard",
   "5": "GarageWorkshopTabletApiController",
   "6": "FleetVehicle",
   "7": ".action_open_ai_diagnostic_wizard",
@@ -26,7 +26,7 @@
   "24": "._read_group_stage_ids",
   "25": "graphify — Universal P0 Invariant",
   "26": "workflows/graphify.md",
-  "27": "GarageStockPickerWizard",
+  "27": ".action_reception_open_billing_wizard",
   "28": ".action_create_or_view_claim",
   "29": ".create",
   "30": "GarageInsuranceClaim",
@@ -74,6 +74,5 @@
   "72": "._onchange_vehicle_id",
   "73": "deploy_to_hetzner.sh",
   "74": "Git Push & Remote Hostinger Staging Invariant",
-  "76": ".submit_supplementary_diagnostic",
-  "77": "._sync_subtasks_with_parent_stage"
+  "76": ".submit_supplementary_diagnostic"
 }

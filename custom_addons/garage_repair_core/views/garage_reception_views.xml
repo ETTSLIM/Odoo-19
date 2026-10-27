@@ -119,6 +119,8 @@
                     <field name="is_assurance" invisible="1"/>
                     <field name="claim_id" invisible="1"/>
                     <field name="can_toggle_workshop_tasks" invisible="1"/>
+                    <field name="symptoms" invisible="1"/>
+                    <field name="diagnostic_notes" invisible="1"/>
                     <widget name="web_ribbon" title="ANNULÉ" bg_color="text-bg-danger" invisible="state != 'cancel'"/>
                     <widget name="web_ribbon" title="ARCHIVÉ" bg_color="text-bg-secondary" invisible="active"/>
                     <widget name="web_ribbon" title="PRÊT" bg_color="text-bg-success" invisible="stage_sequence != 60"/>
@@ -141,25 +143,35 @@
                     <!-- Layout 2 Panneaux Cockpit Atelier (Dossier Actif) -->
                     <div class="row g-3">
                         <!-- ========================================================= -->
-                        <!-- PANNEAU GAUCHE (~35%) : DOSSIER D'ENTRÉE & ÉTAT DU VÉHICULE -->
+                        <!-- PANNEAU GAUCHE (~35%) : COMMAND CENTER & IDENTITÉ DOSSIER -->
                         <!-- ========================================================= -->
                         <div class="col-lg-4 col-xl-4">
                             <div class="o_garage_cockpit_sidebar shadow-sm">
-                                <!-- 1. Immatriculation & Photo Véhicule -->
-                                <div class="text-center pb-3 border-bottom mb-3">
-                                    <div class="d-flex justify-content-center mb-2">
-                                        <span class="o_garage_plate">
-                                            <field name="license_plate" readonly="1"/>
-                                        </span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <field name="image_128" widget="image" class="rounded border shadow-sm mx-auto" options="{'size': [90, 90]}" invisible="not image_128"/>
-                                    </div>
-                                    <div class="fw-bold fs-5 text-dark">
-                                        <field name="vehicle_model_name" readonly="1"/>
-                                    </div>
-                                    <div class="text-muted small mt-1">
-                                        <field name="specialty" widget="badge"/>
+                                <!-- 1. Carte d'Identité Véhicule & Immatriculation (Format Compact Pro) -->
+                                <div class="pb-3 border-bottom mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="flex-shrink-0" invisible="not image_128">
+                                            <field name="image_128" widget="image" class="rounded border shadow-sm" options="{'size': [72, 72]}"/>
+                                        </div>
+                                        <div class="flex-shrink-0 bg-light rounded border d-flex align-items-center justify-content-center text-muted" style="width: 72px; height: 72px;" invisible="image_128">
+                                            <i class="fa fa-car fa-2x opacity-50" title="Véhicule"/>
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="mb-1">
+                                                <span class="o_garage_plate">
+                                                    <field name="license_plate" readonly="1"/>
+                                                </span>
+                                            </div>
+                                            <div class="fw-bold fs-6 text-dark text-truncate" title="Modèle">
+                                                <field name="vehicle_model_name" readonly="1"/>
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                                <field name="specialty" widget="badge"/>
+                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning" invisible="not is_assurance">
+                                                    <i class="fa fa-shield me-1" title="Sinistre"/>Sinistre
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -168,13 +180,17 @@
                                     <div class="text-muted small fw-bold text-uppercase mb-1">
                                         <i class="fa fa-user me-1 text-primary" title="Client"/>Client / Propriétaire
                                     </div>
-                                    <div class="fw-bold text-dark fs-6 mb-1">
+                                    <div class="fw-bold text-dark fs-6 mb-2 text-break">
                                         <field name="customer_id" options="{'no_create': True}"/>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="text-muted small">
-                                            <i class="fa fa-phone me-1" title="Téléphone"/>
+                                        <span class="text-dark small fw-semibold" invisible="not customer_phone">
+                                            <i class="fa fa-phone me-1 text-primary" title="Téléphone"/>
                                             <field name="customer_phone" placeholder="Ex: 0661234567"/>
+                                        </span>
+                                        <span class="text-muted small fst-italic" invisible="customer_phone">
+                                            <i class="fa fa-phone me-1 text-muted opacity-50" title="Téléphone"/>
+                                            Téléphone non renseigné
                                         </span>
                                         <button name="action_smart_whatsapp" type="object" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm" title="Envoyer notification WhatsApp contextuelle pour cette étape" aria-label="WhatsApp" invisible="not customer_phone">
                                             <i class="fa fa-whatsapp text-success" title="WhatsApp"/>
@@ -197,7 +213,9 @@
                                     <div class="row g-2 mb-2">
                                         <div class="col-6">
                                             <span class="text-muted small d-block">Kilométrage</span>
-                                            <strong class="text-dark"><field name="odometer_in"/> km</strong>
+                                            <span class="fw-bold text-dark fs-6 d-inline-flex align-items-baseline gap-1">
+                                                <field name="odometer_display" readonly="1"/>
+                                            </span>
                                         </div>
                                         <div class="col-6">
                                             <span class="text-muted small d-block">Carburant</span>
@@ -207,57 +225,67 @@
                                     <div class="row g-2 mb-2">
                                         <div class="col-6">
                                             <span class="text-muted small d-block">Date d'Entrée</span>
-                                            <span class="small"><field name="date_reception" widget="date"/></span>
+                                            <span class="small fw-semibold text-dark"><field name="date_reception" widget="date"/></span>
                                         </div>
                                         <div class="col-6">
-                                            <span class="text-muted small d-block">Technicien</span>
-                                            <span class="small fw-semibold"><field name="current_operator_id"/></span>
+                                            <span class="text-muted small d-block">Sortie Estimée</span>
+                                            <span class="small fw-semibold text-primary" invisible="not estimated_completion_date">
+                                                <field name="estimated_completion_date" widget="date"/>
+                                            </span>
+                                            <span class="small text-muted fst-italic" invisible="estimated_completion_date">
+                                                À planifier
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="row g-2">
                                         <div class="col-12">
-                                            <span class="text-muted small d-block">Date Prévue de Sortie</span>
-                                            <field name="estimated_completion_date" widget="datetime" class="small fw-semibold text-primary"/>
+                                            <span class="text-muted small d-block">Intervenant Référent</span>
+                                            <span class="small fw-semibold text-dark" invisible="not current_operator_id">
+                                                <i class="fa fa-user-circle me-1 text-muted" title="Opérateur"/>
+                                                <field name="current_operator_id"/>
+                                            </span>
+                                            <span class="small text-muted fst-italic" invisible="current_operator_id">
+                                                <i class="fa fa-user-circle-o me-1 text-muted opacity-50" title="Non assigné"/>
+                                                Non assigné
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- 4. Motif & Diagnostic Entrée -->
+                                <!-- 4. Dossier & Conformité Papiers (Grille 4x4 Photos & Documents) -->
                                 <div class="pb-3 border-bottom mb-3">
-                                    <div class="text-muted small fw-bold text-uppercase mb-1">
-                                        <i class="fa fa-stethoscope me-1 text-primary" title="Diagnostic"/>Symptômes &amp; Diagnostic
-                                    </div>
-                                    <div class="small p-2 bg-white rounded border mb-2 text-dark">
-                                        <strong>Motif Client :</strong>
-                                        <div class="text-muted"><field name="symptoms" readonly="stage_sequence &gt; 10"/></div>
-                                    </div>
-                                    <div class="small p-2 bg-white rounded border mb-2 text-dark" invisible="not diagnostic_notes">
-                                        <strong>Constat Technique :</strong>
-                                        <div class="text-muted"><field name="diagnostic_notes" readonly="1"/></div>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <button name="action_open_ai_diagnostic_wizard" string="Diagnostic Vocal" type="object" class="btn btn-sm btn-outline-primary" icon="fa-microphone"/>
-                                        <button name="action_view_attachments" string="Photos Véhicule" type="object" class="btn btn-sm btn-outline-secondary" icon="fa-camera"/>
-                                    </div>
-                                </div>
-
-                                <!-- 5. Dossier Sinistre (Toggle & Synthèse) -->
-                                <div class="pb-3 border-bottom mb-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
                                         <span class="text-muted small fw-bold text-uppercase">
-                                            <i class="fa fa-shield me-1 text-warning" title="Assurance"/>Dossier Sinistre
+                                            <i class="fa fa-folder-open me-1 text-primary" title="Dossier"/>Dossier &amp; Papiers
                                         </span>
-                                        <field name="is_assurance" widget="boolean_toggle"/>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="small text-muted" style="font-size: 0.72rem;">Sinistre :</span>
+                                            <field name="is_assurance" widget="boolean_toggle"/>
+                                        </div>
                                     </div>
+                                    <field name="photos_grid_sidebar_html" widget="html" nolabel="1"/>
                                     <div class="mt-2 p-2 bg-white rounded border" invisible="not is_assurance and not claim_id">
                                         <div class="d-flex align-items-center justify-content-between mb-1">
-                                            <span class="fw-bold text-dark"><field name="insurance_name"/></span>
+                                            <span class="fw-bold text-dark small"><field name="insurance_name"/></span>
                                             <field name="claim_state" widget="badge"/>
                                         </div>
-                                        <div class="text-muted small" invisible="not claim_number">
-                                            N° Sinistre : <field name="claim_number"/>
+                                        <div class="text-muted small" invisible="not claim_number" style="font-size: 0.75rem;">
+                                            N° Sinistre : <strong class="text-dark"><field name="claim_number"/></strong>
                                         </div>
                                     </div>
+                                </div>
+
+                                <!-- 5. Diagnostic Mécanicien (Micro-tâches Verbatim - Lecture Seule) -->
+                                <div class="pb-3 border-bottom mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small fw-bold text-uppercase">
+                                            <i class="fa fa-stethoscope me-1 text-primary" title="Diagnostic"/>Diagnostic Technique
+                                        </span>
+                                        <span class="badge bg-light text-muted border small" style="font-size: 0.65rem;">
+                                            Lecture Seule
+                                        </span>
+                                    </div>
+                                    <field name="diagnostic_tasks_display_html" widget="html" nolabel="1"/>
                                 </div>
 
                                 <!-- 6. Synthèse Financière (Ce Dossier) -->
@@ -315,22 +343,14 @@
                                         <div class="text-muted small"><field name="valuable_items" readonly="1"/></div>
                                     </div>
 
-                                    <!-- Galerie Photos Miniature -->
-                                    <div class="card border-0">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="fw-bold text-dark fs-6">
-                                                <i class="fa fa-camera text-primary me-2" title="Photos"/>Photos du Véhicule (Chocs &amp; État des Lieux)
-                                            </span>
-                                        </div>
-                                        <field name="photos_grid_html" widget="html" nolabel="1"/>
-                                        <field name="attachment_ids" invisible="1"/>
-                                        <field name="carte_grise_ids" invisible="1"/>
-                                        <field name="permis_ids" invisible="1"/>
-                                        <field name="constat_ids" invisible="1"/>
-                                        <field name="assurance_ids" invisible="1"/>
-                                        <field name="bodywork_notes" invisible="1"/>
-                                        <field name="custom_todo_json" invisible="1"/>
-                                    </div>
+                                    <!-- Pièces jointes & Métadonnées d'accueil -->
+                                    <field name="attachment_ids" invisible="1"/>
+                                    <field name="carte_grise_ids" invisible="1"/>
+                                    <field name="permis_ids" invisible="1"/>
+                                    <field name="constat_ids" invisible="1"/>
+                                    <field name="assurance_ids" invisible="1"/>
+                                    <field name="bodywork_notes" invisible="1"/>
+                                    <field name="custom_todo_json" invisible="1"/>
                                 </page>
 
                                 <!-- Onglet 2 : Devis & Chiffrage (Locked vs Unlocked) -->

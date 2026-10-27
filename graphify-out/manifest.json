@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/garage_reception.py": {
-    "mtime": 1793104591.292603,
-    "ast_hash": "4ca3befd8d59ff02c2cfec82bbca8cd8",
+    "mtime": 1793111784.9675276,
+    "ast_hash": "28df904b13bf15afd4e95571429f4d07",
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/garage_repair_order.py": {

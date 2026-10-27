@@ -97,6 +97,7 @@ class GarageReception(models.Model):
 
     # État lors du check-in
     odometer_in = fields.Integer(string="Kilométrage d'entrée (km)", tracking=True)
+    odometer_display = fields.Char(string="Kilométrage Affiché", compute='_compute_odometer_display')
     fuel_level = fields.Selection([
         ('0', '0% (Réserve)'),
         ('25', '25% (1/4)'),
@@ -305,6 +306,16 @@ class GarageReception(models.Model):
     photos_grid_html = fields.Html(
         string="Galerie Photos & Documents",
         compute='_compute_photos_grid_html',
+        sanitize=False
+    )
+    photos_grid_sidebar_html = fields.Html(
+        string="Grille Photos & Documents Cockpit (4x4)",
+        compute='_compute_photos_grid_sidebar_html',
+        sanitize=False
+    )
+    diagnostic_tasks_display_html = fields.Html(
+        string="Diagnostic Mécanicien (Micro-tâches)",
+        compute='_compute_diagnostic_tasks_display_html',
         sanitize=False
     )
     repair_order_count = fields.Integer(string="Ordres de Réparation", compute='_compute_repair_order_count')
@@ -575,6 +586,277 @@ class GarageReception(models.Model):
 
             html_output = f'{grid_html}{missing_html}{"".join(modals)}'
             rec.photos_grid_html = Markup(html_output)
+
+    @api.depends('odometer_in')
+    def _compute_odometer_display(self):
+        for rec in self:
+            if rec.odometer_in and rec.odometer_in > 0:
+                rec.odometer_display = f"{rec.odometer_in:,} km".replace(',', ' ')
+            else:
+                rec.odometer_display = _("Non relevé")
+
+    @api.depends('attachment_ids', 'carte_grise_ids', 'permis_ids', 'constat_ids', 'assurance_ids')
+    def _compute_photos_grid_sidebar_html(self):
+        """Génère une matrice 4x4 compacte des photos et documents d'accueil pour la barre latérale du cockpit.
+        Chaque slot manquant est explicité avec une bordure en pointillés et un statut 'Manquant' pour une
+        clarté d'audit absolue."""
+        canonical_slots = [
+            {
+                'key': 'choc_avant',
+                'title': "Face Avant / Choc",
+                'short_label': "Face Av.",
+                'icon': "fa-car",
+                'keywords': ['face avant', 'choc_avant', 'avant', 'front'],
+            },
+            {
+                'key': 'choc_arriere',
+                'title': "Choc Arrière",
+                'short_label': "Choc Arr.",
+                'icon': "fa-car",
+                'keywords': ['choc_arriere', 'arriere', 'arrière', 'rear'],
+            },
+            {
+                'key': 'choc_cote',
+                'title': "Chocs Latéraux",
+                'short_label': "Flancs",
+                'icon': "fa-car",
+                'keywords': ['choc_cote', 'cote', 'côté', 'flanc', 'lateral'],
+            },
+            {
+                'key': 'compteur',
+                'title': "Compteur Kilométrique",
+                'short_label': "Compteur",
+                'icon': "fa-dashboard",
+                'keywords': ['compteur', 'odometer', 'km'],
+            },
+            {
+                'key': 'carte_grise_recto',
+                'title': "Carte Grise (Face Avant)",
+                'short_label': "CG Recto",
+                'icon': "fa-id-card",
+                'keywords': ['carte grise (face avant)', 'carte_grise_recto', 'recto'],
+                'field': 'carte_grise_ids',
+                'index': 0,
+            },
+            {
+                'key': 'carte_grise_verso',
+                'title': "Carte Grise (Face Arrière)",
+                'short_label': "CG Verso",
+                'icon': "fa-id-card",
+                'keywords': ['carte grise (face arriere)', 'carte grise (face arrière)', 'carte_grise_verso', 'verso'],
+                'field': 'carte_grise_ids',
+                'index': 1,
+            },
+            {
+                'key': 'permis',
+                'title': "Permis de Conduire",
+                'short_label': "Permis",
+                'icon': "fa-address-card",
+                'keywords': ['permis', 'conduire'],
+                'field': 'permis_ids',
+            },
+            {
+                'key': 'constat',
+                'title': "Constat Amiable / Assurance",
+                'short_label': "Constat",
+                'icon': "fa-file-text-o",
+                'keywords': ['constat', 'assurance', 'attestation'],
+                'field': 'constat_ids',
+            },
+        ]
+
+        for rec in self:
+            pool = list(rec.attachment_ids | rec.carte_grise_ids | rec.permis_ids | rec.constat_ids | rec.assurance_ids)
+            consumed_ids = set()
+            cells = []
+            modals = []
+            captured_count = 0
+
+            # 1. Traitement ordonné des 8 slots canoniques (2 lignes x 4 colonnes)
+            for slot in canonical_slots:
+                matched_att = None
+                field_name = slot.get('field')
+                if field_name:
+                    field_val = getattr(rec, field_name, False)
+                    if field_val:
+                        atts = [a for a in field_val if a.id not in consumed_ids]
+                        idx = slot.get('index')
+                        if idx is not None and len(atts) > idx:
+                            matched_att = atts[idx]
+                        elif atts:
+                            matched_att = atts[0]
+
+                if not matched_att:
+                    for att in pool:
+                        if att.id in consumed_ids:
+                            continue
+                        name_lower = (att.name or '').lower()
+                        if any(kw in name_lower for kw in slot['keywords']):
+                            matched_att = att
+                            break
+
+                short_lbl = slot['short_label']
+                stitle = slot['title']
+                icon_cls = slot['icon']
+
+                if matched_att:
+                    consumed_ids.add(matched_att.id)
+                    captured_count += 1
+                    aid = matched_att.id
+                    aname = matched_att.name or stitle
+                    aurl = f"/web/image/{aid}"
+                    mid = f"recSidePhoto_{rec.id}_{aid}"
+
+                    cells.append(
+                        f'<div class="o_garage_grid_cell o_garage_grid_present" '
+                        f'     data-bs-toggle="modal" data-bs-target="#{mid}" title="{aname}">'
+                        f'  <img src="{aurl}" alt="{aname}"/>'
+                        f'  <span class="o_garage_grid_tag">{short_lbl}</span>'
+                        f'  <span class="o_garage_grid_check"><i class="fa fa-check" title="Fourni"/></span>'
+                        f'</div>'
+                    )
+
+                    modals.append(
+                        f'<div class="modal fade" id="{mid}" tabindex="-1" aria-hidden="true">'
+                        f'  <div class="modal-dialog modal-dialog-centered modal-lg">'
+                        f'    <div class="modal-content shadow-lg">'
+                        f'      <div class="modal-header py-2">'
+                        f'        <h6 class="modal-title fw-bold text-dark"><i class="fa fa-picture-o text-primary me-2"/>{aname} ({short_lbl})</h6>'
+                        f'        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>'
+                        f'      </div>'
+                        f'      <div class="modal-body text-center p-2 bg-dark">'
+                        f'        <img src="{aurl}" alt="{aname}" style="max-height: 80vh; max-width: 100%; object-fit: contain; border-radius: 4px;"/>'
+                        f'      </div>'
+                        f'      <div class="modal-footer py-1 d-flex justify-content-between">'
+                        f'        <a href="{aurl}?download=true" class="btn btn-sm btn-outline-secondary"><i class="fa fa-download me-1"/>Télécharger original</a>'
+                        f'        <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Fermer</button>'
+                        f'      </div>'
+                        f'    </div>'
+                        f'  </div>'
+                        f'</div>'
+                    )
+                else:
+                    cells.append(
+                        f'<div class="o_garage_grid_cell o_garage_grid_missing" title="{stitle} (Non encore fourni)">'
+                        f'  <i class="fa {icon_cls} mb-1" title="{stitle}"/>'
+                        f'  <span class="o_garage_grid_label">{short_lbl}</span>'
+                        f'  <span class="o_garage_grid_status">Manquant</span>'
+                        f'</div>'
+                    )
+
+            # 2. Photos additionnelles éventuelles (pour compléter la grille 4x4 jusqu\'à 16 slots)
+            extra_idx = 1
+            for att in pool:
+                if att.id in consumed_ids:
+                    continue
+                if len(cells) >= 16:
+                    break
+                consumed_ids.add(att.id)
+                captured_count += 1
+                aid = att.id
+                aname = att.name or f"Photo Extra #{extra_idx}"
+                short_lbl = f"Extra #{extra_idx}"
+                extra_idx += 1
+                aurl = f"/web/image/{aid}"
+                mid = f"recSidePhoto_{rec.id}_{aid}"
+
+                cells.append(
+                    f'<div class="o_garage_grid_cell o_garage_grid_present" '
+                    f'     data-bs-toggle="modal" data-bs-target="#{mid}" title="{aname}">'
+                    f'  <img src="{aurl}" alt="{aname}"/>'
+                    f'  <span class="o_garage_grid_tag">{short_lbl}</span>'
+                    f'  <span class="o_garage_grid_check"><i class="fa fa-check" title="Fourni"/></span>'
+                    f'</div>'
+                )
+
+                modals.append(
+                    f'<div class="modal fade" id="{mid}" tabindex="-1" aria-hidden="true">'
+                    f'  <div class="modal-dialog modal-dialog-centered modal-lg">'
+                    f'    <div class="modal-content shadow-lg">'
+                    f'      <div class="modal-header py-2">'
+                    f'        <h6 class="modal-title fw-bold text-dark"><i class="fa fa-picture-o text-primary me-2"/>{aname}</h6>'
+                    f'        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>'
+                    f'      </div>'
+                    f'      <div class="modal-body text-center p-2 bg-dark">'
+                    f'        <img src="{aurl}" alt="{aname}" style="max-height: 80vh; max-width: 100%; object-fit: contain; border-radius: 4px;"/>'
+                    f'      </div>'
+                    f'      <div class="modal-footer py-1 d-flex justify-content-between">'
+                    f'        <a href="{aurl}?download=true" class="btn btn-sm btn-outline-secondary"><i class="fa fa-download me-1"/>Télécharger original</a>'
+                    f'        <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">Fermer</button>'
+                    f'      </div>'
+                    f'    </div>'
+                    f'  </div>'
+                    f'</div>'
+                )
+
+            grid_html = f'<div class="o_garage_sidebar_photo_grid">{"".join(cells)}</div>'
+            badge_summary = (
+                f'<div class="d-flex justify-content-between align-items-center mb-1">'
+                f'  <span class="text-muted small" style="font-size: 0.72rem;">'
+                f'    <i class="fa fa-camera text-primary me-1" title="Photos"/>Documents &amp; État des lieux'
+                f'  </span>'
+                f'  <span class="badge text-bg-light border small" style="font-size: 0.68rem;">'
+                f'    {captured_count} / {len(cells)} document(s)'
+                f'  </span>'
+                f'</div>'
+            )
+            rec.photos_grid_sidebar_html = Markup(f'{badge_summary}{grid_html}{"".join(modals)}')
+
+    @api.depends('diagnostic_log_ids', 'diagnostic_log_ids.task_line_ids', 'diagnostic_log_ids.task_line_ids.name',
+                 'custom_todo_json', 'symptoms', 'diagnostic_notes')
+    def _compute_diagnostic_tasks_display_html(self):
+        """Génère la liste en lecture seule des micro-tâches issues du diagnostic mécanicien.
+        Strictement sans boutons ni actions, reprenant fidèlement les éléments transcrits."""
+        for rec in self:
+            tasks = []
+            if rec.diagnostic_log_ids:
+                latest_log = rec.diagnostic_log_ids[0]
+                if latest_log.task_line_ids:
+                    tasks = [t.name for t in latest_log.task_line_ids if t.name]
+
+            if not tasks and rec.custom_todo_json:
+                try:
+                    parsed = json.loads(rec.custom_todo_json)
+                    if isinstance(parsed, list):
+                        tasks = [str(item).strip() for item in parsed if item and str(item).strip()]
+                except Exception:
+                    pass
+
+            if not tasks:
+                raw_text = rec.symptoms or rec.diagnostic_notes or ''
+                if raw_text:
+                    if '|' in raw_text:
+                        tasks = [part.strip() for part in raw_text.split('|') if part.strip()]
+                    elif '\n' in raw_text:
+                        tasks = [line.strip().lstrip('-•*').strip() for line in raw_text.split('\n') if line.strip()]
+                    elif ';' in raw_text:
+                        tasks = [part.strip() for part in raw_text.split(';') if part.strip()]
+                    else:
+                        tasks = [raw_text.strip()]
+
+            if tasks:
+                items_li = "".join([
+                    f'<li class="d-flex align-items-baseline gap-2 mb-1 text-dark" style="font-size: 0.83rem; line-height: 1.35;">'
+                    f'  <i class="fa fa-wrench text-primary flex-shrink-0" style="font-size: 0.72rem; margin-top: 3px;" title="Tâche"/>'
+                    f'  <span class="fw-semibold text-break">{t}</span>'
+                    f'</li>'
+                    for t in tasks
+                ])
+                html = (
+                    f'<div class="o_garage_diag_box p-2 bg-white rounded border">'
+                    f'  <ul class="list-unstyled mb-0 ps-1">'
+                    f'    {items_li}'
+                    f'  </ul>'
+                    f'</div>'
+                )
+            else:
+                html = (
+                    f'<div class="p-2 bg-light-subtle rounded border text-muted small text-center">'
+                    f'  <i class="fa fa-clock-o me-1" title="En attente"/>'
+                    f'  En attente du diagnostic technique atelier'
+                    f'</div>'
+                )
+            rec.diagnostic_tasks_display_html = Markup(html)
 
     @api.depends('diagnostic_log_ids')
     def _compute_latest_diagnostic_log(self):
