@@ -597,11 +597,11 @@ class GarageReception(models.Model):
 
     @api.depends('attachment_ids', 'carte_grise_ids', 'permis_ids', 'constat_ids', 'assurance_ids', 'is_assurance')
     def _compute_photos_grid_sidebar_html(self):
-        """Génère la grille photos & documents de la barre latérale du cockpit.
-        - Libellés clairs et naturels (sans abréviations cryptiques comme CG Recto, Flancs, etc.)
-        - Zéro sur-numérotation artificielle (pas de 'Extra #1', 'Extra #2' arbitraires)
-        - Adaptation dynamique selon le type de dossier (assurance vs standard)
-        - Lightbox modal haute résolution et accès direct galerie
+        """Génère la matrice 4x2 (8 slots canoniques) de la barre latérale du cockpit.
+        Reflète fidèlement les 8 slots d'accueil de l'application Android (happy-faraday) :
+        - Ligne 1 (Véhicule) : Face Avant, Arrière, Flancs, Compteur
+        - Ligne 2 (Papiers & Légal) : CG Recto, CG Verso, Constat / Assurance, Permis
+        Les photos d'atelier additionnelles éventuelles s'affichent à la suite sans altérer les 8 slots.
         """
         for rec in self:
             pool = list(rec.attachment_ids | rec.carte_grise_ids | rec.permis_ids | rec.constat_ids | rec.assurance_ids)
@@ -610,9 +610,7 @@ class GarageReception(models.Model):
             modals = []
             captured_count = 0
 
-            # 1. Définition des slots clés adaptés au type de dossier
-            # Dossier standard : Face Avant, Dégâts, Compteur, Carte Grise
-            # Dossier assurance : ajoute Permis et Constat Amiable
+            # 8 slots canoniques issus de l'application Android (CHECKIN_PHOTO_SLOTS)
             canonical_slots = [
                 {
                     'key': 'choc_avant',
@@ -622,11 +620,18 @@ class GarageReception(models.Model):
                     'keywords': ['face avant', 'choc_avant', 'avant', 'front'],
                 },
                 {
-                    'key': 'chocs',
-                    'title': "Dégâts & Chocs Carrosserie",
-                    'short_label': "Dégâts",
-                    'icon': "fa-exclamation-triangle",
-                    'keywords': ['choc', 'arriere', 'arrière', 'cote', 'côté', 'flanc', 'lateral', 'degat', 'dégât', 'damage'],
+                    'key': 'choc_arriere',
+                    'title': "Choc Arrière",
+                    'short_label': "Arrière",
+                    'icon': "fa-car",
+                    'keywords': ['choc_arriere', 'arriere', 'arrière', 'rear'],
+                },
+                {
+                    'key': 'choc_cote',
+                    'title': "Chocs Côtés & Flancs",
+                    'short_label': "Flancs",
+                    'icon': "fa-car",
+                    'keywords': ['choc_cote', 'cote', 'côté', 'flanc', 'lateral', 'side'],
                 },
                 {
                     'key': 'compteur',
@@ -636,46 +641,82 @@ class GarageReception(models.Model):
                     'keywords': ['compteur', 'odometer', 'km'],
                 },
                 {
-                    'key': 'carte_grise',
-                    'title': "Carte Grise Véhicule",
-                    'short_label': "Carte Grise",
+                    'key': 'carte_grise_recto',
+                    'title': "Carte Grise (Face Avant / Recto)",
+                    'short_label': "CG Recto",
                     'icon': "fa-id-card",
-                    'keywords': ['carte grise', 'carte_grise', 'recto', 'verso'],
+                    'keywords': ['recto', 'face avant', 'carte_grise_recto'],
                     'field': 'carte_grise_ids',
+                    'slot_type': 'cg_recto',
+                },
+                {
+                    'key': 'carte_grise_verso',
+                    'title': "Carte Grise (Verso)",
+                    'short_label': "CG Verso",
+                    'icon': "fa-id-card",
+                    'keywords': ['verso', 'carte_grise_verso'],
+                    'field': 'carte_grise_ids',
+                    'slot_type': 'cg_verso',
+                },
+                {
+                    'key': 'constat',
+                    'title': "Constat Amiable / Assurance",
+                    'short_label': "Constat",
+                    'icon': "fa-file-text-o",
+                    'keywords': ['constat', 'assurance', 'attestation', 'sinistre'],
+                    'field': 'constat_ids',
+                },
+                {
+                    'key': 'permis',
+                    'title': "Permis de Conduire",
+                    'short_label': "Permis",
+                    'icon': "fa-address-card",
+                    'keywords': ['permis', 'conduire', 'driver'],
+                    'field': 'permis_ids',
                 },
             ]
 
-            if rec.is_assurance:
-                canonical_slots.extend([
-                    {
-                        'key': 'permis',
-                        'title': "Permis de Conduire",
-                        'short_label': "Permis",
-                        'icon': "fa-address-card",
-                        'keywords': ['permis', 'conduire'],
-                        'field': 'permis_ids',
-                    },
-                    {
-                        'key': 'constat',
-                        'title': "Constat Amiable / Assurance",
-                        'short_label': "Constat",
-                        'icon': "fa-file-text-o",
-                        'keywords': ['constat', 'assurance', 'attestation'],
-                        'field': 'constat_ids',
-                    },
-                ])
-
-            # Traitement des slots canoniques
+            # Traitement des 8 slots canoniques
             for slot in canonical_slots:
                 matched_att = None
+                slot_type = slot.get('slot_type')
                 field_name = slot.get('field')
-                if field_name:
+
+                # Matching intelligent pour CG Recto / Verso
+                if slot_type == 'cg_recto':
+                    cg_atts = [a for a in rec.carte_grise_ids if a.id not in consumed_ids]
+                    for a in cg_atts:
+                        an_l = (a.name or '').lower()
+                        if any(k in an_l for k in ['recto', 'face avant', 'carte_grise_recto']):
+                            matched_att = a
+                            break
+                    if not matched_att and cg_atts:
+                        non_verso = [a for a in cg_atts if 'verso' not in (a.name or '').lower()]
+                        matched_att = non_verso[0] if non_verso else cg_atts[0]
+
+                elif slot_type == 'cg_verso':
+                    cg_atts = [a for a in rec.carte_grise_ids if a.id not in consumed_ids]
+                    for a in cg_atts:
+                        an_l = (a.name or '').lower()
+                        if any(k in an_l for k in ['verso', 'carte_grise_verso']):
+                            matched_att = a
+                            break
+                    if not matched_att and cg_atts:
+                        matched_att = cg_atts[0]
+
+                elif field_name:
                     field_val = getattr(rec, field_name, False)
                     if field_val:
                         available = [a for a in field_val if a.id not in consumed_ids]
                         if available:
                             matched_att = available[0]
+                    # Fallback pour constat si présent dans assurance_ids
+                    if not matched_att and slot['key'] == 'constat' and rec.assurance_ids:
+                        available_assur = [a for a in rec.assurance_ids if a.id not in consumed_ids]
+                        if available_assur:
+                            matched_att = available_assur[0]
 
+                # Recherche dans le pool par mots-clés si non trouvé par champ relationnel
                 if not matched_att:
                     for att in pool:
                         if att.id in consumed_ids:
@@ -734,7 +775,7 @@ class GarageReception(models.Model):
                         f'</div>'
                     )
 
-            # 2. Photos additionnelles réelles (sans inventer d'indices "Extra #1" sur-numérotés)
+            # 2. Photos d'atelier additionnelles réelles (non consommées par les 8 slots canoniques)
             for att in pool:
                 if att.id in consumed_ids:
                     continue
@@ -742,19 +783,12 @@ class GarageReception(models.Model):
                 captured_count += 1
                 aid = att.id
                 aname = att.name or _("Photo Atelier")
-                
-                # Déduction intelligente du badge à partir du nom
+
                 name_l = (att.name or '').lower()
-                if any(k in name_l for k in ['carte', 'grise', 'verso']):
-                    short_lbl = "CG Verso" if 'verso' in name_l else "Carte Grise"
-                elif any(k in name_l for k in ['permis']):
-                    short_lbl = "Permis"
-                elif any(k in name_l for k in ['choc', 'degat', 'dégât', 'carrosserie']):
+                if any(k in name_l for k in ['choc', 'degat', 'dégât', 'carrosserie']):
                     short_lbl = "Dégât"
                 elif any(k in name_l for k in ['moteur', 'pont', 'frein', 'vidange', 'atelier', 'travaux']):
                     short_lbl = "Atelier"
-                elif any(k in name_l for k in ['constat', 'assurance']):
-                    short_lbl = "Assurance"
                 else:
                     short_lbl = "Photo"
 
@@ -791,17 +825,7 @@ class GarageReception(models.Model):
                 )
 
             grid_html = f'<div class="o_garage_sidebar_photo_grid">{"".join(cells)}</div>'
-            badge_summary = (
-                f'<div class="d-flex justify-content-between align-items-center mb-1">'
-                f'  <span class="text-muted small" style="font-size: 0.72rem;">'
-                f'    <i class="fa fa-camera text-primary me-1" title="Photos"/>Documents &amp; État des lieux'
-                f'  </span>'
-                f'  <span class="badge text-bg-light border small" style="font-size: 0.68rem;">'
-                f'    {captured_count} photo(s) au dossier'
-                f'  </span>'
-                f'</div>'
-            )
-            rec.photos_grid_sidebar_html = Markup(f'{badge_summary}{grid_html}{"".join(modals)}')
+            rec.photos_grid_sidebar_html = Markup(f'{grid_html}{"".join(modals)}')
 
     @api.depends('diagnostic_log_ids', 'diagnostic_log_ids.task_line_ids', 'diagnostic_log_ids.task_line_ids.name',
                  'custom_todo_json', 'symptoms', 'diagnostic_notes')

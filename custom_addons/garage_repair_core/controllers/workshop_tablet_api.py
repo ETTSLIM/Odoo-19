@@ -704,6 +704,14 @@ class GarageWorkshopTabletApiController(http.Controller):
             # Mode A vs Mode B : Détection intake réceptionniste (sans audio ni tâches) vs mécanicien
             is_mode_a_receptionist = not audio_b64 and not audio_note and not todo_tasks
 
+            # Détection automatique dossier assurance si document constat ou attestation présent
+            has_insurance_doc = any(
+                (item.get('doc_type') or item.get('category') or '').lower() in ('constat', 'assurance')
+                for item in categorized_images
+            )
+            if has_insurance_doc and not is_assurance:
+                is_assurance = True
+
             # Création de la fiche de réception
             Reception = env['garage.reception']
             rec_vals = {
@@ -721,19 +729,19 @@ class GarageWorkshopTabletApiController(http.Controller):
                     pass
             rec = Reception.create(rec_vals)
 
-            # Ajout des pièces jointes photos catégorisées
+            # Ajout des pièces jointes photos catégorisées (8 slots canoniques Android)
             categorized_images = body.get('categorized_images') or []
             if categorized_images:
                 name_map = {
-                    'carte_grise_recto': "Carte Grise (Face Avant)",
+                    'carte_grise_recto': "Carte Grise (Recto)",
                     'carte_grise_verso': "Carte Grise (Verso)",
                     'carte_grise': "Carte Grise",
                     'permis': "Permis de Conduire",
-                    'constat': "Constat Amiable",
+                    'constat': "Constat Amiable / Assurance",
                     'assurance': "Attestation Assurance",
                     'choc_avant': "Photo Véhicule (Face Avant)",
-                    'choc_arriere': "Dégât / Choc Arrière",
-                    'choc_cote': "Dégât / Choc Latéral",
+                    'choc_arriere': "Choc Arrière",
+                    'choc_cote': "Chocs Côtés",
                     'compteur': "Compteur Kilométrique",
                     'choc': "Photo Dégât Atelier",
                 }
@@ -757,19 +765,21 @@ class GarageWorkshopTabletApiController(http.Controller):
                                 rec.write({'carte_grise_ids': [Command.link(att.id)]})
                             elif c_type == 'permis':
                                 rec.write({'permis_ids': [Command.link(att.id)]})
-                            elif c_type == 'constat':
-                                rec.write({'constat_ids': [Command.link(att.id)]})
-                            elif c_type == 'assurance':
-                                rec.write({'assurance_ids': [Command.link(att.id)]})
+                            elif c_type in ('constat', 'assurance'):
+                                rec.write({
+                                    'constat_ids': [Command.link(att.id)],
+                                    'assurance_ids': [Command.link(att.id)],
+                                })
                     except Exception as ie:
                         _logger.warning("Error saving categorized checkin image: %s", ie)
 
+            # Fallback historique : uniquement si AUCUNE image catégorisée n'est fournie (évite les doublons)
             if images_b64 and not categorized_images:
                 for idx, img_b64 in enumerate(images_b64):
                     try:
                         clean_b64 = img_b64.split(',')[-1].strip()
                         att = env['ir.attachment'].create({
-                            'name': f"Photo Checkin #{idx + 1}",
+                            'name': f"Photo Atelier #{idx + 1}",
                             'type': 'binary',
                             'datas': clean_b64,
                             'res_model': 'garage.reception',
