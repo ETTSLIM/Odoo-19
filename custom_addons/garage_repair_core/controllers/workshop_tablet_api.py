@@ -764,7 +764,7 @@ class GarageWorkshopTabletApiController(http.Controller):
                     except Exception as ie:
                         _logger.warning("Error saving categorized checkin image: %s", ie)
 
-            if images_b64:
+            if images_b64 and not categorized_images:
                 for idx, img_b64 in enumerate(images_b64):
                     try:
                         clean_b64 = img_b64.split(',')[-1].strip()

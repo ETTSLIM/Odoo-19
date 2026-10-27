@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/controllers/workshop_tablet_api.py": {
-    "mtime": 1793040487.7306404,
-    "ast_hash": "4c37ea153c66fd53603834ba49fee91c",
+    "mtime": 1793103849.9559917,
+    "ast_hash": "cf8e6d13652da18bb33babe69527e166",
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/__init__.py": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/garage_reception.py": {
-    "mtime": 1793092542.4496346,
-    "ast_hash": "a1235a7be5909391be6a6abcdb9cfcca",
+    "mtime": 1793104591.292603,
+    "ast_hash": "4ca3befd8d59ff02c2cfec82bbca8cd8",
     "semantic_hash": ""
   },
   "custom_addons/garage_repair_core/models/garage_repair_order.py": {
@@ -160,23 +160,23 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1792875029.832674,
-    "ast_hash": "b6973526eaef1f3ca7c53a0d99bcf039",
+    "mtime": 1793104637.6565201,
+    "ast_hash": "975ce23a2e29f7280744344412144f0d",
     "semantic_hash": ""
   },
   "GEMINI.md": {
-    "mtime": 1792875029.832674,
-    "ast_hash": "b6973526eaef1f3ca7c53a0d99bcf039",
+    "mtime": 1793104637.6565201,
+    "ast_hash": "975ce23a2e29f7280744344412144f0d",
     "semantic_hash": ""
   },
   "agent.md": {
-    "mtime": 1792875029.832674,
-    "ast_hash": "b6973526eaef1f3ca7c53a0d99bcf039",
+    "mtime": 1793104637.6565201,
+    "ast_hash": "975ce23a2e29f7280744344412144f0d",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1793094896.7916665,
-    "ast_hash": "e0eb02d2febe4953855e3c3de6e2c1c0",
+    "mtime": 1793095579.8297741,
+    "ast_hash": "1bd5228fd8b80e78c43646c4c1fe2f49",
     "semantic_hash": ""
   },
   "docs/README_MCP.md": {
@@ -235,8 +235,13 @@
     "semantic_hash": ""
   },
   "custom_addons/garage_atelier_theme/static/src/js/garage_cockpit_tabs.js": {
-    "mtime": 1793092607.6760728,
-    "ast_hash": "4fa897c40a7a90bc5181a09349709e19",
+    "mtime": 1793104200.5873978,
+    "ast_hash": "a3eea7b0d965106e414dedf8a13f94f3",
+    "semantic_hash": ""
+  },
+  ".agents/rules/git_push_sync.md": {
+    "mtime": 1793104644.5685585,
+    "ast_hash": "deb275d7c73a5e054232e169bad11dac",
     "semantic_hash": ""
   }
 }

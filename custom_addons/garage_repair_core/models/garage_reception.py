@@ -150,6 +150,11 @@ class GarageReception(models.Model):
     parts_line_ids = fields.One2many(related='repair_order_id.garage_parts_lines', readonly=False, string="Pièces Détachées Chiffrées")
     labor_line_ids = fields.One2many(related='repair_order_id.garage_labor_lines', readonly=False, string="Main-d'Œuvre & Travaux")
     payment_ids = fields.One2many(related='repair_order_id.payment_ids', readonly=True, string="Historique Règlements")
+    parts_bl_ids = fields.One2many(related='repair_order_id.parts_bl_ids', readonly=True, string="Bons de Livraison Fournisseurs")
+    parts_bl_count = fields.Integer(related='repair_order_id.parts_bl_count', string="Nb. BL Fournisseurs", readonly=True)
+    latest_diagnostic_log_id = fields.Many2one('garage.diagnostic.log', compute='_compute_latest_diagnostic_log', string="Dernier Diagnostic Audio", store=False)
+    diagnostic_audio_player_html = fields.Html(compute='_compute_diagnostic_audio_player_html', string="Lecteur Audio Diagnostic", sanitize=False)
+    diagnostic_transcription_raw = fields.Text(compute='_compute_diagnostic_transcription_raw', string="Transcription Darija")
     amount_parts_total = fields.Monetary(related='repair_order_id.amount_parts_untaxed', string="Total Pièces HT", readonly=True)
     amount_labor_total = fields.Monetary(related='repair_order_id.amount_labor_untaxed', string="Total MO HT", readonly=True)
     amount_untaxed_total = fields.Monetary(related='repair_order_id.amount_untaxed_total', string="Total Général HT", readonly=True)
@@ -490,23 +495,14 @@ class GarageReception(models.Model):
                         f'</div>'
                     )
                 else:
-                    # Slot canonique non capturé -> Placeholder générique
+                    # Slot canonique non capturé -> Badge compact d'information (évite 11 boîtes grises géantes)
                     icon_cls = slot['icon']
                     stitle = slot['title']
                     sbadge = slot['badge']
                     missing_cards.append(
-                        f'<div class="col">'
-                        f'  <div class="card h-100 text-center p-2" style="border: 2px dashed #cbd5e1; background: #f8fafc;">'
-                        f'    <div style="height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f5f9;" class="rounded mb-2 text-muted">'
-                        f'      <i class="fa {icon_cls} fa-2x mb-1 opacity-50" title="{stitle}"/>'
-                        f'      <span class="small text-muted" style="font-size: 0.70rem;">Non capturée</span>'
-                        f'    </div>'
-                        f'    <div>'
-                        f'      <span class="badge bg-secondary-subtle text-secondary border text-truncate d-inline-block mb-1 px-2 py-1" style="font-size: 0.70rem;">{sbadge}</span>'
-                        f'      <span class="text-muted text-truncate d-block small" title="{stitle}">{stitle}</span>'
-                        f'    </div>'
-                        f'  </div>'
-                        f'</div>'
+                        f'<span class="badge bg-light text-secondary border me-2 mb-2 p-2">'
+                        f'<i class="fa {icon_cls} me-1 text-muted" title="{stitle}"/>{sbadge} <small class="text-muted">(non fournie)</small>'
+                        f'</span>'
                     )
 
             # 2. Ajout des photos supplémentaires éventuelles (hors 8 slots)
@@ -557,15 +553,43 @@ class GarageReception(models.Model):
                     f'</div>'
                 )
 
-            # 3. Assemblage final : Photos existantes triées en PREMIER, puis placeholders manquants
-            all_cards = existing_cards + missing_cards
-            html_output = (
-                f'<div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">'
-                f'{"".join(all_cards)}'
-                f'</div>'
-                f'{"".join(modals)}'
-            )
+            # 3. Assemblage final : Photos réelles en premier (grille), et mention compacte des pièces non fournies
+            if existing_cards:
+                grid_html = f'<div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-3">{"".join(existing_cards)}</div>'
+            else:
+                grid_html = (
+                    '<div class="alert alert-light border text-center p-4 text-muted mb-3" role="status">'
+                    '  <i class="fa fa-camera-retro fa-2x mb-2 d-block opacity-50" title="Photos"/>'
+                    '  <span class="small">Aucune photo enregistrée lors du check-in.</span>'
+                    '</div>'
+                )
+
+            missing_html = ""
+            if missing_cards:
+                missing_html = (
+                    '<div class="p-2 bg-light-subtle rounded border small mt-2">'
+                    '  <span class="fw-semibold text-muted d-block mb-1"><i class="fa fa-info-circle me-1" title="Info"/>Documents / Photos complémentaires non capturés :</span>'
+                    f'  <div class="d-flex flex-wrap">{"".join(missing_cards)}</div>'
+                    '</div>'
+                )
+
+            html_output = f'{grid_html}{missing_html}{"".join(modals)}'
             rec.photos_grid_html = Markup(html_output)
+
+    @api.depends('diagnostic_log_ids')
+    def _compute_latest_diagnostic_log(self):
+        for rec in self:
+            rec.latest_diagnostic_log_id = rec.diagnostic_log_ids[0] if rec.diagnostic_log_ids else False
+
+    @api.depends('diagnostic_log_ids')
+    def _compute_diagnostic_audio_player_html(self):
+        for rec in self:
+            rec.diagnostic_audio_player_html = rec.latest_diagnostic_log_id.audio_player_html if rec.latest_diagnostic_log_id else False
+
+    @api.depends('diagnostic_log_ids')
+    def _compute_diagnostic_transcription_raw(self):
+        for rec in self:
+            rec.diagnostic_transcription_raw = rec.latest_diagnostic_log_id.transcription_raw if rec.latest_diagnostic_log_id else False
 
     def _compute_repair_order_count(self):
         for rec in self:
@@ -650,6 +674,15 @@ class GarageReception(models.Model):
     def write(self, vals):
         if vals.get('claim_id'):
             vals['is_assurance'] = True
+
+        # Purge automatique des tâches d'une autre spécialité si la spécialité change avant le début des travaux
+        if 'specialty' in vals and not self.env.context.get('skip_specialty_sync'):
+            new_spec = vals['specialty']
+            for rec in self:
+                if rec.specialty != new_spec and rec.stage_sequence <= 20:
+                    unstarted_old = rec.task_ids.filtered(lambda t: t.specialty != new_spec and t.state != '1_done' and not t.is_done)
+                    if unstarted_old:
+                        unstarted_old.unlink()
 
         # 1. Synchronisation bidirectionnelle stage_id <-> state
         if 'stage_id' in vals and vals['stage_id']:
@@ -1526,6 +1559,65 @@ class GarageReception(models.Model):
             }
         }
 
+    def action_import_diagnostic_to_devis(self):
+        """Importe et convertit en 1 clic les micro-tâches détectées par le diagnostic vocal dans le devis."""
+        self.ensure_one()
+        diag = self.latest_diagnostic_log_id
+        if not diag:
+            raise UserError(_("Aucun diagnostic vocal ou rapport technique n'est rattaché à ce dossier."))
+
+        if not self.repair_order_id:
+            self.action_create_or_view_repair_order()
+
+        # Purge automatique des tâches orphelines d'une autre spécialité résiduelles (ex: mécanique sur carrosserie)
+        divergent_tasks = self.task_ids.filtered(lambda t: t.specialty != self.specialty and t.state != '1_done' and not t.is_done)
+        if divergent_tasks:
+            divergent_tasks.unlink()
+
+        # Valider toutes les tâches pour injection OR
+        diag.task_line_ids.write({'is_validated': True})
+        diag.action_validate_and_apply_to_ro()
+
+        if self.stock_status == 'attente_diag':
+            self.write({'stock_status': 'envoye_stock'})
+
+        self.message_post(body=Markup(_(
+            "<b>Diagnostic Vocal %s importé dans le Devis :</b> %d micro-tâches converties en pièces et main-d'œuvre."
+        ) % (diag.name, len(diag.task_line_ids))))
+        return True
+
+    def action_client_approve(self):
+        """Enregistre l'accord client directement depuis la réception et fait progresser l'étape."""
+        self.ensure_one()
+        if self.repair_order_id:
+            self.repair_order_id.action_client_approve()
+        else:
+            self.write({'ro_client_approval_status': 'approved'})
+
+        if self.stage_sequence == 20:
+            self.action_advance_to_accord()
+        elif self.stage_sequence == 30 and not self.is_assurance:
+            self.action_advance_to_repair()
+        return True
+
+    def action_reception_open_stock_picker(self):
+        """Ouvre le wizard de sélection de pièces du stock pour ce dossier."""
+        self.ensure_one()
+        if not self.repair_order_id:
+            self.action_create_or_view_repair_order()
+        action = self.env.ref('garage_repair_core.action_garage_stock_picker_wizard').read()[0]
+        action['context'] = {'default_repair_id': self.repair_order_id.id}
+        return action
+
+    def action_reset_tasks_for_specialty(self):
+        """Réinitialise la checklist en purgeant les tâches non commencées d'une ancienne spécialité."""
+        self.ensure_one()
+        unstarted = self.task_ids.filtered(lambda t: t.state != '1_done' and not t.is_done)
+        unstarted.unlink()
+        self.action_generate_specialty_checklist(replace_existing=False)
+        self.message_post(body=Markup(_("Checklist d'atelier réinitialisée pour la spécialité <b>%s</b>.") % (self.specialty or 'mecanique')))
+        return True
+
     # =========================================================================
     # ACTIONS DU PROTOCOLE HÉRO UNIQUE (1 BOUTON D'AVANCEMENT PAR ÉTAPE)
     # =========================================================================
@@ -1545,8 +1637,8 @@ class GarageReception(models.Model):
                 'is_done': True,
                 'completed_date': fields.Datetime.now()
             })
-        self.message_post(body=Markup(_("<b>Accueil terminé :</b> Le véhicule est transmis au Magasinier pour chiffrage du devis.")))
-        return self.action_open_magasinier_devis_cockpit()
+        self.message_post(body=Markup(_("<b>Accueil terminé :</b> Le véhicule est en cours de chiffrage (Étape 20 - Devis).")))
+        return True
 
     def action_advance_to_accord(self):
         """Étape 20 -> Étape 30 : Le devis est prêt, passe à l'étape d'accord client / assurance."""

@@ -19,6 +19,13 @@
 > 3. **MANDATORY VISUAL WIREFRAME**: Every plan modifying UI forms, tabs, or menus must provide an explicit ASCII wireframe mockup showing the human user experience before and after the change.
 > 4. **PROGRAMMATIC ARCHITECTURAL ASSERTIONS**: Before declaring an execution complete, the assistant must run an active XPath/AST assertion script verifying exact element counts and parent-child container relationships.
 
+> [!CAUTION]
+> ## 🚨 MANDATORY P0 INVARIANT: ATOMIC GIT COMMIT & REMOTE PUSH PROTOCOL (HOSTINGER SYNC) 🚨
+> For ANY code modifications, bug fixes, view enhancements, or architectural refactors:
+> 1. **MANDATORY POST-VALIDATION GIT PUSH**: Immediately after completing local verification (3-Step Pre-Flight Protocol & AST Sync), the AI assistant MUST stage, commit with a semantic message, and push to `origin main` via `git push origin main`.
+> 2. **ZERO UNPUSHED CODE**: Never leave modified files unstaged or unpushed at the end of a turn. The staging server on Hostinger (`hitanger` at 167.233.156.220) synchronizes with `origin main`; unpushed changes cause live desynchronization and break user verification.
+> 3. **VERIFY REMOTE REFLECTION**: Always confirm that `git push` succeeded and that the remote branch has received the commit before reporting completion to the user.
+
 > **CRITICAL DIRECTIVE FOR ALL AGENTS WORKING IN THIS REPOSITORY:**
 > You are developing for **Odoo 19.0** running on **Python 3.12** and **PostgreSQL 16**.
 > Older Odoo paradigms (Odoo 11–17) are **strictly forbidden**. Under no circumstances should you generate legacy syntax.
@@ -110,3 +117,23 @@ Run this quick audit on your custom addon directory to guarantee 0 legacy leakag
 grep -rnE 't-name="kanban-box"|<tree|attrs="|states="|track_visibility=|\(0, 0, ' custom_addons/
 ```
 * **PASS CONDITION**: Zero matches.
+
+---
+
+## 4. MANDATORY GIT PUSH PROTOCOL (HOSTINGER STAGING SYNC)
+
+Once local container verification (Steps 1–3) and AST sync (`graphify update .`) pass with 0 errors:
+1. Stage all code and configuration changes:
+   ```bash
+   git add custom_addons/ ...
+   ```
+2. Commit with a concise semantic message:
+   ```bash
+   git commit -m "feat/fix: <description>"
+   ```
+3. Push to `origin main`:
+   ```bash
+   git push origin main
+   ```
+4. Verify remote push success so that Hostinger (`hitanger` at 167.233.156.220) immediately reflects the update.
+

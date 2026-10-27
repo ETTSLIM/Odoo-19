@@ -39,17 +39,20 @@
                             invisible="stage_sequence != 10 or not id"
                             confirm="Confirmez-vous la fin de l'accueil ? Le véhicule sera transmis au magasinier pour chiffrage (Étape 20)."/>
 
-                    <!-- Étape 20 : Devis / Chiffrage (Bouton Magasinier puis Bouton Accord) -->
-                    <button name="action_open_magasinier_devis_cockpit" 
-                            string="Chiffrer le Devis (Cockpit Magasinier)" 
-                            type="object" class="btn-primary" icon="fa-calculator" 
-                            invisible="stage_sequence != 20 or stock_status == 'devis_pret'"
-                            confirm="Ouvrir l'espace de chiffrage pour préparer les pièces et la main-d'œuvre ?"/>
+                    <!-- Étape 20 : Devis / Chiffrage (Poste de Commande sans sortie de contexte) -->
+                    <button name="action_mark_devis_ready" 
+                            string="Marquer Devis Prêt (Notifier Client)" 
+                            type="object" class="btn-primary" icon="fa-check-circle" 
+                            invisible="stage_sequence != 20 or stock_status == 'devis_pret'"/>
                     <button name="action_advance_to_accord" 
                             string="Passer à l'Accord Client / Expert" 
                             type="object" class="btn-primary" icon="fa-arrow-right" 
                             invisible="stage_sequence != 20 or stock_status != 'devis_pret'"
                             confirm="Le chiffrage est terminé. Confirmez-vous le passage à l'étape d'accord client et assurance (Étape 30) ?"/>
+                    <button name="action_open_magasinier_devis_cockpit" 
+                            string="Vue OR Complète" 
+                            type="object" class="btn btn-outline-secondary btn-sm" icon="fa-external-link" 
+                            invisible="stage_sequence != 20"/>
 
                     <!-- Étape 30 : Accord Client & Dossier Sinistre -->
                     <button name="action_reception_send_whatsapp_quote" 
@@ -125,7 +128,8 @@
                         <label for="name" string="Fiche Réception N°" invisible="not id"/>
                         <h1 invisible="not id" class="d-flex align-items-center gap-2">
                             <field name="name" readonly="1"/>
-                            <span class="badge bg-light text-secondary border font-monospace fs-6" title="Référence Active">
+                            <span class="badge text-bg-dark border border-secondary font-monospace fs-6 px-3 py-1 shadow-sm" title="Référence Ordre de Réparation / Dossier">
+                                <i class="fa fa-tag me-1 text-warning" title="Dossier"/>
                                 <field name="active_reference"/>
                             </span>
                         </h1>
@@ -159,7 +163,7 @@
                                     </div>
                                 </div>
 
-                                <!-- 2. Client & Contact 1-Clic WhatsApp -->
+                                <!-- 2. Client & Contact 1-Clic WhatsApp & Suivi -->
                                 <div class="pb-3 border-bottom mb-3">
                                     <div class="text-muted small fw-bold text-uppercase mb-1">
                                         <i class="fa fa-user me-1 text-primary" title="Client"/>Client / Propriétaire
@@ -167,22 +171,28 @@
                                     <div class="fw-bold text-dark fs-6 mb-1">
                                         <field name="customer_id" options="{'no_create': True}"/>
                                     </div>
-                                    <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="text-muted small">
                                             <i class="fa fa-phone me-1" title="Téléphone"/>
-                                            <field name="customer_phone" readonly="1"/>
+                                            <field name="customer_phone" placeholder="Ex: 0661234567"/>
                                         </span>
                                         <button name="action_smart_whatsapp" type="object" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm" title="Envoyer notification WhatsApp contextuelle pour cette étape" aria-label="WhatsApp" invisible="not customer_phone">
                                             <i class="fa fa-whatsapp text-success" title="WhatsApp"/>
                                             <span>WhatsApp</span>
                                         </button>
                                     </div>
+                                    <div class="d-flex justify-content-end" invisible="not tracking_token">
+                                        <button name="action_open_tracking_portal" type="object" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-sm" title="Prévisualiser le suivi en direct comme le client sur smartphone" aria-label="Portail Client">
+                                            <i class="fa fa-globe text-info" title="Portail"/>
+                                            <span>Aperçu Suivi Client</span>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- 3. État Check-in (Kilométrage & Carburant) -->
+                                <!-- 3. État Check-in (Kilométrage, Carburant & Planning) -->
                                 <div class="pb-3 border-bottom mb-3">
                                     <div class="text-muted small fw-bold text-uppercase mb-2">
-                                        <i class="fa fa-dashboard me-1 text-primary" title="Compteur"/>État Check-in Atelier
+                                        <i class="fa fa-dashboard me-1 text-primary" title="Compteur"/>État Check-in &amp; Planning
                                     </div>
                                     <div class="row g-2 mb-2">
                                         <div class="col-6">
@@ -194,7 +204,7 @@
                                             <field name="fuel_level" widget="badge"/>
                                         </div>
                                     </div>
-                                    <div class="row g-2">
+                                    <div class="row g-2 mb-2">
                                         <div class="col-6">
                                             <span class="text-muted small d-block">Date d'Entrée</span>
                                             <span class="small"><field name="date_reception" widget="date"/></span>
@@ -202,6 +212,12 @@
                                         <div class="col-6">
                                             <span class="text-muted small d-block">Technicien</span>
                                             <span class="small fw-semibold"><field name="current_operator_id"/></span>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-12">
+                                            <span class="text-muted small d-block">Date Prévue de Sortie</span>
+                                            <field name="estimated_completion_date" widget="datetime" class="small fw-semibold text-primary"/>
                                         </div>
                                     </div>
                                 </div>
@@ -225,17 +241,22 @@
                                     </div>
                                 </div>
 
-                                <!-- 5. Dossier Sinistre (Si Véhicule Assuré) -->
-                                <div class="pb-3 border-bottom mb-3" invisible="not is_assurance and not claim_id">
-                                    <div class="text-muted small fw-bold text-uppercase mb-1">
-                                        <i class="fa fa-shield me-1 text-warning" title="Assurance"/>Dossier Sinistre
+                                <!-- 5. Dossier Sinistre (Toggle & Synthèse) -->
+                                <div class="pb-3 border-bottom mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="text-muted small fw-bold text-uppercase">
+                                            <i class="fa fa-shield me-1 text-warning" title="Assurance"/>Dossier Sinistre
+                                        </span>
+                                        <field name="is_assurance" widget="boolean_toggle"/>
                                     </div>
-                                    <div class="d-flex align-items-center justify-content-between mb-1">
-                                        <span class="fw-bold text-dark"><field name="insurance_name"/></span>
-                                        <field name="claim_state" widget="badge"/>
-                                    </div>
-                                    <div class="text-muted small" invisible="not claim_number">
-                                        N° Sinistre : <field name="claim_number"/>
+                                    <div class="mt-2 p-2 bg-white rounded border" invisible="not is_assurance and not claim_id">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="fw-bold text-dark"><field name="insurance_name"/></span>
+                                            <field name="claim_state" widget="badge"/>
+                                        </div>
+                                        <div class="text-muted small" invisible="not claim_number">
+                                            N° Sinistre : <field name="claim_number"/>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -315,14 +336,50 @@
                                 <!-- Onglet 2 : Devis & Chiffrage (Locked vs Unlocked) -->
                                 <page string="🔒 Devis" name="tab_devis_locked" invisible="stage_sequence &gt;= 20"/>
                                 <page string="💰 Devis &amp; Chiffrage" name="tab_devis_active" invisible="stage_sequence &lt; 20">
+                                    <!-- Carte Diagnostic Vocal Mécanicien & Import 1-Clic dans le Devis -->
+                                    <div class="card border-primary shadow-sm mb-3" invisible="not latest_diagnostic_log_id">
+                                        <div class="card-header bg-primary-subtle py-2 d-flex justify-content-between align-items-center border-bottom">
+                                            <span class="fw-bold text-primary">
+                                                <i class="fa fa-headphones me-2" title="Audio Mécanicien"/>DIAGNOSTIC VOCAL MÉCANICIEN &amp; CONSEILS IA
+                                            </span>
+                                            <button name="action_import_diagnostic_to_devis" 
+                                                    string="Importer les travaux dans le Devis (1-Clic)" 
+                                                    type="object" class="btn btn-sm btn-primary shadow-sm" 
+                                                    icon="fa-plus-circle"
+                                                    confirm="Convertir automatiquement les travaux et pièces recommandés par le mécanicien en lignes de devis chiffrées ?"/>
+                                        </div>
+                                        <div class="card-body p-3 bg-white">
+                                            <div class="row g-3">
+                                                <div class="col-md-5">
+                                                    <span class="small text-muted fw-bold d-block mb-1">Enregistrement Audio :</span>
+                                                    <field name="diagnostic_audio_player_html" widget="html" nolabel="1"/>
+                                                    <div class="small mt-2 p-2 bg-light rounded text-muted" invisible="not diagnostic_transcription_raw">
+                                                        <strong>Transcription Darija :</strong> <field name="diagnostic_transcription_raw" readonly="1"/>
+                                                    </div>
+                                                    <div class="small mt-2 p-2 bg-light rounded text-muted" invisible="not diagnostic_notes">
+                                                        <strong>Constat :</strong> <field name="diagnostic_notes" readonly="1"/>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-7">
+                                                    <span class="small text-muted fw-bold d-block mb-1">Pièces &amp; Fournitures Recommandées :</span>
+                                                    <div class="p-2 bg-light rounded text-dark small" style="min-height: 80px;">
+                                                        <field name="diagnostic_parts_note" readonly="1"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded border mb-3">
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="small text-muted fw-bold text-uppercase">Accord Devis Client :</span>
                                             <field name="ro_client_approval_status" widget="badge" decoration-warning="ro_client_approval_status == 'pending'" decoration-success="ro_client_approval_status == 'approved'" decoration-danger="ro_client_approval_status == 'rejected'"/>
                                         </div>
-                                        <div class="d-flex gap-2">
-                                            <button name="action_open_magasinier_devis_cockpit" string="Cockpit Magasinier (Chiffrage Avancé)" type="object" class="btn btn-sm btn-outline-primary" icon="fa-calculator"/>
-                                            <button name="action_reception_send_whatsapp_quote" string="Envoyer Devis WhatsApp" type="object" class="btn btn-sm btn-outline-success" icon="fa-whatsapp" invisible="ro_client_approval_status == 'approved'"/>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button name="action_reception_open_stock_picker" string="Piocher Pièces du Stock" type="object" class="btn btn-sm btn-outline-info" icon="fa-cubes"/>
+                                            <button name="action_mark_devis_ready" string="Marquer Devis Prêt" type="object" class="btn btn-sm btn-outline-primary" icon="fa-check-circle" invisible="stock_status == 'devis_pret'"/>
+                                            <button name="action_reception_send_whatsapp_quote" string="Envoyer Devis WhatsApp" type="object" class="btn btn-sm btn-outline-success" icon="fa-whatsapp" invisible="not customer_phone or ro_client_approval_status == 'approved'"/>
+                                            <button name="action_client_approve" string="Valider Accord Client" type="object" class="btn btn-sm btn-success" icon="fa-check" invisible="ro_client_approval_status == 'approved'"/>
                                         </div>
                                     </div>
 
@@ -389,8 +446,8 @@
                                 </page>
 
                                 <!-- Onglet 3 : Pièces Requises (Locked vs Unlocked) -->
-                                <page string="🔒 Pièces" name="tab_pieces_locked" invisible="stage_sequence &gt;= 20"/>
-                                <page string="📦 Pièces Requises" name="tab_pieces_active" invisible="stage_sequence &lt; 20">
+                                <page string="🔒 Pièces" name="tab_pieces_locked" invisible="stage_sequence &gt;= 30"/>
+                                <page string="📦 Pièces Requises" name="tab_pieces_active" invisible="stage_sequence &lt; 30">
                                     <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded border mb-3">
                                         <div class="d-flex align-items-center gap-3">
                                             <span class="fw-bold text-dark">Disponibilité Magasin :</span>
@@ -421,6 +478,20 @@
                                             <field name="is_officially_cleared" widget="badge" string="Sortie"/>
                                         </list>
                                     </field>
+
+                                    <!-- Bons de Livraison Pièces Fournisseurs (BL Achats Liés) -->
+                                    <div class="fs-6 fw-bold text-dark mb-2 mt-4 pt-3 border-top" invisible="parts_bl_count == 0">
+                                        <i class="fa fa-truck me-2 text-primary" title="Livraisons"/>Bons de Livraison Pièces Fournisseurs (BL Achats Liés)
+                                    </div>
+                                    <field name="parts_bl_ids" readonly="1" invisible="parts_bl_count == 0">
+                                        <list string="BL Pièces Fournisseurs">
+                                            <field name="name"/>
+                                            <field name="supplier_id"/>
+                                            <field name="date_bl"/>
+                                            <field name="total_amount"/>
+                                            <field name="state" widget="badge" decoration-warning="state == 'draft'" decoration-info="state == 'allocated'" decoration-success="state == 'invoiced'"/>
+                                        </list>
+                                    </field>
                                 </page>
 
                                 <!-- Onglet 4 : Travaux Atelier (Locked vs Unlocked) -->
@@ -431,8 +502,9 @@
                                             <span class="fw-bold text-dark">Avancement Global :</span>
                                             <field name="checklist_progress" widget="progressbar"/>
                                         </div>
-                                        <div>
-                                            <button name="action_generate_specialty_checklist" string="Régénérer Gamme d'Atelier" type="object" class="btn btn-sm btn-outline-secondary" icon="fa-refresh" confirm="Régénérer la checklist des micro-tâches selon la spécialité ?"/>
+                                        <div class="d-flex gap-2">
+                                            <button name="action_reset_tasks_for_specialty" string="Réinitialiser Gamme Spécialité" type="object" class="btn btn-sm btn-outline-danger" icon="fa-refresh" confirm="Supprimer les micro-tâches non commencées d'autres spécialités et reconstruire la checklist propre de cette spécialité ?"/>
+                                            <button name="action_generate_specialty_checklist" string="Compléter Gamme Atelier" type="object" class="btn btn-sm btn-outline-secondary" icon="fa-plus" confirm="Régénérer ou compléter la checklist des micro-tâches selon la spécialité ?"/>
                                         </div>
                                     </div>
 
