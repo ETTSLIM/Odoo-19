@@ -3,7 +3,8 @@ services:
     image: odoo:19.0
     container_name: odoo19_garage
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8069:8069"
       - "8072:8072"
@@ -14,9 +15,12 @@ services:
     volumes:
       - ./config:/etc/odoo
       - ./custom_addons:/mnt/extra-addons
-      - ./odoo_data:/var/lib/odoo
-    command: --dev=reload,xml,qweb
+      - odoo_data:/var/lib/odoo
+    command: odoo -c /etc/odoo/odoo.conf --dev=reload,xml,qweb
     restart: unless-stopped
+    networks:
+      - default
+      - garage-ai_default
 
   db:
     image: postgres:16-alpine
@@ -27,9 +31,24 @@ services:
       - POSTGRES_PASSWORD=odoo
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - ./db_data:/var/lib/postgresql/data/pgdata
+      - db_data:/var/lib/postgresql/data/pgdata
     restart: unless-stopped
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   default:
     name: odoo-garage-net
+  garage-ai_default:
+    external: true
+
+volumes:
+  db_data:
+    name: odoo19_odoo19_db_data
+  odoo_data:
+    name: odoo19_garage_odoo_data
