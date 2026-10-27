@@ -160,18 +160,18 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1793104637.6565201,
-    "ast_hash": "975ce23a2e29f7280744344412144f0d",
+    "mtime": 1793114255.4216363,
+    "ast_hash": "35cf2e31dd3c61128dc8c631fe0fe266",
     "semantic_hash": ""
   },
   "GEMINI.md": {
-    "mtime": 1793104637.6565201,
-    "ast_hash": "975ce23a2e29f7280744344412144f0d",
+    "mtime": 1793114255.4216363,
+    "ast_hash": "35cf2e31dd3c61128dc8c631fe0fe266",
     "semantic_hash": ""
   },
   "agent.md": {
-    "mtime": 1793104637.6565201,
-    "ast_hash": "975ce23a2e29f7280744344412144f0d",
+    "mtime": 1793114255.4216363,
+    "ast_hash": "35cf2e31dd3c61128dc8c631fe0fe266",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -242,6 +242,11 @@
   ".agents/rules/git_push_sync.md": {
     "mtime": 1793104644.5685585,
     "ast_hash": "deb275d7c73a5e054232e169bad11dac",
+    "semantic_hash": ""
+  },
+  ".agents/rules/cockpit_submodule_sync.md": {
+    "mtime": 1793114234.0118744,
+    "ast_hash": "2f7132ddba332fe4bee1c7e5a65c07cf",
     "semantic_hash": ""
   }
 }

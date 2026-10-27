@@ -19,9 +19,9 @@
   "17": "ResUsers",
   "18": ".action_reception_open_payment_wizard",
   "19": "3. MANDATORY 3-STEP PRE-FLIGHT VERIFICATION PROTOCOL",
-  "20": "wizard/__init__.py",
+  "20": "GaragePhotoGalleryWizard",
   "21": ".action_smart_whatsapp",
-  "22": "GaragePhotoGalleryWizard",
+  "22": "GarageTrackingController",
   "23": ".action_create_or_view_repair_order",
   "24": "._read_group_stage_ids",
   "25": "graphify — Universal P0 Invariant",
@@ -74,5 +74,9 @@
   "72": "._onchange_vehicle_id",
   "73": "deploy_to_hetzner.sh",
   "74": "Git Push & Remote Hostinger Staging Invariant",
-  "76": ".submit_supplementary_diagnostic"
+  "75": "GarageStockPickerWizard",
+  "76": ".submit_supplementary_diagnostic",
+  "77": "ODOO 19 ARCHITECTURAL LOCK & AGENT INVARIANTS",
+  "78": "GarageAiDiagnosticWizard",
+  "79": "cockpit_submodule_sync.md"
 }
